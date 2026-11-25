@@ -6,7 +6,7 @@
 
 **Status:** done
 
-- [x] Interrupteur de notifications par objectif (formulaire, désactivé par défaut ; `GoalEntity.notificationsEnabled`, migration Room 1 → 2)
+- [x] Interrupteur de notifications par objectif (formulaire, désactivé par défaut ; `GoalEntity.notificationsEnabled`, migration Room 2 → 3, inclus dans l'export/import de t10)
 - [x] Réglage global de l'heure d'envoi (cloche de la liste, défaut 9 h)
 - [x] Demande d'autorisation (Android 13+) au moment où l'utilisateur active une notification
 - [x] Mois-anniversaire d'un 29/30/31 → dernier jour des mois plus courts
@@ -17,4 +17,4 @@
 - [x] Cas partagés du planificateur : tous les jalons ci-dessus, horizon, objectif désactivé, objectif passé
 - [x] Message d'aide si l'optimisation de batterie bloque les notifications (Xiaomi/Huawei)
 
-**Non vérifié sur appareil** (pas d'émulateur) : affichage réel des notifications, demande d'autorisation, déclenchement des alarmes (Doze, surcouches Xiaomi/Huawei), réception de BOOT_COMPLETED/TIMEZONE_CHANGED, tâche WorkManager, migration Room sur une base existante, sélecteur d'heure. Vérifié : `./gradlew test assembleDebug` (22 cas partagés du planificateur + 3 tests de sélection).
+**Non vérifié sur appareil** (pas d'émulateur) : affichage réel des notifications, demande d'autorisation, déclenchement des alarmes (Doze, surcouches Xiaomi/Huawei), réception de BOOT_COMPLETED/TIMEZONE_CHANGED, tâche WorkManager, migration Room sur une base existante, sélecteur d'heure. Vérifié : `./gradlew test assembleDebug` (22 cas partagés du planificateur, 3 tests de sélection, `Migration2To3Test` sur SQLite en JVM, mapping export).

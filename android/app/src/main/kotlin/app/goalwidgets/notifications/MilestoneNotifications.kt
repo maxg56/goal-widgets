@@ -121,7 +121,11 @@ object MilestoneNotifications {
 
         // Alarme en retard (téléphone éteint, Doze…) : seulement le jour même du jalon, sinon le
         // texte serait faux d'un jour. Objectif modifié, désactivé ou supprimé : le planificateur fait foi.
-        val today = LocalDate.now()
+        // Exception : une heure d'envoi après 23:50 peut, à cause de la fenêtre de [WINDOW_MILLIS],
+        // sonner juste après minuit ; le jalon de la veille reste alors valable.
+        val now = LocalDateTime.now()
+        val windowStartDay = now.minusNanos(WINDOW_MILLIS * 1_000_000).toLocalDate()
+        val today = if (date == windowStartDay) date else now.toLocalDate()
         if (date != today) return
         val row = (app as GoalWidgetsApplication).database.goalDao().getById(goalId)
         val deliver = MilestonePlanner.shouldDeliver(milestone, row?.toGoal(), row?.notificationsEnabled == true, today)

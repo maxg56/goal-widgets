@@ -517,6 +517,21 @@
           "end": "2026-11-30"
         }
       }
+    },
+    {
+      "name": "cible avant le départ, semaine en cours : la cellule du départ est hors objectif (après la cible)",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-11-25",
+        "targetDate": "2026-11-20"
+      },
+      "today": "2026-11-25",
+      "period": "week",
+      "expected": {
+        "unit": "day",
+        "count": 7,
+        "states": "ooooooo"
+      }
     }
   ]
 }

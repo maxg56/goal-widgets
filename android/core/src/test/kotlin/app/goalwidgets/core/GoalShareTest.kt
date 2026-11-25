@@ -45,8 +45,13 @@ class GoalShareTest {
     }
 
     @Test
-    fun `les caractères interdits dans un nom de fichier sont remplacés`() {
-        assertEquals("Bac _ juin_ 2027 _.goalwidgets.json", GoalShare.fileName("  Bac / juin: 2027 ?  "))
+    fun `les caractères interdits dans un nom de fichier sont remplacés par un tiret`() {
+        assertEquals("Bac - juin- 2027 -.goalwidgets.json", GoalShare.fileName("  Bac / juin: 2027 ?  "))
+    }
+
+    @Test
+    fun `retours à la ligne remplacés par une espace, pas de point initial`() {
+        assertEquals("Voyage Japon.goalwidgets.json", GoalShare.fileName("..Voyage\nJapon"))
     }
 
     @Test
@@ -55,7 +60,7 @@ class GoalShareTest {
     }
 
     @Test
-    fun `un titre très long est raccourci à 80 caractères`() {
-        assertEquals("a".repeat(80) + ".goalwidgets.json", GoalShare.fileName("a".repeat(200)))
+    fun `un titre très long est raccourci à 60 caractères`() {
+        assertEquals("a".repeat(60) + ".goalwidgets.json", GoalShare.fileName("a".repeat(200)))
     }
 }

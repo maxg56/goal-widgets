@@ -30,7 +30,7 @@
 - [ ] Couleur de l'objectif utilisée pour les points ; mode clair/sombre
 
 ## Avancement Android (branche `t12-android`)
-- [x] `app.goalwidgets.core.DotGrid.compute(goal, today, period)` + `shared-cases/dotgrid.json` (26 cas, harnais `DotGridSharedCasesTest`) ; `outside` évalué avant `today` en mois/semaine (2 cas : cible dépassée en vue mois, « depuis » à départ futur en vue semaine)
+- [x] `app.goalwidgets.core.DotGrid.compute(goal, today, period)` + `shared-cases/dotgrid.json` (27 cas, harnais `DotGridSharedCasesTest`) ; `outside` évalué avant `today` en mois/semaine (3 cas : cible dépassée en vue mois, « depuis » à départ futur en vue semaine, cible avant le départ en vue semaine)
 - [x] Widget Glance « Grille » distinct (`DotGridWidget`, tailles moyenne 4×2 et grande), objectif + période dans `GoalWidgetConfigureActivity`, minuit via `MidnightRefresh`
 - [x] Couleur de l'objectif pour les points (masques teintés par `ColorProvider` jour/nuit) ; rendu non vérifié sur appareil
 

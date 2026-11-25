@@ -53,7 +53,8 @@ data class DotGrid(val unit: DotUnit, val cells: List<DotCell>) {
 
         fun compute(goal: Goal, today: LocalDate, period: DotPeriod): DotGrid {
             // Étendue de l'objectif : départ → cible (compte à rebours) ou → sans fin (« depuis »).
-            // Cible avant le départ (possible via un import) : l'objectif se réduit à son départ.
+            // Cible avant le départ (possible via un import) : en « objectif entier », une seule cellule
+            // au départ ; en mois/semaine, tout ce qui suit la cible est hors objectif (comme iOS).
             val goalStart = goal.startDate
             val goalEnd: LocalDate? = when (goal.kind) {
                 GoalKind.COUNTDOWN -> maxOf(goalStart, requireNotNull(goal.targetDate) { "Compte à rebours sans cible" })
@@ -92,7 +93,7 @@ data class DotGrid(val unit: DotUnit, val cells: List<DotCell>) {
                 // `outside` n'existe qu'en périodes mois/semaine : en « objectif entier » la plage est
                 // l'objectif lui-même (« depuis » à départ futur → une cellule `today`).
                 val outside = period != DotPeriod.WHOLE &&
-                    (cellEnd < goalStart || (goalEnd != null && cellStart > goalEnd))
+                    (cellEnd < goalStart || (goal.targetDate != null && goal.kind == GoalKind.COUNTDOWN && cellStart > goal.targetDate))
                 val state = when {
                     outside -> DotState.OUTSIDE
                     cellEnd < today -> DotState.ELAPSED

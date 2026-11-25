@@ -11,5 +11,15 @@
 "widget_goal_deleted" = "Objectif supprimé";
 "widget_goal_deleted_hint" = "Touchez longuement puis « Modifier le widget » pour en choisir un autre";
 
+/* Widget « Grille » (t12). */
+"grid_widget_name" = "Grille";
+"grid_widget_description" = "Un point par jour : écoulés, aujourd'hui et restants.";
+"grid_intent_title" = "Configurer la grille";
+"grid_intent_description" = "Objectif et période affichés par cette grille.";
+"grid_intent_period" = "Période";
+"grid_period_whole" = "Objectif entier";
+"grid_period_month" = "Mois en cours";
+"grid_period_week" = "Semaine en cours";
+
 "deeplink_close" = "Fermer";
 "deeplink_goal_not_found" = "Cet objectif n'existe plus";

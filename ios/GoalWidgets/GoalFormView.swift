@@ -145,6 +145,20 @@ struct GoalFormView: View {
                     }
                 }
 
+                // Partager (t13) : l'objectif tel qu'enregistré (les modifications non enregistrées ne partent pas).
+                if case .edit(let record) = mode, let shared = GoalTransfer.exportedGoal(record) {
+                    Section {
+                        ShareLink(
+                            item: SharedGoalFile(goal: shared),
+                            preview: SharePreview(GoalShare.fileName(title: shared.title))
+                        ) {
+                            Label("action_share", systemImage: "square.and.arrow.up")
+                        }
+                    } footer: {
+                        Text("share_footer")
+                    }
+                }
+
                 if isEditing {
                     Section {
                         Button("action_delete", role: .destructive) {

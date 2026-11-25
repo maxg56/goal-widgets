@@ -34,6 +34,31 @@ targets:
           - app.goalwidgets.reschedule-notifications
         UIBackgroundModes:
           - fetch
+        # Partage d'un objectif (t13) : fichier `<titre>.goalwidgets.json` (export v1 d'un objectif).
+        # Type exporté `app.goalwidgets.goal` (conforme à public.json, extension `goalwidgets`) ; l'app
+        # s'annonce aussi pour public.json car le nom se termine par `.json` (l'extension vue par le
+        # système) et les messageries transmettent souvent le fichier comme JSON simple.
+        # Copie dans Documents/Inbox (pas d'ouverture sur place) → lue dans `onOpenURL`.
+        LSSupportsOpeningDocumentsInPlace: false
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: app.goalwidgets.goal
+            UTTypeDescription: Objectif Goal Widgets
+            UTTypeConformsTo:
+              - public.json
+            UTTypeTagSpecification:
+              public.filename-extension:
+                - goalwidgets
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Objectif Goal Widgets
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Owner
+            LSItemContentTypes:
+              - app.goalwidgets.goal
+          - CFBundleTypeName: JSON
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            LSItemContentTypes:
+              - public.json
     # App Group partagé avec l'extension widget (t07) : stockage SwiftData commun.
     entitlements:
       path: GoalWidgets/GoalWidgets.entitlements

@@ -12,6 +12,8 @@ struct GoalWidgetsApp: App {
     @Environment(\.scenePhase) private var scenePhase
     /// Objectif ouvert par un lien profond `goalwidgets://goal/<id>` (appui sur un widget).
     @State private var deepLinkedGoal: DeepLinkedGoal?
+    /// Fichier d'objectif(s) reçu et ouvert avec l'app (t13).
+    @State private var receivedShare: ReceivedShare?
 
     /// Statique : utilisé aussi par la tâche de fond de reprogrammation des notifications.
     private static let sharedContainer: ModelContainer = {
@@ -28,12 +30,18 @@ struct GoalWidgetsApp: App {
         WindowGroup {
             GoalListView()
                 .onOpenURL { url in
-                    if let id = GoalDeepLink.goalID(from: url) {
+                    if url.isFileURL {
+                        // Fichier reçu (t13) : « Ouvrir avec Goal Widgets » → aperçu → Ajouter / Annuler.
+                        receivedShare = ReceivedShare.read(url)
+                    } else if let id = GoalDeepLink.goalID(from: url) {
                         deepLinkedGoal = DeepLinkedGoal(id: id)
                     }
                 }
                 .sheet(item: $deepLinkedGoal) { link in
                     GoalDeepLinkView(goalID: link.id)
+                }
+                .sheet(item: $receivedShare) { share in
+                    SharedGoalPreviewView(share: share)
                 }
                 // Appui sur une notification de jalon : même feuille que le lien profond du widget.
                 .onReceive(NotificationRouter.shared.$openedGoalID.compactMap { $0 }) { id in

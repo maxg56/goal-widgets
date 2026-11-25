@@ -50,7 +50,7 @@ struct GoalWidgetView: View {
 }
 
 /// Grand chiffre (jours) ou « Aujourd'hui » le jour J.
-private struct BigNumber: View {
+struct BigNumber: View {
     let state: DisplayState
 
     var body: some View {
@@ -151,7 +151,7 @@ private struct CircularGoalView: View {
 }
 
 /// États « non configuré » et « objectif supprimé ».
-private struct MessageView: View {
+struct MessageView: View {
     let title: LocalizedStringKey
     let hint: LocalizedStringKey
     let family: WidgetFamily

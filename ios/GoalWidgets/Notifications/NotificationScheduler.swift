@@ -73,19 +73,16 @@ enum NotificationScheduler {
         let wanted = Set(selected.map(\.id))
 
         let pending = await center.pendingNotificationRequests()
-        let obsolete = pending.map(\.identifier).filter { !wanted.contains($0) }
+        // Les demandes du mode debug (t14) ne sont jamais retirées ici : un test « dans 10 s » survit
+        // à une reprogrammation (retour au premier plan, sauvegarde…).
+        let obsolete = pending.map(\.identifier).filter { !wanted.contains($0) && !$0.hasPrefix(debugIDPrefix) }
         if !obsolete.isEmpty {
             center.removePendingNotificationRequests(withIdentifiers: obsolete)
         }
 
         for milestone in selected {
             guard let title = titles[milestone.goalID], let uuid = goalUUIDs[milestone.goalID] else { continue }
-            let content = UNMutableNotificationContent()
-            content.title = title
-            content.body = NotificationLabels.body(for: milestone)
-            content.sound = .default
-            content.threadIdentifier = milestone.goalID
-            content.userInfo = [goalURLKey: GoalDeepLink.url(forGoal: uuid).absoluteString]
+            let content = content(for: milestone, title: title, goalUUID: uuid)
 
             // Composantes tirées de l'instant résolu (`fireDate`), pas de l'heure demandée : si
             // l'heure d'envoi n'existe pas ce jour-là (passage à l'heure d'été, ex. 02:30 à Paris),
@@ -99,6 +96,21 @@ enum NotificationScheduler {
             try? await center.add(request)
         }
     }
+
+    /// Contenu d'une notification de jalon : titre de l'objectif, texte du jalon, appui → lien profond.
+    /// Seul chemin d'affichage, utilisé aussi par le mode debug (t14).
+    nonisolated static func content(for milestone: Milestone, title: String, goalUUID: UUID) -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = NotificationLabels.body(for: milestone)
+        content.sound = .default
+        content.threadIdentifier = milestone.goalID
+        content.userInfo = [goalURLKey: GoalDeepLink.url(forGoal: goalUUID).absoluteString]
+        return content
+    }
+
+    /// Préfixe des identifiants des demandes créées par le mode debug (t14).
+    nonisolated static let debugIDPrefix = "debug-"
 
     /// Demande à iOS de relancer la reprogrammation en arrière-plan (au plus tôt dans ~12 h).
     /// iOS décide du moment réel ; l'horizon de 64 notifications couvre les périodes sans exécution.

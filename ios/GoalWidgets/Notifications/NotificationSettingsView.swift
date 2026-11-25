@@ -21,6 +21,10 @@ struct NotificationSettingsView: View {
                 if isDenied {
                     NotificationsDeniedSection()
                 }
+                #if DEBUG
+                // Builds de debug uniquement (t14) : absent du code compilé en release.
+                NotificationDebugSection()
+                #endif
             }
             .navigationTitle("notifications_settings_title")
             .navigationBarTitleDisplayMode(.inline)

@@ -78,3 +78,12 @@
 "import_error_invalid_goal" = "Fichier refusé : l'objectif n° %1$ld est invalide (champ « %2$@ »). Aucun objectif n'a été importé.";
 "import_error_duplicate_id" = "Fichier refusé : un même objectif y figure deux fois. Aucun objectif n'a été importé.";
 "import_error_unreadable" = "Impossible de lire ce fichier. Aucun objectif n'a été importé.";
+
+/* Partager un objectif (t13). */
+"action_share" = "Partager";
+"action_add" = "Ajouter";
+"share_footer" = "Envoie un fichier que la personne ouvre avec Goal Widgets pour avoir sa propre copie.";
+"share_preview_title" = "Objectif reçu";
+"share_already_present" = "Déjà dans tes objectifs";
+"share_nothing_to_add" = "Tout est déjà dans tes objectifs.";
+"share_error_title" = "Fichier non reconnu";

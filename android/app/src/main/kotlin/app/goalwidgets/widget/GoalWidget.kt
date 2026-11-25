@@ -26,6 +26,8 @@ import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
+import androidx.glance.color.ColorProvider
+import androidx.glance.unit.ColorProvider
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -43,8 +45,11 @@ import androidx.glance.text.TextStyle
 import app.goalwidgets.GoalWidgetsApplication
 import app.goalwidgets.MainActivity
 import app.goalwidgets.R
+import app.goalwidgets.core.GoalStyle
 import app.goalwidgets.core.WidgetContent
+import app.goalwidgets.ui.GoalColors
 import app.goalwidgets.ui.GoalLabels
+import app.goalwidgets.ui.titleWithEmoji
 import java.time.LocalDate
 
 /**
@@ -70,7 +75,8 @@ class GoalWidget : GlanceAppWidget() {
                     val content = WidgetContent.resolve(goalId, LocalDate.now()) { wanted ->
                         rows.firstOrNull { it.id == wanted }?.toGoal()
                     }
-                    WidgetBody(content, appWidgetId)
+                    val style = rows.firstOrNull { it.id == goalId }?.style() ?: GoalStyle.NONE
+                    WidgetBody(content, style, appWidgetId)
                 }
             }
         }
@@ -86,11 +92,11 @@ class GoalWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun WidgetBody(content: WidgetContent, appWidgetId: Int) {
+private fun WidgetBody(content: WidgetContent, style: GoalStyle, appWidgetId: Int) {
     val context = LocalContext.current
     when (content) {
         is WidgetContent.Showing -> Background(GlanceModifier.clickable(openGoal(context, content.goalId))) {
-            ShowingGoal(content)
+            ShowingGoal(content, style)
         }
         is WidgetContent.GoalDeleted -> Background(GlanceModifier.clickable(chooseGoal(context, appWidgetId))) {
             Message(context.getString(R.string.widget_goal_deleted))
@@ -115,22 +121,26 @@ private fun Background(modifier: GlanceModifier, content: @Composable () -> Unit
 }
 
 @Composable
-private fun ShowingGoal(content: WidgetContent.Showing) {
+private fun ShowingGoal(content: WidgetContent.Showing, style: GoalStyle) {
     val resources = LocalContext.current.resources
+    // Couleur de l'objectif (teinte claire/sombre selon le thème), sinon couleur du thème.
+    val accent: ColorProvider = style.color
+        ?.let { ColorProvider(day = GoalColors.light(it), night = GoalColors.dark(it)) }
+        ?: GlanceTheme.colors.primary
     val medium = LocalSize.current.width >= GoalWidget.MEDIUM.width &&
         LocalSize.current.height >= GoalWidget.MEDIUM.height
     Column(modifier = GlanceModifier.fillMaxWidth()) {
         Text(
             text = GoalLabels.status(resources, content.state),
             style = TextStyle(
-                color = GlanceTheme.colors.primary,
+                color = accent,
                 fontSize = if (medium) 24.sp else 18.sp,
                 fontWeight = FontWeight.Bold,
             ),
             maxLines = 1,
         )
         Text(
-            text = content.title,
+            text = titleWithEmoji(content.title, style.emoji),
             style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp),
             maxLines = if (medium) 2 else 1,
         )
@@ -141,7 +151,7 @@ private fun ShowingGoal(content: WidgetContent.Showing) {
                 LinearProgressIndicator(
                     progress = percent / 100f,
                     modifier = GlanceModifier.defaultWeight().height(6.dp),
-                    color = GlanceTheme.colors.primary,
+                    color = accent,
                     backgroundColor = GlanceTheme.colors.surfaceVariant,
                 )
                 Spacer(GlanceModifier.width(8.dp))

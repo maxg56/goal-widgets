@@ -1,0 +1,106 @@
+{
+  "version": 1,
+  "comment": "Cas d'import partagés (JUnit + XCTest). Voir docs/export-format.md. Pour chaque cas : lire `file`, le décoder, puis fusionner avec les objectifs locaux dont les identifiants sont `existingIds`. `expected.error` = code d'erreur attendu (+ `index`/`field`/`id` si présents) ; sinon `expected.goals` = tous les objectifs décodés et normalisés (dans l'ordre du fichier), `expected.added` = ids ajoutés (dans l'ordre), `expected.skipped` = nombre d'objectifs ignorés car déjà présents.",
+  "cases": [
+    {
+      "name": "fichier valide, base vide : tout est ajouté",
+      "file": "valid-two-goals.json",
+      "existingIds": [],
+      "expected": {
+        "goals": [
+          {
+            "id": "3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b",
+            "title": "Examen",
+            "kind": "countdown",
+            "startDate": "2026-09-01",
+            "targetDate": "2027-06-15",
+            "color": "blue",
+            "emoji": "🎓",
+            "notificationsEnabled": true,
+            "createdAt": "2026-09-01T07:12:45.123Z"
+          },
+          {
+            "id": "a1b2c3d4-0000-4000-8000-00000000abcd",
+            "title": "Arrêt du tabac",
+            "kind": "since",
+            "startDate": "2024-02-29",
+            "targetDate": null,
+            "color": null,
+            "emoji": null,
+            "notificationsEnabled": false,
+            "createdAt": "2024-02-29T20:00:00Z"
+          }
+        ],
+        "added": ["3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b", "a1b2c3d4-0000-4000-8000-00000000abcd"],
+        "skipped": 0
+      }
+    },
+    {
+      "name": "objectif déjà présent (même id) : ignoré, l'autre est ajouté",
+      "file": "valid-two-goals.json",
+      "existingIds": ["3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b"],
+      "expected": {
+        "added": ["a1b2c3d4-0000-4000-8000-00000000abcd"],
+        "skipped": 1
+      }
+    },
+    {
+      "name": "deuxième import du même fichier : aucun doublon",
+      "file": "valid-two-goals.json",
+      "existingIds": ["3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b", "a1b2c3d4-0000-4000-8000-00000000abcd"],
+      "expected": {
+        "added": [],
+        "skipped": 2
+      }
+    },
+    {
+      "name": "ids comparés sans tenir compte de la casse (UUID iOS en majuscules)",
+      "file": "valid-two-goals.json",
+      "existingIds": ["3F2B8C1E-4D5A-4E6F-9A7B-1C2D3E4F5A6B"],
+      "expected": {
+        "added": ["a1b2c3d4-0000-4000-8000-00000000abcd"],
+        "skipped": 1
+      }
+    },
+    {
+      "name": "lecture tolérante : champs inconnus ignorés, titre nettoyé, id en minuscules, cible ignorée pour « depuis », couleur inconnue et emoji vide → null, notificationsEnabled absent → null, décalage horaire accepté",
+      "file": "valid-lenient.json",
+      "existingIds": [],
+      "expected": {
+        "goals": [
+          {
+            "id": "b7e1c9a0-1234-4abc-8def-0123456789ab",
+            "title": "Voyage",
+            "kind": "since",
+            "startDate": "2025-07-14",
+            "targetDate": null,
+            "color": null,
+            "emoji": null,
+            "notificationsEnabled": null,
+            "createdAt": "2025-07-14T08:00:00Z"
+          }
+        ],
+        "added": ["b7e1c9a0-1234-4abc-8def-0123456789ab"],
+        "skipped": 0
+      }
+    },
+    {
+      "name": "export vide : valide, rien à ajouter",
+      "file": "valid-empty.json",
+      "existingIds": [],
+      "expected": { "goals": [], "added": [], "skipped": 0 }
+    },
+    { "name": "pas du JSON", "file": "invalid-not-json.txt", "existingIds": [], "expected": { "error": "notJson" } },
+    { "name": "JSON d'une autre application", "file": "invalid-wrong-format.json", "existingIds": [], "expected": { "error": "notAnExport" } },
+    { "name": "racine qui n'est pas un objet", "file": "invalid-top-level-array.json", "existingIds": [], "expected": { "error": "notAnExport" } },
+    { "name": "liste goals absente", "file": "invalid-goals-missing.json", "existingIds": [], "expected": { "error": "notAnExport" } },
+    { "name": "version plus récente que l'app", "file": "invalid-future-version.json", "existingIds": [], "expected": { "error": "unsupportedVersion", "version": 2 } },
+    { "name": "titre vide (2e objectif) : tout le fichier est refusé", "file": "invalid-blank-title.json", "existingIds": [], "expected": { "error": "invalidGoal", "index": 1, "field": "title" } },
+    { "name": "compte à rebours sans date cible", "file": "invalid-countdown-without-target.json", "existingIds": [], "expected": { "error": "invalidGoal", "index": 0, "field": "targetDate" } },
+    { "name": "date inexistante (30 février)", "file": "invalid-bad-date.json", "existingIds": [], "expected": { "error": "invalidGoal", "index": 0, "field": "targetDate" } },
+    { "name": "type inconnu", "file": "invalid-unknown-kind.json", "existingIds": [], "expected": { "error": "invalidGoal", "index": 0, "field": "kind" } },
+    { "name": "id qui n'est pas un UUID", "file": "invalid-bad-id.json", "existingIds": [], "expected": { "error": "invalidGoal", "index": 0, "field": "id" } },
+    { "name": "createdAt absent", "file": "invalid-missing-created-at.json", "existingIds": [], "expected": { "error": "invalidGoal", "index": 0, "field": "createdAt" } },
+    { "name": "même id deux fois dans le fichier", "file": "invalid-duplicate-id.json", "existingIds": [], "expected": { "error": "duplicateId", "id": "11111111-1111-4111-8111-111111111111" } }
+  ]
+}

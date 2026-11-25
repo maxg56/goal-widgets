@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "comment": "Tri de la liste (t10/t11). closestDate : 1) comptes à rebours dont la cible est aujourd'hui ou plus tard, cible croissante ; 2) comptes à rebours atteints, cible décroissante (le plus récemment atteint d'abord) ; 3) objectifs « depuis », départ décroissant (le plus récent d'abord). created : createdAt décroissant (le plus récent d'abord). Égalités : createdAt décroissant puis id croissant (comparaison de chaînes).",
+  "today": "2026-11-25",
+  "goals": [
+    { "id": "a", "kind": "countdown", "startDate": "2026-01-03", "targetDate": "2026-12-01", "createdAt": "2026-01-03T10:00:00Z" },
+    { "id": "b", "kind": "countdown", "startDate": "2026-05-01", "targetDate": "2026-11-25", "createdAt": "2026-05-01T10:00:00Z" },
+    { "id": "c", "kind": "countdown", "startDate": "2026-02-01", "targetDate": "2027-03-01", "createdAt": "2026-02-01T10:00:00Z" },
+    { "id": "d", "kind": "countdown", "startDate": "2026-03-01", "targetDate": "2026-11-20", "createdAt": "2026-03-01T10:00:00Z" },
+    { "id": "e", "kind": "countdown", "startDate": "2025-12-01", "targetDate": "2026-10-01", "createdAt": "2025-12-01T10:00:00Z" },
+    { "id": "f", "kind": "since", "startDate": "2026-11-01", "createdAt": "2026-11-01T00:00:00Z" },
+    { "id": "g", "kind": "since", "startDate": "2020-01-01", "createdAt": "2026-06-01T10:00:00Z" },
+    { "id": "h", "kind": "countdown", "startDate": "2026-08-01", "targetDate": "2026-12-01", "createdAt": "2026-08-01T10:00:00Z" },
+    { "id": "i", "kind": "since", "startDate": "2026-11-01", "createdAt": "2026-11-01T00:00:00Z" }
+  ],
+  "cases": [
+    { "name": "date la plus proche", "order": "closestDate", "expected": ["b", "h", "a", "c", "d", "e", "f", "i", "g"] },
+    { "name": "création (la plus récente d'abord)", "order": "created", "expected": ["f", "i", "h", "g", "b", "d", "c", "a", "e"] }
+  ]
+}

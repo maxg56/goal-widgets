@@ -1,14 +1,25 @@
 package app.goalwidgets.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
@@ -33,7 +44,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -42,7 +60,9 @@ import app.goalwidgets.core.CountdownEngine
 import app.goalwidgets.core.DraftError
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalDraft
+import app.goalwidgets.core.GoalColor
 import app.goalwidgets.core.GoalKind
+import app.goalwidgets.core.GoalStyle
 import app.goalwidgets.core.Phase
 import java.time.Instant
 import java.time.LocalDate
@@ -61,8 +81,8 @@ import java.time.format.FormatStyle
 fun GoalFormScreen(
     existing: StoredGoal?,
     today: LocalDate,
-    /** Objectif validé et état de l'interrupteur de notifications. */
-    onSave: (Goal, Boolean) -> Unit,
+    /** Objectif validé, son style et l'état de l'interrupteur de notifications. */
+    onSave: (Goal, GoalStyle, Boolean) -> Unit,
     onCancel: () -> Unit,
     onDelete: () -> Unit = {},
     onContinueAsSince: () -> Unit = {},
@@ -72,6 +92,8 @@ fun GoalFormScreen(
     var title by rememberSaveable { mutableStateOf(initial?.title ?: "") }
     var startDate by rememberSaveable { mutableStateOf(initial?.startDate ?: today) }
     var targetDate by rememberSaveable { mutableStateOf(initial?.targetDate) }
+    var color by rememberSaveable { mutableStateOf(existing?.style?.color) }
+    var emoji by rememberSaveable { mutableStateOf(existing?.style?.emoji) }
     // Les erreurs ne s'affichent qu'après une première tentative d'enregistrement.
     var attempted by rememberSaveable { mutableStateOf(false) }
     var confirmingDelete by rememberSaveable { mutableStateOf(false) }
@@ -104,7 +126,13 @@ fun GoalFormScreen(
                     }
                     TextButton(onClick = {
                         attempted = true
-                        if (draft.errors().isEmpty()) onSave(draft.toGoal(), notificationsEnabled)
+                        if (draft.errors().isEmpty()) {
+                            onSave(
+                                draft.toGoal(),
+                                GoalStyle(color, emoji?.trim()?.takeIf { it.isNotEmpty() }),
+                                notificationsEnabled,
+                            )
+                        }
                     }) { Text(stringResource(R.string.action_save)) }
                 },
             )
@@ -160,6 +188,8 @@ fun GoalFormScreen(
                     onPick = { startDate = it },
                 )
             }
+            ColorSelector(selected = color, onSelect = { color = it })
+            EmojiSelector(selected = emoji, onSelect = { emoji = it })
             NotificationToggle(enabled = notificationsEnabled, onChange = { notificationsEnabled = it })
             if (canContinueAsSince) {
                 OutlinedButton(onClick = onContinueAsSince, modifier = Modifier.fillMaxWidth()) {
@@ -207,6 +237,101 @@ private fun KindSelector(kind: GoalKind, onSelect: (GoalKind) -> Unit) {
     }
 }
 
+/** Pastilles de la palette [GoalColor], plus « aucune couleur » (couleur du thème). */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ColorSelector(selected: GoalColor?, onSelect: (GoalColor?) -> Unit) {
+    val dark = isSystemInDarkTheme()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.goal_form_color), style = MaterialTheme.typography.labelLarge)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Swatch(
+                fill = MaterialTheme.colorScheme.surfaceVariant,
+                label = stringResource(R.string.goal_color_none),
+                selected = selected == null,
+                onClick = { onSelect(null) },
+            )
+            GoalColor.entries.forEach { c ->
+                Swatch(
+                    fill = GoalColors.of(c, dark),
+                    label = stringResource(GoalColors.name(c)),
+                    selected = selected == c,
+                    onClick = { onSelect(c) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun Swatch(fill: androidx.compose.ui.graphics.Color, label: String, selected: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .background(fill)
+            .border(
+                width = if (selected) 3.dp else 1.dp,
+                color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outlineVariant,
+                shape = CircleShape,
+            )
+            .clickable(role = Role.RadioButton, onClick = onClick)
+            .semantics {
+                contentDescription = label
+                this.selected = selected
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        if (selected) Icon(Icons.Filled.Check, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+/** Emojis suggérés, « aucun », ou un emoji libre (clavier emoji du système). */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun EmojiSelector(selected: String?, onSelect: (String?) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(stringResource(R.string.goal_form_emoji), style = MaterialTheme.typography.labelLarge)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            EmojiChoice(
+                selected = selected.isNullOrBlank(),
+                label = stringResource(R.string.goal_emoji_none),
+                onClick = { onSelect(null) },
+            ) { Icon(Icons.Filled.Close, contentDescription = null) }
+            SUGGESTED_EMOJIS.forEach { e ->
+                EmojiChoice(selected = selected == e, label = e, onClick = { onSelect(e) }) {
+                    Text(e, fontSize = 22.sp)
+                }
+            }
+        }
+        OutlinedTextField(
+            value = selected.takeUnless { it in SUGGESTED_EMOJIS }.orEmpty(),
+            onValueChange = { if (it.length <= EMOJI_MAX_LENGTH) onSelect(it) },
+            label = { Text(stringResource(R.string.goal_form_emoji_custom)) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun EmojiChoice(selected: Boolean, label: String, onClick: () -> Unit, content: @Composable () -> Unit) {
+    val shape = RoundedCornerShape(12.dp)
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(shape)
+            .background(if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surface)
+            .border(1.dp, if (selected) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.outlineVariant, shape)
+            .clickable(role = Role.RadioButton, onClick = onClick)
+            .semantics {
+                contentDescription = label
+                this.selected = selected
+            },
+        contentAlignment = Alignment.Center,
+    ) { content() }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DateField(label: String, date: LocalDate?, error: String?, onPick: (LocalDate) -> Unit) {
@@ -246,7 +371,7 @@ private fun Long.utcMillisToLocalDate(): LocalDate = Instant.ofEpochMilli(this).
 @Preview(showBackground = true)
 @Composable
 private fun GoalFormScreenNewPreview() {
-    GoalWidgetsTheme { GoalFormScreen(existing = null, today = LocalDate.of(2026, 1, 6), onSave = { _, _ -> }, onCancel = {}) }
+    GoalWidgetsTheme { GoalFormScreen(existing = null, today = LocalDate.of(2026, 1, 6), onSave = { _, _, _ -> }, onCancel = {}) }
 }
 
 @Preview(showBackground = true)
@@ -254,6 +379,11 @@ private fun GoalFormScreenNewPreview() {
 private fun GoalFormScreenEditReachedPreview() {
     val goal = Goal(GoalKind.COUNTDOWN, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 4), "Examen")
     GoalWidgetsTheme {
-        GoalFormScreen(existing = StoredGoal(1, goal), today = LocalDate.of(2026, 1, 6), onSave = { _, _ -> }, onCancel = {})
+        GoalFormScreen(
+            existing = StoredGoal(1, goal, GoalStyle(GoalColor.BLUE, "🎓")),
+            today = LocalDate.of(2026, 1, 6),
+            onSave = { _, _, _ -> },
+            onCancel = {},
+        )
     }
 }

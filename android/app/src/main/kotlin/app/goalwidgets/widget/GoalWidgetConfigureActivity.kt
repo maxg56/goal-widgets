@@ -51,6 +51,7 @@ import app.goalwidgets.core.CountdownEngine
 import app.goalwidgets.ui.GoalLabels
 import app.goalwidgets.ui.GoalWidgetsTheme
 import app.goalwidgets.ui.StoredGoal
+import app.goalwidgets.ui.titleWithEmoji
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -73,7 +74,7 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
         }
         enableEdgeToEdge()
         val dao = (application as GoalWidgetsApplication).database.goalDao()
-        val goalsFlow = dao.observeAll().map { rows -> rows.map { StoredGoal(it.id, it.toGoal()) } }
+        val goalsFlow = dao.observeAll().map { rows -> rows.map(StoredGoal::from) }
         setContent {
             GoalWidgetsTheme {
                 val goals by goalsFlow.collectAsStateWithLifecycle(initialValue = null)
@@ -152,7 +153,7 @@ private fun PickerRow(stored: StoredGoal, selected: Boolean, today: LocalDate, o
         Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stored.goal.title,
+                    text = titleWithEmoji(stored.goal.title, stored.style.emoji),
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,

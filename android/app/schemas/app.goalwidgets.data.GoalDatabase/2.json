@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 2,
-    "identityHash": "ce89fbf22a66d1e0a46074ab29cdea68",
+    "identityHash": "b71d91928e0db53c6413e94852cad758",
     "entities": [
       {
         "tableName": "goals",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `kind` TEXT NOT NULL, `startEpochDay` INTEGER NOT NULL, `targetEpochDay` INTEGER, `createdAtMillis` INTEGER NOT NULL, `notificationsEnabled` INTEGER NOT NULL DEFAULT 0)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `kind` TEXT NOT NULL, `startEpochDay` INTEGER NOT NULL, `targetEpochDay` INTEGER, `createdAtMillis` INTEGER NOT NULL, `uid` TEXT NOT NULL DEFAULT '', `color` TEXT, `emoji` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -45,11 +45,23 @@
             "notNull": true
           },
           {
-            "fieldPath": "notificationsEnabled",
-            "columnName": "notificationsEnabled",
-            "affinity": "INTEGER",
+            "fieldPath": "uid",
+            "columnName": "uid",
+            "affinity": "TEXT",
             "notNull": true,
-            "defaultValue": "0"
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "color",
+            "columnName": "color",
+            "affinity": "TEXT",
+            "notNull": false
+          },
+          {
+            "fieldPath": "emoji",
+            "columnName": "emoji",
+            "affinity": "TEXT",
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -58,14 +70,24 @@
             "id"
           ]
         },
-        "indices": [],
+        "indices": [
+          {
+            "name": "index_goals_uid",
+            "unique": true,
+            "columnNames": [
+              "uid"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_goals_uid` ON `${TABLE_NAME}` (`uid`)"
+          }
+        ],
         "foreignKeys": []
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ce89fbf22a66d1e0a46074ab29cdea68')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'b71d91928e0db53c6413e94852cad758')"
     ]
   }
 }

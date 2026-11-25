@@ -79,6 +79,53 @@
     <string name="widget_config_open_app">Ouvrir l\'app</string>
     <string name="widget_config_current">Objectif actuel</string>
 
+    <!-- Couleur et emoji (t10). -->
+    <string name="goal_form_color">Couleur</string>
+    <string name="goal_form_emoji">Emoji</string>
+    <string name="goal_form_emoji_custom">Autre emoji</string>
+    <string name="goal_color_none">Aucune couleur</string>
+    <string name="goal_emoji_none">Aucun emoji</string>
+    <string name="goal_color_red">Rouge</string>
+    <string name="goal_color_orange">Orange</string>
+    <string name="goal_color_yellow">Jaune</string>
+    <string name="goal_color_green">Vert</string>
+    <string name="goal_color_teal">Turquoise</string>
+    <string name="goal_color_blue">Bleu</string>
+    <string name="goal_color_indigo">Indigo</string>
+    <string name="goal_color_purple">Violet</string>
+    <string name="goal_color_pink">Rose</string>
+    <string name="goal_color_gray">Gris</string>
+
+    <!-- Tri et export/import (t10). -->
+    <string name="action_more">Plus d\'options</string>
+    <string name="goal_sort_title">Trier par</string>
+    <string name="goal_sort_closest_date">Date la plus proche</string>
+    <string name="goal_sort_created">Date de création</string>
+    <string name="action_export">Exporter les objectifs</string>
+    <string name="action_import">Importer des objectifs</string>
+    <plurals name="export_done">
+        <item quantity="one">%d objectif exporté</item>
+        <item quantity="many">%d objectifs exportés</item>
+        <item quantity="other">%d objectifs exportés</item>
+    </plurals>
+    <string name="export_failed">L\'export a échoué : le fichier n\'a pas pu être écrit.</string>
+    <plurals name="import_added">
+        <item quantity="one">%d objectif importé</item>
+        <item quantity="many">%d objectifs importés</item>
+        <item quantity="other">%d objectifs importés</item>
+    </plurals>
+    <plurals name="import_skipped">
+        <item quantity="one">%d déjà présent</item>
+        <item quantity="many">%d déjà présents</item>
+        <item quantity="other">%d déjà présents</item>
+    </plurals>
+    <string name="import_empty">Ce fichier ne contient aucun objectif.</string>
+    <string name="import_error_not_export">Ce fichier n\'est pas un export Goal Widgets. Aucun objectif n\'a été modifié.</string>
+    <string name="import_error_unsupported_version">Ce fichier vient d\'une version plus récente de l\'app (format %1$d). Mettez l\'app à jour pour l\'importer.</string>
+    <string name="import_error_invalid_goal">Fichier refusé : l\'objectif n° %1$d est invalide (champ « %2$s »). Aucun objectif n\'a été importé.</string>
+    <string name="import_error_duplicate_id">Fichier refusé : un même objectif y figure deux fois. Aucun objectif n\'a été importé.</string>
+    <string name="import_error_unreadable">Impossible de lire ce fichier. Aucun objectif n\'a été importé.</string>
+
     <!-- Notifications de jalons (t08). Mêmes clés qu'iOS (t09) ; le titre d'une notification est
          celui de l'objectif. %1$s = durée construite avec breakdown_years / breakdown_months. -->
     <string name="goal_form_notifications">Notifications de jalons</string>

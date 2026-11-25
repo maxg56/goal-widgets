@@ -36,6 +36,16 @@ public struct LocalDate: Hashable, Comparable, Sendable, CustomStringConvertible
         LocalDate.utcCalendar.dateComponents([.day], from: anchor, to: other.anchor).day!
     }
 
+    /// Date décalée de `days` jours calendaires (négatif = dans le passé).
+    public func adding(days: Int) -> LocalDate {
+        let shifted = LocalDate.utcCalendar.date(byAdding: .day, value: days, to: anchor)!
+        let c = LocalDate.utcCalendar.dateComponents([.year, .month, .day], from: shifted)
+        return LocalDate(year: c.year!, month: c.month!, day: c.day!)
+    }
+
+    /// Représentation ISO `AAAA-MM-JJ` (format de stockage et du jeu de cas partagé).
+    public var iso: String { description }
+
     public var description: String {
         String(format: "%04d-%02d-%02d", year, month, day)
     }

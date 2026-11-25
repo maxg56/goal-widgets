@@ -1,3 +1,17 @@
 /* Langue par défaut : français. Clés identiques aux noms de res/values/strings.xml côté Android. */
+/* Pluriels (countdown_in_days, countdown_reached_days_ago) : voir Localizable.stringsdict. */
 "goal_list_title" = "Mes objectifs";
 "goal_list_empty" = "Aucun objectif pour l'instant";
+"goal_add" = "Nouvel objectif";
+
+"goal_form_new_countdown" = "Nouveau compte à rebours";
+"goal_form_title" = "Titre";
+"goal_form_target_date" = "Date cible";
+"goal_form_start_date" = "Date de départ";
+"goal_form_error_empty_title" = "Le titre est obligatoire";
+"goal_form_error_target_not_after_start" = "La date cible doit être après la date de départ";
+
+"action_save" = "Enregistrer";
+"action_cancel" = "Annuler";
+
+"countdown_today" = "Aujourd'hui";

@@ -25,10 +25,28 @@ final class EngineSharedCasesTests: XCTestCase {
             let startDate: String
             let targetDate: String?
         }
+        /// Chaque champ est vérifié seulement s'il est présent.
+        /// `progress` distingue « absent » (non vérifié) de `null` explicite (doit valoir nil).
         struct Expected: Decodable {
             let phase: String?
             let days: Int?
-            let progress: Double?
+            let progress: Double??
+
+            private enum CodingKeys: String, CodingKey { case phase, days, progress }
+
+            init(from decoder: Decoder) throws {
+                let c = try decoder.container(keyedBy: CodingKeys.self)
+                phase = try c.decodeIfPresent(String.self, forKey: .phase)
+                days = try c.decodeIfPresent(Int.self, forKey: .days)
+                if c.contains(.progress) {
+                    let value: Double? = try c.decodeNil(forKey: .progress)
+                        ? nil
+                        : try c.decode(Double.self, forKey: .progress)
+                    progress = .some(value)
+                } else {
+                    progress = .none
+                }
+            }
         }
         let name: String
         let goal: GoalJSON
@@ -55,7 +73,12 @@ final class EngineSharedCasesTests: XCTestCase {
             if let days = c.expected.days {
                 XCTAssertEqual(state.days, days, "\(c.name): days")
             }
-            if let progress = c.expected.progress {
+            switch c.expected.progress {
+            case .none:
+                break // champ absent : non vérifié
+            case .some(.none):
+                XCTAssertNil(state.progress, "\(c.name): progress devrait être absent (null)")
+            case .some(.some(let progress)):
                 let actual = try XCTUnwrap(state.progress, "\(c.name): progress attendu mais absent")
                 XCTAssertEqual(actual, progress, accuracy: 1e-6, "\(c.name): progress")
             }

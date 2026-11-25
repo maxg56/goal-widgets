@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Pluriels français (0 et 1 = « one »). Mêmes clés que les <plurals> Android. -->
+<plist version="1.0">
+<dict>
+	<key>countdown_in_days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>dans %ld jour</string>
+			<key>other</key>
+			<string>dans %ld jours</string>
+		</dict>
+	</dict>
+	<key>countdown_reached_days_ago</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@days@</string>
+		<key>days</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>Atteint il y a %ld jour</string>
+			<key>other</key>
+			<string>Atteint il y a %ld jours</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

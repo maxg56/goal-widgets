@@ -18,6 +18,12 @@ targets:
       - GoalWidgets
     dependencies:
       - package: GoalCore
+    # App Group partagé avec l'extension widget (t07) : stockage SwiftData commun.
+    entitlements:
+      path: GoalWidgets/GoalWidgets.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.app.goalwidgets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.goalwidgets

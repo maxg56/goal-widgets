@@ -1,0 +1,16 @@
+# Android / Gradle
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+captures/
+.externalNativeBuild/
+.cxx/
+# iOS / Xcode
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.build/
+# OS
+.DS_Store

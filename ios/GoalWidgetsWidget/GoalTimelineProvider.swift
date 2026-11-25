@@ -51,7 +51,7 @@ struct GoalTimelineProvider: AppIntentTimelineProvider {
     static let sample = WidgetDisplay.goal(
         id: UUID(),
         title: String(localized: "widget_sample_title", table: "Widget"),
-        state: DisplayState(phase: .upcoming, days: 12, progress: 0.6)
+        state: DisplayState(phase: .upcoming, days: 12, progress: 0.6, percent: 60)
     )
 }
 

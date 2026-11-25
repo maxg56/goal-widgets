@@ -37,12 +37,6 @@ enum GoalLabels {
         return String.localizedStringWithFormat(format, value)
     }
 
-    /// Ancienne signature (t03), gardée pour ne pas casser le code du widget (t07) à la fusion.
-    @available(*, deprecated, message: "Utiliser percent(_: Int) avec DisplayState.percent (arrondi entier, journal [t02])")
-    static func percent(_ progress: Double) -> String {
-        progress.formatted(.percent.precision(.fractionLength(0)))
-    }
-
     static func validationMessage(_ error: CountdownValidationError) -> String {
         switch error {
         case .emptyTitle:

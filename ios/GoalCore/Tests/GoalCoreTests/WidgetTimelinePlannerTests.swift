@@ -41,13 +41,13 @@ final class WidgetTimelinePlannerTests: XCTestCase {
 
         XCTAssertEqual(plan.entries, [
             WidgetDayEntry(day: date("2026-01-09"),
-                           display: .goal(id: goalID, title: "Examen", state: DisplayState(phase: .upcoming, days: 2, progress: 0.8))),
+                           display: .goal(id: goalID, title: "Examen", state: DisplayState(phase: .upcoming, days: 2, progress: 0.8, percent: 80))),
             WidgetDayEntry(day: date("2026-01-10"),
-                           display: .goal(id: goalID, title: "Examen", state: DisplayState(phase: .upcoming, days: 1, progress: 0.9))),
+                           display: .goal(id: goalID, title: "Examen", state: DisplayState(phase: .upcoming, days: 1, progress: 0.9, percent: 90))),
             WidgetDayEntry(day: date("2026-01-11"),
-                           display: .goal(id: goalID, title: "Examen", state: DisplayState(phase: .today, days: 0, progress: 1.0))),
+                           display: .goal(id: goalID, title: "Examen", state: DisplayState(phase: .today, days: 0, progress: 1.0, percent: 100))),
             WidgetDayEntry(day: date("2026-01-12"),
-                           display: .goal(id: goalID, title: "Examen", state: DisplayState(phase: .reached, days: 1, progress: 1.0))),
+                           display: .goal(id: goalID, title: "Examen", state: DisplayState(phase: .reached, days: 1, progress: 1.0, percent: 100))),
         ])
         XCTAssertEqual(plan.reloadOn, date("2026-01-13"))
     }

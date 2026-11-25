@@ -108,10 +108,11 @@ private struct MediumGoalView: View {
                 }
             }
             Spacer(minLength: 0)
-            if let progress = state.progress {
+            // `percent` (entier arrondi vers le bas, journal [t02]) : 100 % seulement le jour J.
+            if let percent = state.percent {
                 HStack {
-                    ProgressView(value: progress)
-                    Text(GoalLabels.percent(progress))
+                    ProgressView(value: Double(percent), total: 100)
+                    Text(GoalLabels.percent(percent))
                         .font(.caption)
                         .monospacedDigit()
                 }
@@ -126,8 +127,8 @@ private struct CircularGoalView: View {
     let state: DisplayState
 
     var body: some View {
-        if let progress = state.progress {
-            Gauge(value: progress) {
+        if let percent = state.percent {
+            Gauge(value: Double(percent), in: 0...100) {
                 EmptyView()
             } currentValueLabel: {
                 Text("\(state.days)")

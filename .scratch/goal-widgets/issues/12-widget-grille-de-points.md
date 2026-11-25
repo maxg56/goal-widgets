@@ -6,6 +6,8 @@
 
 **Status:** ready-for-agent
 
+**Status iOS :** done (non vérifié) — code écrit sans Xcode (machine Linux) : ni compilé ni exécuté.
+
 ## Règles de calcul (décidées, à appliquer telles quelles des deux côtés)
 `DotGrid.compute(goal, today, period) -> DotGrid(unit, cells: [Cell(start, end, state)])`
 - `period` : `whole` | `month` | `week`.
@@ -24,5 +26,10 @@
 
 - [ ] Logique pure + cas partagés (au moins : compte à rebours court en `day`, long en `week`, très long en `month`, « depuis » en `whole`, `month` et `week` avec cellules `outside`, départ futur, fin de mois, année bissextile)
 - [ ] Widget Android : nouveau style « Grille » (Glance), choix objectif + période dans l'écran de configuration, rafraîchi à minuit
-- [ ] Widget iOS : nouveau widget « Grille » (paramètres AppIntent objectif + période), timeline quotidienne
+- [x] Widget iOS : nouveau widget « Grille » (paramètres AppIntent objectif + période), timeline quotidienne (écrit sans Xcode, non compilé, rendu non vérifié)
 - [ ] Couleur de l'objectif utilisée pour les points ; mode clair/sombre
+
+## Avancement iOS (branche `t12-ios`, non vérifié)
+- [x] `GoalCore.DotGrid.compute(goal, today:, period:)` (règles ci-dessus, `outside` évalué en premier) + `DotGridTests` (21 tests, vecteurs calculés à la main, vérifiés par une copie Python jetable)
+- [x] Harnais `DotGridSharedCasesTests` pour `shared-cases/dotgrid.json` (champs vérifiés si présents ; test ignoré si le fichier manque) — les cas partagés eux-mêmes sont écrits côté Android
+- [x] Couleur de l'objectif pour les points (`GoalAppearance`, teintes clair/sombre) ; rendu non vérifié

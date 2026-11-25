@@ -6,6 +6,8 @@ import WidgetKit
 struct GoalWidgetsBundle: WidgetBundle {
     var body: some Widget {
         GoalWidget()
+        // Grille de points (t12).
+        GoalGridWidget()
     }
 }
 

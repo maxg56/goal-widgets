@@ -63,19 +63,22 @@ enum GoalTransfer {
     // MARK: Export
 
     static func exportedGoals(_ records: [GoalRecord]) -> [ExportedGoal] {
-        records.compactMap { record in
-            guard let goal = record.goal else { return nil } // enregistrement illisible : non exporté
-            let style = record.style
-            return ExportedGoal(
-                id: record.exportID,
-                title: record.title,
-                goal: goal,
-                color: style.color,
-                emoji: style.emoji,
-                notificationsEnabled: record.notificationsEnabled,
-                createdAt: record.createdAt
-            )
-        }
+        records.compactMap(exportedGoal)
+    }
+
+    /// Un enregistrement au format d'export ; nil s'il est illisible (non exporté, non partageable).
+    static func exportedGoal(_ record: GoalRecord) -> ExportedGoal? {
+        guard let goal = record.goal else { return nil }
+        let style = record.style
+        return ExportedGoal(
+            id: record.exportID,
+            title: record.title,
+            goal: goal,
+            color: style.color,
+            emoji: style.emoji,
+            notificationsEnabled: record.notificationsEnabled,
+            createdAt: record.createdAt
+        )
     }
 
     static func suggestedFileName() -> String {
@@ -176,6 +179,23 @@ struct GoalExportFile: Transferable, Sendable {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             let url = directory.appendingPathComponent(GoalTransfer.suggestedFileName())
             try GoalExport.encode(file.goals, exportedAt: Date()).write(to: url, options: .atomic)
+            return SentTransferredFile(url)
+        }
+    }
+}
+
+/// Partage d'un seul objectif (t13) : fichier `<titre>.goalwidgets.json` (`GoalShare`), type JSON
+/// pour passer par toutes les messageries ; le destinataire l'ouvre avec Goal Widgets (`onOpenURL`).
+struct SharedGoalFile: Transferable, Sendable {
+    let goal: ExportedGoal
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .json) { file in
+            let directory = FileManager.default.temporaryDirectory
+                .appendingPathComponent(UUID().uuidString, isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            let url = directory.appendingPathComponent(GoalShare.fileName(title: file.goal.title))
+            try GoalShare.encode(file.goal, exportedAt: Date()).write(to: url, options: .atomic)
             return SentTransferredFile(url)
         }
     }

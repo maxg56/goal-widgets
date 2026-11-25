@@ -78,6 +78,14 @@
     <string name="widget_config_empty">Aucun objectif pour l\'instant. Créez-en un dans l\'app.</string>
     <string name="widget_config_open_app">Ouvrir l\'app</string>
     <string name="widget_config_current">Objectif actuel</string>
+    <!-- Widget « Grille » (t12) -->
+    <string name="widget_grid_name">Grille</string>
+    <string name="widget_grid_description">Un point par jour : écoulés, aujourd\'hui, restants</string>
+    <string name="widget_grid_description_a11y">Grille de points : écoulés, aujourd\'hui, restants</string>
+    <string name="widget_config_period">Période affichée</string>
+    <string name="widget_period_whole">Objectif entier</string>
+    <string name="widget_period_month">Mois en cours</string>
+    <string name="widget_period_week">Semaine en cours</string>
 
     <!-- Couleur et emoji (t10). -->
     <string name="goal_form_color">Couleur</string>

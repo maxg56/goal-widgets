@@ -108,7 +108,7 @@ private fun WidgetBody(content: WidgetContent, style: GoalStyle, appWidgetId: In
 }
 
 @Composable
-private fun Background(modifier: GlanceModifier, content: @Composable () -> Unit) {
+internal fun Background(modifier: GlanceModifier, content: @Composable () -> Unit) {
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -165,7 +165,7 @@ private fun ShowingGoal(content: WidgetContent.Showing, style: GoalStyle) {
 }
 
 @Composable
-private fun Message(text: String) {
+internal fun Message(text: String) {
     Text(
         text = text,
         style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp),
@@ -178,7 +178,7 @@ private fun Message(text: String) {
  * `CLEAR_TOP | SINGLE_TOP` : si l'app est déjà ouverte, `MainActivity` est réutilisée
  * (`onNewIntent`) → un formulaire en cours n'est pas perdu.
  */
-private fun openGoal(context: Context, goalId: Long): Action = actionStartActivity(
+internal fun openGoal(context: Context, goalId: Long): Action = actionStartActivity(
     Intent(context, MainActivity::class.java)
         .setData(Uri.parse("goalwidgets://goal/$goalId"))
         .putExtra(MainActivity.EXTRA_GOAL_ID, goalId)
@@ -186,7 +186,7 @@ private fun openGoal(context: Context, goalId: Long): Action = actionStartActivi
 )
 
 /** Ouvre l'écran de choix de l'objectif pour ce widget. */
-private fun chooseGoal(context: Context, appWidgetId: Int): Action = actionStartActivity(
+internal fun chooseGoal(context: Context, appWidgetId: Int): Action = actionStartActivity(
     Intent(context, GoalWidgetConfigureActivity::class.java)
         .setData(Uri.parse("goalwidgets://widget/$appWidgetId"))
         .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)

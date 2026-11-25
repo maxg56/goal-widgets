@@ -25,6 +25,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -39,6 +42,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.datastore.preferences.core.Preferences
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.state.PreferencesGlanceStateDefinition
@@ -48,6 +52,7 @@ import app.goalwidgets.GoalWidgetsApplication
 import app.goalwidgets.MainActivity
 import app.goalwidgets.R
 import app.goalwidgets.core.CountdownEngine
+import app.goalwidgets.core.DotPeriod
 import app.goalwidgets.ui.GoalLabels
 import app.goalwidgets.ui.GoalWidgetsTheme
 import app.goalwidgets.ui.StoredGoal
@@ -75,18 +80,32 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
         enableEdgeToEdge()
         val dao = (application as GoalWidgetsApplication).database.goalDao()
         val goalsFlow = dao.observeAll().map { rows -> rows.map(StoredGoal::from) }
+        // Widget « Grille » : la période se choisit ici aussi (au-dessus de la liste).
+        val isGrid = GoalWidgets.isDotGrid(this, appWidgetId)
         setContent {
             GoalWidgetsTheme {
                 val goals by goalsFlow.collectAsStateWithLifecycle(initialValue = null)
                 var current by remember { mutableStateOf<Long?>(null) }
-                LaunchedEffect(appWidgetId) { current = currentGoalId(appWidgetId) }
+                var period by remember { mutableStateOf(DotPeriod.WHOLE) }
+                LaunchedEffect(appWidgetId) {
+                    val state = currentState(appWidgetId)
+                    current = state?.get(GoalWidgets.GOAL_ID)
+                    period = DotPeriod.fromWire(state?.get(GoalWidgets.PERIOD)) ?: DotPeriod.WHOLE
+                }
                 GoalPickerScreen(
                     goals = goals,
                     selectedId = current,
                     today = LocalDate.now(),
+                    period = if (isGrid) period else null,
+                    onPeriodChange = { period = it },
                     onPick = { goalId ->
                         lifecycleScope.launch {
-                            GoalWidgets.assign(this@GoalWidgetConfigureActivity, appWidgetId, goalId)
+                            GoalWidgets.assign(
+                                this@GoalWidgetConfigureActivity,
+                                appWidgetId,
+                                goalId,
+                                period.takeIf { isGrid },
+                            )
                             MidnightRefresh.schedule(this@GoalWidgetConfigureActivity)
                             setResult(RESULT_OK, result)
                             finish()
@@ -101,9 +120,9 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
         }
     }
 
-    private suspend fun currentGoalId(appWidgetId: Int): Long? = runCatching {
+    private suspend fun currentState(appWidgetId: Int): Preferences? = runCatching {
         val glanceId = GlanceAppWidgetManager(this).getGlanceIdBy(appWidgetId)
-        getAppWidgetState(this, PreferencesGlanceStateDefinition, glanceId)[GoalWidgets.GOAL_ID]
+        getAppWidgetState(this, PreferencesGlanceStateDefinition, glanceId)
     }.getOrNull()
 }
 
@@ -113,6 +132,9 @@ private fun GoalPickerScreen(
     goals: List<StoredGoal>?,
     selectedId: Long?,
     today: LocalDate,
+    /** Période de la « Grille » ; `null` pour le widget « Objectif » (pas de choix de période). */
+    period: DotPeriod?,
+    onPeriodChange: (DotPeriod) -> Unit,
     onPick: (Long) -> Unit,
     onOpenApp: () -> Unit,
 ) {
@@ -138,6 +160,9 @@ private fun GoalPickerScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (period != null) {
+                    item(key = "period") { PeriodChoice(period, onPeriodChange) }
+                }
                 items(goals, key = { it.id }) { stored ->
                     PickerRow(stored, selected = stored.id == selectedId, today = today) { onPick(stored.id) }
                 }
@@ -170,5 +195,36 @@ private fun PickerRow(stored: StoredGoal, selected: Boolean, today: LocalDate, o
                 }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PeriodChoice(period: DotPeriod, onChange: (DotPeriod) -> Unit) {
+    val options = listOf(
+        DotPeriod.WHOLE to R.string.widget_period_whole,
+        DotPeriod.MONTH to R.string.widget_period_month,
+        DotPeriod.WEEK to R.string.widget_period_week,
+    )
+    Column {
+        Text(
+            text = stringResource(R.string.widget_config_period),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(bottom = 8.dp),
+        )
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            options.forEachIndexed { index, (value, label) ->
+                SegmentedButton(
+                    selected = value == period,
+                    onClick = { onChange(value) },
+                    shape = SegmentedButtonDefaults.itemShape(index, options.size),
+                ) { Text(stringResource(label), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            }
+        }
+        Text(
+            text = stringResource(R.string.widget_config_title),
+            style = MaterialTheme.typography.titleSmall,
+            modifier = Modifier.padding(top = 16.dp),
+        )
     }
 }

@@ -22,7 +22,7 @@
   - `remaining` : la cellule commence après `today`.
 - Cas partagés : `shared-cases/dotgrid.json` (même enveloppe que `engine.json` : `{version, cases:[{name, goal, today, period, expected:{unit, count, states?, first?, last?}}]}` — `states` = chaîne compacte d'une lettre par cellule : `e`/`t`/`r`/`o` ; `first`/`last` = `{start, end}` ISO).
 
-- [ ] Logique pure + cas partagés (au moins : compte à rebours court en `day`, long en `week`, très long en `month`, « depuis » en `whole`, `month` et `week` avec cellules `outside`, départ futur, fin de mois, année bissextile)
-- [ ] Widget Android : nouveau style « Grille » (Glance), choix objectif + période dans l'écran de configuration, rafraîchi à minuit
+- [ ] Logique pure + cas partagés — Android fait (`DotGrid.kt`, `shared-cases/dotgrid.json` : 26 cas) (au moins : compte à rebours court en `day`, long en `week`, très long en `month`, « depuis » en `whole`, `month` et `week` avec cellules `outside`, départ futur, fin de mois, année bissextile)
+- [x] Widget Android : nouveau style « Grille » (Glance), choix objectif + période dans l'écran de configuration, rafraîchi à minuit
 - [ ] Widget iOS : nouveau widget « Grille » (paramètres AppIntent objectif + période), timeline quotidienne
-- [ ] Couleur de l'objectif utilisée pour les points ; mode clair/sombre
+- [ ] Couleur de l'objectif utilisée pour les points ; mode clair/sombre — Android fait (masques teintés `ColorProvider` jour/nuit ; rendu non vérifié sur appareil)

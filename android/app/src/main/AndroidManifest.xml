@@ -33,6 +33,19 @@
                 android:resource="@xml/goal_widget_info" />
         </receiver>
 
+        <!-- Widget « Grille » (ticket 12) : un point par jour / semaine / mois. -->
+        <receiver
+            android:name=".widget.DotGridWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_grid_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/dot_grid_widget_info" />
+        </receiver>
+
         <activity
             android:name=".widget.GoalWidgetConfigureActivity"
             android:excludeFromRecents="true"

@@ -1,0 +1,522 @@
+{
+  "version": 1,
+  "comment": "Grille de points (ticket 12). DotGrid.compute(goal, today, period). Seuls les champs présents dans expected sont vérifiés : unit (day|week|month), count (nombre de cellules), states (une lettre par cellule : e écoulée, t aujourd'hui, r restante, o hors objectif), first/last = {start, end} de la première/dernière cellule.",
+  "cases": [
+    {
+      "name": "compte à rebours court, objectif entier : un point par jour",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-11-20",
+        "targetDate": "2026-11-30"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "day",
+        "count": 11,
+        "states": "eeeeetrrrrr",
+        "first": {
+          "start": "2026-11-20",
+          "end": "2026-11-20"
+        },
+        "last": {
+          "start": "2026-11-30",
+          "end": "2026-11-30"
+        }
+      }
+    },
+    {
+      "name": "366 jours (année bissextile) : encore un point par jour, le 29 février est le 60e",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2024-01-01",
+        "targetDate": "2024-12-31"
+      },
+      "today": "2024-02-29",
+      "period": "whole",
+      "expected": {
+        "unit": "day",
+        "count": 366,
+        "states": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeetrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+        "first": {
+          "start": "2024-01-01",
+          "end": "2024-01-01"
+        },
+        "last": {
+          "start": "2024-12-31",
+          "end": "2024-12-31"
+        }
+      }
+    },
+    {
+      "name": "367 jours : un point par semaine depuis le départ, la dernière cellule est plus courte",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2024-01-01",
+        "targetDate": "2025-01-01"
+      },
+      "today": "2024-01-10",
+      "period": "whole",
+      "expected": {
+        "unit": "week",
+        "count": 53,
+        "states": "etrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+        "first": {
+          "start": "2024-01-01",
+          "end": "2024-01-07"
+        },
+        "last": {
+          "start": "2024-12-30",
+          "end": "2025-01-01"
+        }
+      }
+    },
+    {
+      "name": "366 semaines pile (2562 jours) : encore en semaines",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2020-01-01",
+        "targetDate": "2027-01-05"
+      },
+      "today": "2019-12-31",
+      "period": "whole",
+      "expected": {
+        "unit": "week",
+        "count": 366,
+        "states": "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+        "first": {
+          "start": "2020-01-01",
+          "end": "2020-01-07"
+        },
+        "last": {
+          "start": "2026-12-30",
+          "end": "2027-01-05"
+        }
+      }
+    },
+    {
+      "name": "2563 jours : un point par mois calendaire",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2020-01-01",
+        "targetDate": "2027-01-06"
+      },
+      "today": "2027-01-06",
+      "period": "whole",
+      "expected": {
+        "unit": "month",
+        "count": 85,
+        "states": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeet",
+        "first": {
+          "start": "2020-01-01",
+          "end": "2020-01-31"
+        },
+        "last": {
+          "start": "2027-01-01",
+          "end": "2027-01-06"
+        }
+      }
+    },
+    {
+      "name": "très long compte à rebours : mois calendaires, première et dernière cellule tronquées",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2020-01-15",
+        "targetDate": "2030-06-10"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "month",
+        "count": 126,
+        "states": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeetrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr",
+        "first": {
+          "start": "2020-01-15",
+          "end": "2020-01-31"
+        },
+        "last": {
+          "start": "2030-06-01",
+          "end": "2030-06-10"
+        }
+      }
+    },
+    {
+      "name": "unité semaine : aujourd'hui dans la dernière cellule courte",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2024-01-01",
+        "targetDate": "2025-01-01"
+      },
+      "today": "2025-01-01",
+      "period": "whole",
+      "expected": {
+        "unit": "week",
+        "count": 53,
+        "states": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeet"
+      }
+    },
+    {
+      "name": "« depuis », objectif entier : du départ à aujourd'hui",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-11-20"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "day",
+        "count": 6,
+        "states": "eeeeet",
+        "first": {
+          "start": "2026-11-20",
+          "end": "2026-11-20"
+        },
+        "last": {
+          "start": "2026-11-25",
+          "end": "2026-11-25"
+        }
+      }
+    },
+    {
+      "name": "« depuis » à départ futur, objectif entier : une seule cellule aujourd'hui",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-12-01"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "day",
+        "count": 1,
+        "states": "t",
+        "first": {
+          "start": "2026-11-25",
+          "end": "2026-11-25"
+        },
+        "last": {
+          "start": "2026-11-25",
+          "end": "2026-11-25"
+        }
+      }
+    },
+    {
+      "name": "« depuis » le jour même, objectif entier : une cellule aujourd'hui",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-11-25"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "day",
+        "count": 1,
+        "states": "t"
+      }
+    },
+    {
+      "name": "« depuis » très ancien : un point par mois, la dernière cellule finit aujourd'hui",
+      "goal": {
+        "kind": "since",
+        "startDate": "2010-03-15"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "month",
+        "count": 201,
+        "states": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeet",
+        "first": {
+          "start": "2010-03-15",
+          "end": "2010-03-31"
+        },
+        "last": {
+          "start": "2026-11-01",
+          "end": "2026-11-25"
+        }
+      }
+    },
+    {
+      "name": "« depuis », mois en cours : jours avant le départ hors objectif",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-11-10"
+      },
+      "today": "2026-11-25",
+      "period": "month",
+      "expected": {
+        "unit": "day",
+        "count": 30,
+        "states": "oooooooooeeeeeeeeeeeeeeetrrrrr",
+        "first": {
+          "start": "2026-11-01",
+          "end": "2026-11-01"
+        },
+        "last": {
+          "start": "2026-11-30",
+          "end": "2026-11-30"
+        }
+      }
+    },
+    {
+      "name": "« depuis » à départ futur, semaine en cours : aujourd'hui est hors objectif",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-11-27"
+      },
+      "today": "2026-11-25",
+      "period": "week",
+      "expected": {
+        "unit": "day",
+        "count": 7,
+        "states": "oooorrr",
+        "first": {
+          "start": "2026-11-23",
+          "end": "2026-11-23"
+        },
+        "last": {
+          "start": "2026-11-29",
+          "end": "2026-11-29"
+        }
+      }
+    },
+    {
+      "name": "compte à rebours, semaine ISO en cours (lundi → dimanche) : avant le départ et après la cible hors objectif",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-11-24",
+        "targetDate": "2026-11-27"
+      },
+      "today": "2026-11-25",
+      "period": "week",
+      "expected": {
+        "unit": "day",
+        "count": 7,
+        "states": "oetrroo",
+        "first": {
+          "start": "2026-11-23",
+          "end": "2026-11-23"
+        },
+        "last": {
+          "start": "2026-11-29",
+          "end": "2026-11-29"
+        }
+      }
+    },
+    {
+      "name": "semaine à cheval sur deux années",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2027-12-31"
+      },
+      "today": "2026-12-31",
+      "period": "week",
+      "expected": {
+        "unit": "day",
+        "count": 7,
+        "states": "eeetrrr",
+        "first": {
+          "start": "2026-12-28",
+          "end": "2026-12-28"
+        },
+        "last": {
+          "start": "2027-01-03",
+          "end": "2027-01-03"
+        }
+      }
+    },
+    {
+      "name": "semaine en cours un dimanche : aujourd'hui est le dernier point",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2027-12-31"
+      },
+      "today": "2026-11-29",
+      "period": "week",
+      "expected": {
+        "unit": "day",
+        "count": 7,
+        "states": "eeeeeet",
+        "first": {
+          "start": "2026-11-23",
+          "end": "2026-11-23"
+        }
+      }
+    },
+    {
+      "name": "semaine en cours un lundi : aujourd'hui est le premier point",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2027-12-31"
+      },
+      "today": "2026-11-23",
+      "period": "week",
+      "expected": {
+        "unit": "day",
+        "count": 7,
+        "states": "trrrrrr"
+      }
+    },
+    {
+      "name": "mois en cours, fin de mois (31 janvier)",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-12-31"
+      },
+      "today": "2026-01-31",
+      "period": "month",
+      "expected": {
+        "unit": "day",
+        "count": 31,
+        "states": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeet",
+        "first": {
+          "start": "2026-01-01",
+          "end": "2026-01-01"
+        },
+        "last": {
+          "start": "2026-01-31",
+          "end": "2026-01-31"
+        }
+      }
+    },
+    {
+      "name": "mois en cours, février non bissextile",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-12-31"
+      },
+      "today": "2026-02-28",
+      "period": "month",
+      "expected": {
+        "unit": "day",
+        "count": 28,
+        "states": "eeeeeeeeeeeeeeeeeeeeeeeeeeet",
+        "last": {
+          "start": "2026-02-28",
+          "end": "2026-02-28"
+        }
+      }
+    },
+    {
+      "name": "mois en cours, février bissextile (29 février)",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2028-01-01",
+        "targetDate": "2028-12-31"
+      },
+      "today": "2028-02-29",
+      "period": "month",
+      "expected": {
+        "unit": "day",
+        "count": 29,
+        "states": "eeeeeeeeeeeeeeeeeeeeeeeeeeeet",
+        "last": {
+          "start": "2028-02-29",
+          "end": "2028-02-29"
+        }
+      }
+    },
+    {
+      "name": "mois en cours, cible dépassée : la cellule du jour est hors objectif",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-11-01",
+        "targetDate": "2026-11-10"
+      },
+      "today": "2026-11-25",
+      "period": "month",
+      "expected": {
+        "unit": "day",
+        "count": 30,
+        "states": "eeeeeeeeeeoooooooooooooooooooo"
+      }
+    },
+    {
+      "name": "mois en cours, cible dans le mois : jours après la cible hors objectif",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-10-01",
+        "targetDate": "2026-11-27"
+      },
+      "today": "2026-11-25",
+      "period": "month",
+      "expected": {
+        "unit": "day",
+        "count": 30,
+        "states": "eeeeeeeeeeeeeeeeeeeeeeeetrrooo"
+      }
+    },
+    {
+      "name": "compte à rebours pas encore commencé, objectif entier : tout reste à venir",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-12-01",
+        "targetDate": "2026-12-05"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "day",
+        "count": 5,
+        "states": "rrrrr"
+      }
+    },
+    {
+      "name": "compte à rebours terminé, objectif entier : tout est écoulé",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-11-01",
+        "targetDate": "2026-11-05"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "day",
+        "count": 5,
+        "states": "eeeee"
+      }
+    },
+    {
+      "name": "départ = cible : une seule cellule",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-11-25",
+        "targetDate": "2026-11-25"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "day",
+        "count": 1,
+        "states": "t",
+        "first": {
+          "start": "2026-11-25",
+          "end": "2026-11-25"
+        }
+      }
+    },
+    {
+      "name": "cible avant le départ (fichier importé) : une seule cellule au départ",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-11-30",
+        "targetDate": "2026-11-20"
+      },
+      "today": "2026-11-25",
+      "period": "whole",
+      "expected": {
+        "unit": "day",
+        "count": 1,
+        "states": "r",
+        "first": {
+          "start": "2026-11-30",
+          "end": "2026-11-30"
+        }
+      }
+    }
+  ]
+}

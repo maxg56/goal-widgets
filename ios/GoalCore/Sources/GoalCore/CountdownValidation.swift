@@ -21,3 +21,25 @@ public enum CountdownValidation {
         return nil
     }
 }
+
+/// Erreur de saisie du formulaire d'un objectif « depuis ».
+public enum SinceValidationError: Equatable, Sendable {
+    /// Titre vide (ou uniquement des espaces).
+    case emptyTitle
+    /// La date de départ ne peut pas être dans le futur (aujourd'hui est accepté).
+    case startInFuture
+}
+
+/// Règles du formulaire d'un objectif « depuis » (mêmes règles que l'app Android, ticket 04).
+public enum SinceValidation {
+    /// Renvoie la première erreur rencontrée, ou nil si la saisie est valide.
+    public static func check(title: String, startDate: LocalDate, today: LocalDate) -> SinceValidationError? {
+        if title.allSatisfy(\.isWhitespace) {
+            return .emptyTitle
+        }
+        if startDate > today {
+            return .startInFuture
+        }
+        return nil
+    }
+}

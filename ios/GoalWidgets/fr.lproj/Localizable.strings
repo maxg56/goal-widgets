@@ -1,10 +1,16 @@
 /* Langue par défaut : français. Clés identiques aux noms de res/values/strings.xml côté Android. */
-/* Pluriels (countdown_in_days, countdown_reached_days_ago) : voir Localizable.stringsdict. */
+/* Pluriels (countdown_in_days, countdown_reached_days_ago, since_days, breakdown_*) : voir Localizable.stringsdict. */
 "goal_list_title" = "Mes objectifs";
 "goal_list_empty" = "Aucun objectif pour l'instant";
 "goal_add" = "Nouvel objectif";
 
-"goal_form_new_countdown" = "Nouveau compte à rebours";
+"goal_form_new" = "Nouvel objectif";
+"goal_form_edit" = "Modifier l'objectif";
+"goal_form_kind" = "Type";
+"goal_kind_countdown" = "Compte à rebours";
+"goal_kind_since" = "Depuis";
+"goal_form_since_date" = "Depuis le";
+"goal_form_error_start_in_future" = "La date ne peut pas être dans le futur";
 "goal_form_title" = "Titre";
 "goal_form_target_date" = "Date cible";
 "goal_form_start_date" = "Date de départ";
@@ -13,5 +19,13 @@
 
 "action_save" = "Enregistrer";
 "action_cancel" = "Annuler";
+"action_delete" = "Supprimer";
+
+"goal_action_continue_as_since" = "Continuer en compteur depuis";
+"goal_delete_confirm_title" = "Supprimer cet objectif ?";
+"goal_delete_confirm_message" = "Cette action est définitive.";
 
 "countdown_today" = "Aujourd'hui";
+"since_today" = "Depuis aujourd'hui";
+/* Pourcentage affiché (espace insécable avant %, comme Android). */
+"goal_progress_percent" = "%ld %%";

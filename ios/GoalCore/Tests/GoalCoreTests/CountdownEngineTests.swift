@@ -88,4 +88,39 @@ final class CountdownEngineTests: XCTestCase {
             day = day.adding(days: 1)
         }
     }
+
+    // MARK: - Pourcentage affiché (entier, arrondi vers le bas — journal [t02])
+
+    func testPercent_isRoundedDown() {
+        // 2 jours sur 3 → 66 %.
+        XCTAssertEqual(CountdownEngine.compute(countdown("2026-01-01", "2026-01-04"), today: date("2026-01-03")).percent, 66)
+    }
+
+    func testPercent_hasNoFloatingPointError() {
+        // 29 jours sur 100 → 29 % (et non 28 via 0.29 × 100).
+        XCTAssertEqual(CountdownEngine.compute(countdown("2026-01-01", "2026-04-11"), today: date("2026-01-30")).percent, 29)
+    }
+
+    func testPercent_neverReaches100BeforeTargetDay() {
+        // 999 jours sur 1000 → 99 %.
+        XCTAssertEqual(CountdownEngine.compute(countdown("2026-01-01", "2028-09-27"), today: date("2028-09-26")).percent, 99)
+    }
+
+    func testPercent_isClampedBetween0And100() {
+        let goal = countdown("2026-01-10", "2026-01-20")
+        XCTAssertEqual(CountdownEngine.compute(goal, today: date("2026-01-05")).percent, 0)
+        XCTAssertEqual(CountdownEngine.compute(goal, today: date("2026-01-20")).percent, 100)
+        XCTAssertEqual(CountdownEngine.compute(goal, today: date("2026-02-01")).percent, 100)
+    }
+
+    func testPercent_whenStartEqualsTarget_is0BeforeAnd100FromTarget() {
+        let goal = countdown("2026-01-11", "2026-01-11")
+        XCTAssertEqual(CountdownEngine.compute(goal, today: date("2026-01-05")).percent, 0)
+        XCTAssertEqual(CountdownEngine.compute(goal, today: date("2026-01-11")).percent, 100)
+    }
+
+    func testPercent_isNilForSince() {
+        let goal = Goal(kind: .since, startDate: date("2026-01-01"))
+        XCTAssertNil(CountdownEngine.compute(goal, today: date("2026-01-05")).percent)
+    }
 }

@@ -13,6 +13,7 @@ struct GoalListView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var today = LocalDate.today()
     @State private var isCreating = false
+    @State private var isShowingNotificationSettings = false
     @State private var editing: GoalRecord?
     @State private var pendingDeletion: GoalRecord?
 
@@ -31,6 +32,13 @@ struct GoalListView: View {
             }
             .navigationTitle("goal_list_title")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        isShowingNotificationSettings = true
+                    } label: {
+                        Label("notifications_settings_title", systemImage: "bell")
+                    }
+                }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         isCreating = true
@@ -38,6 +46,9 @@ struct GoalListView: View {
                         Label("goal_add", systemImage: "plus")
                     }
                 }
+            }
+            .sheet(isPresented: $isShowingNotificationSettings) {
+                NotificationSettingsView()
             }
             .sheet(isPresented: $isCreating) {
                 GoalFormView(mode: .create)

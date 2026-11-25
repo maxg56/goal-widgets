@@ -22,6 +22,9 @@ struct GoalFormView: View {
     @State private var startDate: Date
     @State private var targetDate: Date
     @State private var isConfirmingDelete = false
+    /// Notifications de jalons de cet objectif (t09) ; l'autorisation iOS est demandée à l'activation.
+    @State private var notificationsEnabled: Bool
+    @State private var notificationsDenied = false
 
     init(mode: Mode) {
         self.mode = mode
@@ -33,12 +36,14 @@ struct GoalFormView: View {
             _kind = State(initialValue: .countdown)
             _startDate = State(initialValue: now)
             _targetDate = State(initialValue: inThirtyDays)
+            _notificationsEnabled = State(initialValue: false)
         case .edit(let record):
             let goal = record.goal
             _title = State(initialValue: record.title)
             _kind = State(initialValue: goal?.kind ?? .countdown)
             _startDate = State(initialValue: goal.map { Self.date(from: $0.startDate) } ?? now)
             _targetDate = State(initialValue: goal?.targetDate.map { Self.date(from: $0) } ?? inThirtyDays)
+            _notificationsEnabled = State(initialValue: record.notificationsEnabled)
         }
     }
 
@@ -107,6 +112,16 @@ struct GoalFormView: View {
                     }
                 }
 
+                Section {
+                    Toggle("goal_form_notifications", isOn: $notificationsEnabled)
+                } footer: {
+                    Text("goal_form_notifications_footer")
+                }
+
+                if notificationsEnabled && notificationsDenied {
+                    NotificationsDeniedSection()
+                }
+
                 if canContinueAsSince {
                     Section {
                         Button("goal_action_continue_as_since") {
@@ -132,6 +147,19 @@ struct GoalFormView: View {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("action_save") { save() }
                         .disabled(!isValid)
+                }
+            }
+            .onChange(of: notificationsEnabled) { _, enabled in
+                // Spec 44 : l'autorisation est demandée au moment où l'utilisateur active une notification.
+                guard enabled else { return }
+                Task {
+                    let granted = await NotificationPermission.requestIfNeeded()
+                    notificationsDenied = !granted
+                }
+            }
+            .task {
+                if notificationsEnabled {
+                    notificationsDenied = await NotificationPermission.isDenied()
                 }
             }
             .confirmationDialog("goal_delete_confirm_title", isPresented: $isConfirmingDelete, titleVisibility: .visible) {
@@ -167,11 +195,14 @@ struct GoalFormView: View {
                 title: cleanTitle,
                 kind: goal.kind,
                 startDate: goal.startDate,
-                targetDate: goal.targetDate
+                targetDate: goal.targetDate,
+                notificationsEnabled: notificationsEnabled
             ))
         case .edit(let record):
             record.update(title: cleanTitle, goal: goal)
+            record.notificationsEnabled = notificationsEnabled
         }
+        // La sauvegarde déclenche la reprogrammation des notifications (GoalWidgetsApp, ModelContext.didSave).
         try? modelContext.save()
         dismiss()
     }

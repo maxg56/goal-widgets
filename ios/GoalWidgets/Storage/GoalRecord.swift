@@ -15,6 +15,10 @@ final class GoalRecord {
     var startDateISO: String
     var targetDateISO: String?
     var createdAt: Date
+    /// Notifications de jalons (t09). Valeur par défaut à la déclaration : migration légère
+    /// automatique de SwiftData pour les objectifs existants (désactivées, cf. spec 44 : l'autorisation
+    /// est demandée quand l'utilisateur active une notification).
+    var notificationsEnabled: Bool = false
 
     init(
         id: UUID = UUID(),
@@ -22,7 +26,8 @@ final class GoalRecord {
         kind: GoalKind,
         startDate: LocalDate,
         targetDate: LocalDate?,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        notificationsEnabled: Bool = false
     ) {
         self.id = id
         self.title = title
@@ -30,6 +35,7 @@ final class GoalRecord {
         self.startDateISO = startDate.iso
         self.targetDateISO = targetDate?.iso
         self.createdAt = createdAt
+        self.notificationsEnabled = notificationsEnabled
     }
 }
 

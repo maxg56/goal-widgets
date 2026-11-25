@@ -1,0 +1,591 @@
+{
+  "version": 1,
+  "description": "Planificateur de jalons : objectif + date du jour + horizon -> notifications. Règles dans ENV.md, Journal [t09]. `expected.notifications` est la liste complète et ordonnée (par date). `goal.notificationsEnabled` absent = true.",
+  "cases": [
+    {
+      "name": "depuis : mois-anniversaires simples, le jour de départ ne compte pas",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-15"
+      },
+      "today": "2026-01-15",
+      "horizonDays": 100,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:month_anniversary:2026-02-15",
+            "date": "2026-02-15",
+            "kind": "month_anniversary",
+            "value": 1
+          },
+          {
+            "id": "g1:month_anniversary:2026-03-15",
+            "date": "2026-03-15",
+            "kind": "month_anniversary",
+            "value": 2
+          },
+          {
+            "id": "g1:month_anniversary:2026-04-15",
+            "date": "2026-04-15",
+            "kind": "month_anniversary",
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "depuis un 31 : repli sur le dernier jour des mois plus courts (28 février, 30 avril)",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-31"
+      },
+      "today": "2026-02-01",
+      "horizonDays": 90,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:month_anniversary:2026-02-28",
+            "date": "2026-02-28",
+            "kind": "month_anniversary",
+            "value": 1
+          },
+          {
+            "id": "g1:month_anniversary:2026-03-31",
+            "date": "2026-03-31",
+            "kind": "month_anniversary",
+            "value": 2
+          },
+          {
+            "id": "g1:month_anniversary:2026-04-30",
+            "date": "2026-04-30",
+            "kind": "month_anniversary",
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "depuis un 30 : 28 février puis retour au 30 (calcul toujours depuis le départ)",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-03-30"
+      },
+      "today": "2027-01-01",
+      "horizonDays": 70,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:month_anniversary:2027-01-30",
+            "date": "2027-01-30",
+            "kind": "month_anniversary",
+            "value": 10
+          },
+          {
+            "id": "g1:month_anniversary:2027-02-28",
+            "date": "2027-02-28",
+            "kind": "month_anniversary",
+            "value": 11
+          }
+        ]
+      }
+    },
+    {
+      "name": "depuis un 31 janvier, année bissextile : 29 février",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2028-01-31"
+      },
+      "today": "2028-02-01",
+      "horizonDays": 30,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:month_anniversary:2028-02-29",
+            "date": "2028-02-29",
+            "kind": "month_anniversary",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "depuis : 12e mois-anniversaire = 1er anniversaire annuel, un seul message (l'anniversaire annuel l'emporte)",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2025-03-10"
+      },
+      "today": "2026-02-20",
+      "horizonDays": 30,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:year_anniversary:2026-03-10",
+            "date": "2026-03-10",
+            "kind": "year_anniversary",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "depuis un 29 février : anniversaire annuel le 28 février des années non bissextiles",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-02-29"
+      },
+      "today": "2025-02-01",
+      "horizonDays": 30,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:year_anniversary:2025-02-28",
+            "date": "2025-02-28",
+            "kind": "year_anniversary",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "depuis un 29 février : anniversaire annuel le 29 février des années bissextiles",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-02-29"
+      },
+      "today": "2028-02-01",
+      "horizonDays": 30,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:year_anniversary:2028-02-29",
+            "date": "2028-02-29",
+            "kind": "year_anniversary",
+            "value": 4
+          }
+        ]
+      }
+    },
+    {
+      "name": "depuis : 13e mois-anniversaire après le 1er anniversaire (valeur = mois écoulés au total)",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2025-03-10"
+      },
+      "today": "2026-03-11",
+      "horizonDays": 31,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:month_anniversary:2026-04-10",
+            "date": "2026-04-10",
+            "kind": "month_anniversary",
+            "value": 13
+          }
+        ]
+      }
+    },
+    {
+      "name": "rien avant aujourd'hui, aujourd'hui inclus (horizon 0)",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-10"
+      },
+      "today": "2026-03-10",
+      "horizonDays": 0,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:month_anniversary:2026-03-10",
+            "date": "2026-03-10",
+            "kind": "month_anniversary",
+            "value": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "horizon inclusif : un jalon à aujourd'hui + horizon est inclus",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-10"
+      },
+      "today": "2026-03-11",
+      "horizonDays": 30,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:month_anniversary:2026-04-10",
+            "date": "2026-04-10",
+            "kind": "month_anniversary",
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "horizon : un jalon au-delà d'aujourd'hui + horizon est exclu",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-10"
+      },
+      "today": "2026-03-11",
+      "horizonDays": 29,
+      "expected": {
+        "notifications": []
+      }
+    },
+    {
+      "name": "depuis une date future : rien le jour de départ, premier mois-anniversaire ensuite",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-05-01"
+      },
+      "today": "2026-04-01",
+      "horizonDays": 61,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:month_anniversary:2026-06-01",
+            "date": "2026-06-01",
+            "kind": "month_anniversary",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "compte à rebours : J-30, J-7, J-1 et jour J (mars 2026, février de 28 jours)",
+      "goalId": "g1",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-03-01"
+      },
+      "today": "2026-01-15",
+      "horizonDays": 60,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:days_before:2026-01-30",
+            "date": "2026-01-30",
+            "kind": "days_before",
+            "value": 30
+          },
+          {
+            "id": "g1:days_before:2026-02-22",
+            "date": "2026-02-22",
+            "kind": "days_before",
+            "value": 7
+          },
+          {
+            "id": "g1:days_before:2026-02-28",
+            "date": "2026-02-28",
+            "kind": "days_before",
+            "value": 1
+          },
+          {
+            "id": "g1:target_day:2026-03-01",
+            "date": "2026-03-01",
+            "kind": "target_day",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "compte à rebours long : rappels mensuels (repli fin de mois) jusqu'à 2 mois, puis J-30/J-7/J-1/J",
+      "goalId": "g1",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-07-31"
+      },
+      "today": "2026-01-01",
+      "horizonDays": 220,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:monthly_reminder:2026-01-31",
+            "date": "2026-01-31",
+            "kind": "monthly_reminder",
+            "value": 6
+          },
+          {
+            "id": "g1:monthly_reminder:2026-02-28",
+            "date": "2026-02-28",
+            "kind": "monthly_reminder",
+            "value": 5
+          },
+          {
+            "id": "g1:monthly_reminder:2026-03-31",
+            "date": "2026-03-31",
+            "kind": "monthly_reminder",
+            "value": 4
+          },
+          {
+            "id": "g1:monthly_reminder:2026-04-30",
+            "date": "2026-04-30",
+            "kind": "monthly_reminder",
+            "value": 3
+          },
+          {
+            "id": "g1:monthly_reminder:2026-05-31",
+            "date": "2026-05-31",
+            "kind": "monthly_reminder",
+            "value": 2
+          },
+          {
+            "id": "g1:days_before:2026-07-01",
+            "date": "2026-07-01",
+            "kind": "days_before",
+            "value": 30
+          },
+          {
+            "id": "g1:days_before:2026-07-24",
+            "date": "2026-07-24",
+            "kind": "days_before",
+            "value": 7
+          },
+          {
+            "id": "g1:days_before:2026-07-30",
+            "date": "2026-07-30",
+            "kind": "days_before",
+            "value": 1
+          },
+          {
+            "id": "g1:target_day:2026-07-31",
+            "date": "2026-07-31",
+            "kind": "target_day",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "identifiants stables : même objectif qu'au cas précédent, un autre jour → mêmes identifiants",
+      "goalId": "g1",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-07-31"
+      },
+      "today": "2026-03-01",
+      "horizonDays": 60,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:monthly_reminder:2026-03-31",
+            "date": "2026-03-31",
+            "kind": "monthly_reminder",
+            "value": 4
+          },
+          {
+            "id": "g1:monthly_reminder:2026-04-30",
+            "date": "2026-04-30",
+            "kind": "monthly_reminder",
+            "value": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "compte à rebours : aucun rappel le jour de départ ni avant",
+      "goalId": "g1",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-15",
+        "targetDate": "2026-04-15"
+      },
+      "today": "2026-01-15",
+      "horizonDays": 100,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:monthly_reminder:2026-02-15",
+            "date": "2026-02-15",
+            "kind": "monthly_reminder",
+            "value": 2
+          },
+          {
+            "id": "g1:days_before:2026-03-16",
+            "date": "2026-03-16",
+            "kind": "days_before",
+            "value": 30
+          },
+          {
+            "id": "g1:days_before:2026-04-08",
+            "date": "2026-04-08",
+            "kind": "days_before",
+            "value": 7
+          },
+          {
+            "id": "g1:days_before:2026-04-14",
+            "date": "2026-04-14",
+            "kind": "days_before",
+            "value": 1
+          },
+          {
+            "id": "g1:target_day:2026-04-15",
+            "date": "2026-04-15",
+            "kind": "target_day",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "compte à rebours court : J-30 avant le départ n'est pas envoyé",
+      "goalId": "g1",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-03-01",
+        "targetDate": "2026-03-11"
+      },
+      "today": "2026-03-01",
+      "horizonDays": 60,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:days_before:2026-03-04",
+            "date": "2026-03-04",
+            "kind": "days_before",
+            "value": 7
+          },
+          {
+            "id": "g1:days_before:2026-03-10",
+            "date": "2026-03-10",
+            "kind": "days_before",
+            "value": 1
+          },
+          {
+            "id": "g1:target_day:2026-03-11",
+            "date": "2026-03-11",
+            "kind": "target_day",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "compte à rebours vers le 1er mars 2028 : J-1 = 29 février",
+      "goalId": "g1",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2027-12-01",
+        "targetDate": "2028-03-01"
+      },
+      "today": "2027-12-15",
+      "horizonDays": 90,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:monthly_reminder:2028-01-01",
+            "date": "2028-01-01",
+            "kind": "monthly_reminder",
+            "value": 2
+          },
+          {
+            "id": "g1:days_before:2028-01-31",
+            "date": "2028-01-31",
+            "kind": "days_before",
+            "value": 30
+          },
+          {
+            "id": "g1:days_before:2028-02-23",
+            "date": "2028-02-23",
+            "kind": "days_before",
+            "value": 7
+          },
+          {
+            "id": "g1:days_before:2028-02-29",
+            "date": "2028-02-29",
+            "kind": "days_before",
+            "value": 1
+          },
+          {
+            "id": "g1:target_day:2028-03-01",
+            "date": "2028-03-01",
+            "kind": "target_day",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "compte à rebours, jour J aujourd'hui : seulement le jour J",
+      "goalId": "g1",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-02-10"
+      },
+      "today": "2026-02-10",
+      "horizonDays": 60,
+      "expected": {
+        "notifications": [
+          {
+            "id": "g1:target_day:2026-02-10",
+            "date": "2026-02-10",
+            "kind": "target_day",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "compte à rebours dont la date est passée : aucune notification",
+      "goalId": "g1",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2025-12-01",
+        "targetDate": "2026-01-10"
+      },
+      "today": "2026-01-11",
+      "horizonDays": 365,
+      "expected": {
+        "notifications": []
+      }
+    },
+    {
+      "name": "objectif « depuis » désactivé : aucune notification",
+      "goalId": "g1",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-15",
+        "notificationsEnabled": false
+      },
+      "today": "2026-01-15",
+      "horizonDays": 100,
+      "expected": {
+        "notifications": []
+      }
+    },
+    {
+      "name": "compte à rebours désactivé : aucune notification",
+      "goalId": "g1",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-03-01",
+        "notificationsEnabled": false
+      },
+      "today": "2026-01-15",
+      "horizonDays": 60,
+      "expected": {
+        "notifications": []
+      }
+    }
+  ]
+}

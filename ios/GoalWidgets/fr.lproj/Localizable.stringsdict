@@ -107,5 +107,23 @@
 			<string>%ld jours</string>
 		</dict>
 	</dict>
+	<key>notif_countdown_days_left</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>Plus que %ld jour</string>
+			<key>many</key>
+			<string>Plus que %ld jours</string>
+			<key>other</key>
+			<string>Plus que %ld jours</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

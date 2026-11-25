@@ -21,7 +21,8 @@ targets:
       # Extension widget (t07), intégrée à l'app (embed par défaut pour une app-extension).
       - target: GoalWidgetsWidget
     # Info.plist généré par XcodeGen (non versionné), fusionné avec GENERATE_INFOPLIST_FILE :
-    # seul ajout = schéma d'URL `goalwidgets://` pour les liens profonds des widgets (t07).
+    # ajouts = schéma d'URL `goalwidgets://` pour les liens profonds des widgets et notifications (t07),
+    # tâche de fond de reprogrammation des notifications (t09, BGAppRefreshTask → mode `fetch`).
     info:
       path: Config/GoalWidgets-Info.plist
       properties:
@@ -29,6 +30,10 @@ targets:
           - CFBundleURLName: app.goalwidgets
             CFBundleURLSchemes:
               - goalwidgets
+        BGTaskSchedulerPermittedIdentifiers:
+          - app.goalwidgets.reschedule-notifications
+        UIBackgroundModes:
+          - fetch
     # App Group partagé avec l'extension widget (t07) : stockage SwiftData commun.
     entitlements:
       path: GoalWidgets/GoalWidgets.entitlements

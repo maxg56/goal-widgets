@@ -29,3 +29,18 @@
 "since_today" = "Depuis aujourd'hui";
 /* Pourcentage affiché (espace insécable avant %, comme Android). */
 "goal_progress_percent" = "%ld %%";
+
+/* Notifications de jalons (t09). Pluriel notif_countdown_days_left : voir Localizable.stringsdict. */
+"action_ok" = "OK";
+"goal_form_notifications" = "Notifications de jalons";
+"goal_form_notifications_footer" = "Compteur « depuis » : chaque mois et chaque année. Compte à rebours : rappels mensuels, puis J-30, J-7, J-1 et le jour J.";
+"notifications_settings_title" = "Notifications";
+"notifications_send_time" = "Heure d'envoi";
+"notifications_send_time_footer" = "Heure à laquelle arrivent les notifications, pour tous les objectifs.";
+"notifications_denied_hint" = "Les notifications de Goal Widgets sont désactivées dans les Réglages de l'iPhone.";
+"notifications_open_settings" = "Ouvrir les Réglages";
+/* %@ = durée lisible (« 3 mois », « 1 an », « 1 an 2 mois »). */
+"notif_since_elapsed" = "Ça fait %@";
+"notif_countdown_remaining" = "Plus que %@";
+"notif_countdown_tomorrow" = "C'est demain !";
+"notif_countdown_today" = "C'est aujourd'hui !";

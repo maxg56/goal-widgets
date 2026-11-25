@@ -73,8 +73,33 @@ object MilestoneNotifications {
         return granted && NotificationManagerCompat.from(context).areNotificationsEnabled()
     }
 
+    /** Jalon programmé et son heure d'envoi réelle (epoch ms). */
+    data class Scheduled(val milestone: Milestone, val triggerAtMillis: Long)
+
     /** Annule et reprogramme toutes les alarmes de l'horizon à partir de la base. */
     suspend fun reschedule(context: Context) = mutex.withLock {
+        val app = context.applicationContext
+        val wanted = wanted(app)
+
+        val alarms = app.getSystemService(AlarmManager::class.java)
+        val prefs = NotificationSettings.prefs(app)
+        val previous = prefs.getStringSet(KEY_SCHEDULED, emptySet()).orEmpty()
+        val wantedIds = wanted.map { it.milestone.id }.toSet()
+        for (id in previous - wantedIds) {
+            alarms.cancel(alarmIntent(app, Uri.parse(uriOf(id)), Intent()))
+        }
+        for (s in wanted) {
+            // setWindow : sans permission d'alarme exacte ; une alarme identique (même URI) est remplacée.
+            alarms.setWindow(AlarmManager.RTC_WAKEUP, s.triggerAtMillis, WINDOW_MILLIS, alarmIntent(app, s.milestone))
+        }
+        prefs.edit().putStringSet(KEY_SCHEDULED, wantedIds).apply()
+    }
+
+    /**
+     * Jalons que [reschedule] programme (les [MAX_SCHEDULED] plus proches de l'horizon, heure
+     * d'envoi pas encore passée), du plus proche au plus lointain. Aussi lu par l'écran de debug (t14).
+     */
+    suspend fun wanted(context: Context): List<Scheduled> {
         val app = context.applicationContext
         val dao = (app as GoalWidgetsApplication).database.goalDao()
         val today = LocalDate.now()
@@ -92,32 +117,20 @@ object MilestoneNotifications {
             )
         }
         // Le jalon du jour n'est programmé que si l'heure d'envoi n'est pas encore passée.
-        val wanted = MilestonePlanner.closest(
+        return MilestonePlanner.closest(
             planned.filter { triggerAt(it.date, sendTime, zone) > now },
             MAX_SCHEDULED,
         )
-
-        val alarms = app.getSystemService(AlarmManager::class.java)
-        val prefs = NotificationSettings.prefs(app)
-        val previous = prefs.getStringSet(KEY_SCHEDULED, emptySet()).orEmpty()
-        val wantedIds = wanted.map { it.id }.toSet()
-        for (id in previous - wantedIds) {
-            alarms.cancel(alarmIntent(app, Uri.parse(uriOf(id)), Intent()))
-        }
-        for (m in wanted) {
-            // setWindow : sans permission d'alarme exacte ; une alarme identique (même URI) est remplacée.
-            alarms.setWindow(AlarmManager.RTC_WAKEUP, triggerAt(m.date, sendTime, zone), WINDOW_MILLIS, alarmIntent(app, m))
-        }
-        prefs.edit().putStringSet(KEY_SCHEDULED, wantedIds).apply()
+            .map { Scheduled(it, triggerAt(it.date, sendTime, zone)) }
+            .sortedBy { it.triggerAtMillis }
     }
 
     /** Alarme déclenchée : affiche la notification si le jalon est toujours d'actualité. */
     suspend fun fire(context: Context, intent: Intent) {
         val app = context.applicationContext
-        val goalId = intent.getLongExtra(EXTRA_GOAL_ID, -1L)
-        val date = intent.getStringExtra(EXTRA_DATE)?.let(LocalDate::parse) ?: return
-        val kind = intent.getStringExtra(EXTRA_KIND)?.let(MilestoneKind::fromWire) ?: return
-        val milestone = Milestone(goalId.toString(), date, kind, intent.getIntExtra(EXTRA_VALUE, 0))
+        val milestone = milestoneOf(intent) ?: return
+        val goalId = milestone.goalId.toLong()
+        val date = milestone.date
 
         // Alarme en retard (téléphone éteint, Doze…) : seulement le jour même du jalon, sinon le
         // texte serait faux d'un jour. Objectif modifié, désactivé ou supprimé : le planificateur fait foi.
@@ -129,20 +142,47 @@ object MilestoneNotifications {
         if (date != today) return
         val row = (app as GoalWidgetsApplication).database.goalDao().getById(goalId)
         val deliver = MilestonePlanner.shouldDeliver(milestone, row?.toGoal(), row?.notificationsEnabled == true, today)
-        if (row == null || !deliver || !canPost(app)) return
+        if (row == null || !deliver) return
+        show(app, row.title, milestone)
+    }
 
+    /**
+     * Affichage d'une notification de jalon (texte, appui → ouverture de l'objectif), sans aucune
+     * vérification de date : chemin commun à l'alarme réelle et aux outils de debug (t14).
+     * Renvoie `false` si l'app n'a pas le droit de notifier.
+     */
+    fun show(context: Context, goalTitle: String, milestone: Milestone): Boolean {
+        val app = context.applicationContext
+        if (!canPost(app)) return false
         val notification = NotificationCompat.Builder(app, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(row.title)
+            .setContentTitle(goalTitle)
             .setContentText(NotificationTexts.body(app.resources, milestone))
-            .setContentIntent(openGoalIntent(app, goalId, milestone.id))
+            .setContentIntent(openGoalIntent(app, milestone.goalId.toLong(), milestone.id))
             .setAutoCancel(true)
             .build()
-        try {
+        return try {
             NotificationManagerCompat.from(app).notify(milestone.id, 0, notification)
+            true
         } catch (_: SecurityException) {
             // Autorisation retirée entre la vérification et l'envoi.
+            false
         }
+    }
+
+    /** Écrit [m] dans les extras de [intent] (alarme réelle, et alarme de test en debug). */
+    fun putMilestone(intent: Intent, m: Milestone): Intent = intent
+        .putExtra(EXTRA_GOAL_ID, m.goalId.toLong())
+        .putExtra(EXTRA_KIND, m.kind.wire)
+        .putExtra(EXTRA_VALUE, m.value)
+        .putExtra(EXTRA_DATE, m.date.toString())
+
+    /** Jalon porté par une alarme, `null` si les extras sont incomplets. */
+    fun milestoneOf(intent: Intent): Milestone? {
+        val goalId = intent.getLongExtra(EXTRA_GOAL_ID, -1L)
+        val date = intent.getStringExtra(EXTRA_DATE)?.let(LocalDate::parse) ?: return null
+        val kind = intent.getStringExtra(EXTRA_KIND)?.let(MilestoneKind::fromWire) ?: return null
+        return Milestone(goalId.toString(), date, kind, intent.getIntExtra(EXTRA_VALUE, 0))
     }
 
     private fun triggerAt(date: LocalDate, sendTime: java.time.LocalTime, zone: ZoneId): Long =
@@ -154,11 +194,7 @@ object MilestoneNotifications {
         alarmIntent(
             context,
             Uri.parse(uriOf(m.id)),
-            Intent()
-                .putExtra(EXTRA_GOAL_ID, m.goalId.toLong())
-                .putExtra(EXTRA_KIND, m.kind.wire)
-                .putExtra(EXTRA_VALUE, m.value)
-                .putExtra(EXTRA_DATE, m.date.toString()),
+            putMilestone(Intent(), m),
         )
 
     // L'identité d'un PendingIntent = composant + action + URI (les extras ne comptent pas).

@@ -31,6 +31,8 @@ android {
     }
     buildFeatures {
         compose = true
+        // BuildConfig.DEBUG : section « Debug » des notifications (t14).
+        buildConfig = true
     }
     testOptions {
         unitTests.all { it.useJUnitPlatform() }

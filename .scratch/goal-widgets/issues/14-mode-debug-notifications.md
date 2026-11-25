@@ -6,8 +6,8 @@
 
 **Status:** ready-for-agent
 
-- [ ] Section « Debug » visible uniquement en debug (absente du code compilé en release : `BuildConfig.DEBUG` / `#if DEBUG`)
-- [ ] Liste des jalons programmés, avec l'heure d'envoi réelle
-- [ ] « Envoyer maintenant » : passe par le même chemin d'affichage que l'alarme réelle (texte, appui → ouverture de l'objectif), sans la vérification « jour même »
-- [ ] « Dans 10 secondes » : vraie alarme (Android) / vraie demande `UNTimeIntervalNotificationTrigger` (iOS) pour vérifier la livraison de bout en bout
-- [ ] Android : `buildConfig = true` activé si nécessaire ; vérifier que `assembleRelease` compile sans la section
+- [ ] Section « Debug » visible uniquement en debug (absente du code compilé en release : `BuildConfig.DEBUG` / `#if DEBUG`) — Android fait (code dans `src/debug`, stub vide dans `src/release`, appel gardé par `BuildConfig.DEBUG` ; vérifié : aucune classe de debug dans l'APK release)
+- [ ] Liste des jalons programmés, avec l'heure d'envoi réelle — Android fait (`MilestoneNotifications.wanted`)
+- [ ] « Envoyer maintenant » : passe par le même chemin d'affichage que l'alarme réelle (texte, appui → ouverture de l'objectif), sans la vérification « jour même » — Android fait (`MilestoneNotifications.show`)
+- [ ] « Dans 10 secondes » : vraie alarme (Android) / vraie demande `UNTimeIntervalNotificationTrigger` (iOS) pour vérifier la livraison de bout en bout — Android fait (exacte si autorisée, sinon `setAndAllowWhileIdle`)
+- [x] Android : `buildConfig = true` activé si nécessaire ; vérifier que `assembleRelease` compile sans la section (hors `lintVital*`, dont l'artefact n'est pas en cache hors ligne)

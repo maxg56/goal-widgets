@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Builds de debug uniquement (t14) : outils de test des notifications. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Alarme de test « dans 10 secondes » à l'heure exacte si l'utilisateur l'autorise
+         (Android 14+ : refusée par défaut ; sinon alarme inexacte, possiblement différée). -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+
+    <application>
+        <receiver
+            android:name=".debug.DebugMilestoneReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

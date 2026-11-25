@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Section « Debug » des réglages de notifications (t14) : builds de debug uniquement. -->
+<resources>
+    <string name="debug_title">Debug</string>
+    <string name="debug_permission">Autorisation POST_NOTIFICATIONS : %1$s</string>
+    <string name="debug_app_enabled">Notifications de l\'app : %1$s</string>
+    <string name="debug_channel">Canal « milestones » : importance %1$d</string>
+    <string name="debug_exact_alarms">Alarmes exactes : %1$s</string>
+    <string name="debug_yes">oui</string>
+    <string name="debug_no">non</string>
+    <string name="debug_test_goal">Objectif du jalon de test</string>
+    <string name="debug_no_goal">Aucun objectif</string>
+    <string name="debug_schedule_test">Programmer un jalon de test dans 10 secondes</string>
+    <string name="debug_scheduled_test">Jalon de test programmé (%1$s)</string>
+    <string name="debug_exact">exact</string>
+    <string name="debug_inexact">inexact, peut être différé</string>
+    <string name="debug_scheduled_title">Jalons programmés (%1$d)</string>
+    <string name="debug_scheduled_empty">Aucun jalon programmé.</string>
+    <string name="debug_send_now">Envoyer maintenant</string>
+    <string name="debug_refresh">Actualiser</string>
+    <string name="debug_not_sent">Non envoyé : notifications non autorisées.</string>
+</resources>

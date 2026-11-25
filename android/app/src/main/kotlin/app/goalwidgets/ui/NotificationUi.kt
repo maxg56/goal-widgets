@@ -47,7 +47,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import app.goalwidgets.BuildConfig
 import app.goalwidgets.R
+import app.goalwidgets.debug.NotificationDebugSection
 import app.goalwidgets.notifications.MilestoneNotifications
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -159,6 +161,8 @@ fun NotificationSettingsScreen(
                     Text(stringResource(R.string.notifications_battery_open))
                 }
             }
+            // Outils de test (t14) : le code n'existe que dans les builds de debug (src/debug).
+            if (BuildConfig.DEBUG) NotificationDebugSection()
         }
     }
     if (picking) {

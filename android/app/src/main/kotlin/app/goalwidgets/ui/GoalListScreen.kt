@@ -13,10 +13,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -50,6 +52,8 @@ fun GoalListScreen(
     onContinueAsSince: (StoredGoal) -> Unit = {},
     /** Objectif à faire défiler jusqu'à l'écran (ouverture depuis un widget). */
     focusGoalId: Long? = null,
+    /** Cloche : réglages globaux des notifications (heure d'envoi). */
+    onOpenNotificationSettings: () -> Unit = {},
 ) {
     val listState = rememberLazyListState()
     LaunchedEffect(goals != null, focusGoalId) {
@@ -57,7 +61,19 @@ fun GoalListScreen(
         if (index >= 0) listState.animateScrollToItem(index)
     }
     Scaffold(
-        topBar = { TopAppBar(title = { Text(stringResource(R.string.goal_list_title)) }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.goal_list_title)) },
+                actions = {
+                    IconButton(onClick = onOpenNotificationSettings) {
+                        Icon(
+                            Icons.Filled.Notifications,
+                            contentDescription = stringResource(R.string.notifications_settings_title),
+                        )
+                    }
+                },
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = onAdd,

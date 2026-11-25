@@ -2,7 +2,29 @@ package app.goalwidgets
 
 import android.app.Application
 import app.goalwidgets.data.GoalDatabase
+import app.goalwidgets.notifications.DailyRescheduleWorker
+import app.goalwidgets.notifications.MilestoneNotifications
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class GoalWidgetsApplication : Application() {
     val database: GoalDatabase by lazy { GoalDatabase.create(this) }
+
+    /** Travail de fond lié au processus (reprogrammation des notifications). */
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    override fun onCreate() {
+        super.onCreate()
+        // Démarrage de l'app : canal, tâche quotidienne et reprogrammation de l'horizon.
+        MilestoneNotifications.createChannel(this)
+        DailyRescheduleWorker.enqueue(this)
+        rescheduleNotifications()
+    }
+
+    /** À appeler après toute modification d'objectif ou de l'heure d'envoi. */
+    fun rescheduleNotifications() {
+        scope.launch { MilestoneNotifications.reschedule(this@GoalWidgetsApplication) }
+    }
 }

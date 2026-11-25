@@ -61,7 +61,8 @@ import java.time.format.FormatStyle
 fun GoalFormScreen(
     existing: StoredGoal?,
     today: LocalDate,
-    onSave: (Goal) -> Unit,
+    /** Objectif validé et état de l'interrupteur de notifications. */
+    onSave: (Goal, Boolean) -> Unit,
     onCancel: () -> Unit,
     onDelete: () -> Unit = {},
     onContinueAsSince: () -> Unit = {},
@@ -74,6 +75,8 @@ fun GoalFormScreen(
     // Les erreurs ne s'affichent qu'après une première tentative d'enregistrement.
     var attempted by rememberSaveable { mutableStateOf(false) }
     var confirmingDelete by rememberSaveable { mutableStateOf(false) }
+    // Désactivées par défaut, y compris pour un nouvel objectif (même règle qu'iOS).
+    var notificationsEnabled by rememberSaveable { mutableStateOf(existing?.notificationsEnabled ?: false) }
 
     val draft = GoalDraft(kind, title, startDate, targetDate, today)
     val errors = if (attempted) draft.errors() else emptySet()
@@ -101,7 +104,7 @@ fun GoalFormScreen(
                     }
                     TextButton(onClick = {
                         attempted = true
-                        if (draft.errors().isEmpty()) onSave(draft.toGoal())
+                        if (draft.errors().isEmpty()) onSave(draft.toGoal(), notificationsEnabled)
                     }) { Text(stringResource(R.string.action_save)) }
                 },
             )
@@ -157,6 +160,7 @@ fun GoalFormScreen(
                     onPick = { startDate = it },
                 )
             }
+            NotificationToggle(enabled = notificationsEnabled, onChange = { notificationsEnabled = it })
             if (canContinueAsSince) {
                 OutlinedButton(onClick = onContinueAsSince, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.goal_action_continue_as_since))
@@ -242,7 +246,7 @@ private fun Long.utcMillisToLocalDate(): LocalDate = Instant.ofEpochMilli(this).
 @Preview(showBackground = true)
 @Composable
 private fun GoalFormScreenNewPreview() {
-    GoalWidgetsTheme { GoalFormScreen(existing = null, today = LocalDate.of(2026, 1, 6), onSave = {}, onCancel = {}) }
+    GoalWidgetsTheme { GoalFormScreen(existing = null, today = LocalDate.of(2026, 1, 6), onSave = { _, _ -> }, onCancel = {}) }
 }
 
 @Preview(showBackground = true)
@@ -250,6 +254,6 @@ private fun GoalFormScreenNewPreview() {
 private fun GoalFormScreenEditReachedPreview() {
     val goal = Goal(GoalKind.COUNTDOWN, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 4), "Examen")
     GoalWidgetsTheme {
-        GoalFormScreen(existing = StoredGoal(1, goal), today = LocalDate.of(2026, 1, 6), onSave = {}, onCancel = {})
+        GoalFormScreen(existing = StoredGoal(1, goal), today = LocalDate.of(2026, 1, 6), onSave = { _, _ -> }, onCancel = {})
     }
 }

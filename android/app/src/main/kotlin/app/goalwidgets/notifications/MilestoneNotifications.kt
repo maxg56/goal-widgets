@@ -1,0 +1,178 @@
+package app.goalwidgets.notifications
+
+import android.Manifest
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import app.goalwidgets.GoalWidgetsApplication
+import app.goalwidgets.MainActivity
+import app.goalwidgets.R
+import app.goalwidgets.core.Milestone
+import app.goalwidgets.core.MilestoneKind
+import app.goalwidgets.core.MilestonePlanner
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
+
+/**
+ * Couche OS (mince) des notifications de jalons : le planificateur pur décide quoi et quel jour,
+ * on programme une alarme par jalon à l'heure d'envoi globale.
+ *
+ * Tout l'horizon est reprogrammé à chaque appel de [reschedule] : modification d'un objectif ou
+ * de l'heure, démarrage de l'app, redémarrage, changement d'heure/de fuseau, tâche quotidienne.
+ * Identifiants stables : l'alarme d'un jalon est un `PendingIntent` dont l'URI est l'id du jalon
+ * (`<goalId>:<kind>:<AAAA-MM-JJ>`) et la notification affichée porte cet id en étiquette →
+ * reprogrammer remplace au lieu de dupliquer.
+ */
+object MilestoneNotifications {
+    const val CHANNEL_ID = "milestones"
+
+    /** Fenêtre glissante : la tâche quotidienne la fait avancer. */
+    const val HORIZON_DAYS = 60
+
+    /** Plafond d'alarmes en attente (Android limite le nombre d'alarmes par app, ~500). */
+    const val MAX_SCHEDULED = 100
+
+    /** Fenêtre de déclenchement (10 min = minimum accepté par Android 12+, sans alarme exacte). */
+    private const val WINDOW_MILLIS = 10 * 60_000L
+
+    private const val ACTION_FIRE = "app.goalwidgets.action.MILESTONE"
+    private const val KEY_SCHEDULED = "scheduled_milestone_ids"
+    private const val EXTRA_GOAL_ID = "goal_id"
+    private const val EXTRA_KIND = "kind"
+    private const val EXTRA_VALUE = "value"
+    private const val EXTRA_DATE = "date"
+
+    private val mutex = Mutex()
+
+    fun createChannel(context: Context) {
+        val channel = NotificationChannel(
+            CHANNEL_ID,
+            context.getString(R.string.notif_channel_name),
+            NotificationManager.IMPORTANCE_DEFAULT,
+        ).apply { description = context.getString(R.string.notif_channel_description) }
+        context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
+    /** L'app peut-elle afficher des notifications (autorisation Android 13+ et réglage système) ? */
+    fun canPost(context: Context): Boolean {
+        val granted = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
+        return granted && NotificationManagerCompat.from(context).areNotificationsEnabled()
+    }
+
+    /** Annule et reprogramme toutes les alarmes de l'horizon à partir de la base. */
+    suspend fun reschedule(context: Context) = mutex.withLock {
+        val app = context.applicationContext
+        val dao = (app as GoalWidgetsApplication).database.goalDao()
+        val today = LocalDate.now()
+        val sendTime = NotificationSettings.sendTime(app)
+        val zone = ZoneId.systemDefault()
+        val now = System.currentTimeMillis()
+
+        val planned = dao.getAll().flatMap { row ->
+            MilestonePlanner.plan(
+                goalId = row.id.toString(),
+                goal = row.toGoal(),
+                notificationsEnabled = row.notificationsEnabled,
+                today = today,
+                horizonDays = HORIZON_DAYS,
+            )
+        }
+        // Le jalon du jour n'est programmé que si l'heure d'envoi n'est pas encore passée.
+        val wanted = MilestonePlanner.closest(
+            planned.filter { triggerAt(it.date, sendTime, zone) > now },
+            MAX_SCHEDULED,
+        )
+
+        val alarms = app.getSystemService(AlarmManager::class.java)
+        val prefs = NotificationSettings.prefs(app)
+        val previous = prefs.getStringSet(KEY_SCHEDULED, emptySet()).orEmpty()
+        val wantedIds = wanted.map { it.id }.toSet()
+        for (id in previous - wantedIds) {
+            alarms.cancel(alarmIntent(app, Uri.parse(uriOf(id)), Intent()))
+        }
+        for (m in wanted) {
+            // setWindow : sans permission d'alarme exacte ; une alarme identique (même URI) est remplacée.
+            alarms.setWindow(AlarmManager.RTC_WAKEUP, triggerAt(m.date, sendTime, zone), WINDOW_MILLIS, alarmIntent(app, m))
+        }
+        prefs.edit().putStringSet(KEY_SCHEDULED, wantedIds).apply()
+    }
+
+    /** Alarme déclenchée : affiche la notification si le jalon est toujours d'actualité. */
+    suspend fun fire(context: Context, intent: Intent) {
+        val app = context.applicationContext
+        val goalId = intent.getLongExtra(EXTRA_GOAL_ID, -1L)
+        val date = intent.getStringExtra(EXTRA_DATE)?.let(LocalDate::parse) ?: return
+        val kind = intent.getStringExtra(EXTRA_KIND)?.let(MilestoneKind::fromWire) ?: return
+        val milestone = Milestone(goalId.toString(), date, kind, intent.getIntExtra(EXTRA_VALUE, 0))
+
+        // Alarme très en retard (téléphone éteint, Doze…) : on ne notifie pas un jalon d'avant-hier.
+        if (date < LocalDate.now().minusDays(1)) return
+        val row = (app as GoalWidgetsApplication).database.goalDao().getById(goalId) ?: return
+        // Objectif modifié ou désactivé depuis la programmation : le planificateur fait foi.
+        val stillPlanned = MilestonePlanner.plan(goalId.toString(), row.toGoal(), row.notificationsEnabled, date, 0)
+        if (milestone !in stillPlanned || !canPost(app)) return
+
+        val notification = NotificationCompat.Builder(app, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(row.title)
+            .setContentText(NotificationTexts.body(app.resources, milestone))
+            .setContentIntent(openGoalIntent(app, goalId, milestone.id))
+            .setAutoCancel(true)
+            .build()
+        try {
+            NotificationManagerCompat.from(app).notify(milestone.id, 0, notification)
+        } catch (_: SecurityException) {
+            // Autorisation retirée entre la vérification et l'envoi.
+        }
+    }
+
+    private fun triggerAt(date: LocalDate, sendTime: java.time.LocalTime, zone: ZoneId): Long =
+        LocalDateTime.of(date, sendTime).atZone(zone).toInstant().toEpochMilli()
+
+    private fun uriOf(milestoneId: String) = "goalwidgets://milestone/" + Uri.encode(milestoneId)
+
+    private fun alarmIntent(context: Context, m: Milestone): PendingIntent =
+        alarmIntent(
+            context,
+            Uri.parse(uriOf(m.id)),
+            Intent()
+                .putExtra(EXTRA_GOAL_ID, m.goalId.toLong())
+                .putExtra(EXTRA_KIND, m.kind.wire)
+                .putExtra(EXTRA_VALUE, m.value)
+                .putExtra(EXTRA_DATE, m.date.toString()),
+        )
+
+    // L'identité d'un PendingIntent = composant + action + URI (les extras ne comptent pas).
+    private fun alarmIntent(context: Context, uri: Uri, extras: Intent): PendingIntent = PendingIntent.getBroadcast(
+        context,
+        0,
+        Intent(context, MilestoneAlarmReceiver::class.java).setAction(ACTION_FIRE).setData(uri).putExtras(extras),
+        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+    )
+
+    /** Appui sur la notification : ouvre l'app sur l'objectif (même extra que le widget, t06). */
+    private fun openGoalIntent(context: Context, goalId: Long, milestoneId: String): PendingIntent =
+        PendingIntent.getActivity(
+            context,
+            0,
+            Intent(context, MainActivity::class.java)
+                .setData(Uri.parse(uriOf(milestoneId)))
+                .putExtra(MainActivity.EXTRA_GOAL_ID, goalId)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+}

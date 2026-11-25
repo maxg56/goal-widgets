@@ -3,6 +3,8 @@
 
     <!-- Reprogrammer l'alarme de minuit des widgets après un redémarrage. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Notifications de jalons (t08) : autorisation demandée à l'activation (Android 13+). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".GoalWidgetsApplication"
@@ -47,6 +49,22 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Notifications de jalons (t08) : une alarme par jalon, et reprogrammation complète au
+             redémarrage, à la mise à jour de l'app, au changement d'heure ou de fuseau. -->
+        <receiver
+            android:name=".notifications.MilestoneAlarmReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".notifications.NotificationRescheduleReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
                 <action android:name="android.intent.action.TIME_SET" />
                 <action android:name="android.intent.action.TIMEZONE_CHANGED" />
             </intent-filter>

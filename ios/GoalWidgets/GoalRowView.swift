@@ -2,7 +2,8 @@
 import SwiftUI
 import GoalCore
 
-/// Ligne de la liste : titre, « dans N jours », barre de progression et pourcentage.
+/// Ligne de la liste : titre, statut (« dans N jours », « Atteint il y a N jours », « Depuis N jours »),
+/// puis barre + pourcentage (compte à rebours) ou forme lisible années/mois/jours (« depuis »).
 struct GoalRowView: View {
     let record: GoalRecord
     let today: LocalDate
@@ -16,13 +17,18 @@ struct GoalRowView: View {
                 Text(GoalLabels.status(for: state))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                if let progress = state.progress {
+                if let percent = state.percent {
                     HStack {
-                        ProgressView(value: progress)
-                        Text(GoalLabels.percent(progress))
+                        ProgressView(value: Double(percent), total: 100)
+                        Text(GoalLabels.percent(percent))
                             .font(.caption)
                             .monospacedDigit()
                     }
+                }
+                if let breakdown = state.breakdown, let text = GoalLabels.breakdown(breakdown) {
+                    Text(text)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }

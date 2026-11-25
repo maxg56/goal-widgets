@@ -35,5 +35,77 @@
 			<string>Atteint il y a %ld jours</string>
 		</dict>
 	</dict>
+	<key>since_days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>Depuis %ld jour</string>
+			<key>many</key>
+			<string>Depuis %ld jours</string>
+			<key>other</key>
+			<string>Depuis %ld jours</string>
+		</dict>
+	</dict>
+	<key>breakdown_years</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>%ld an</string>
+			<key>many</key>
+			<string>%ld ans</string>
+			<key>other</key>
+			<string>%ld ans</string>
+		</dict>
+	</dict>
+	<key>breakdown_months</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>%ld mois</string>
+			<key>many</key>
+			<string>%ld mois</string>
+			<key>other</key>
+			<string>%ld mois</string>
+		</dict>
+	</dict>
+	<key>breakdown_days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>%ld jour</string>
+			<key>many</key>
+			<string>%ld jours</string>
+			<key>other</key>
+			<string>%ld jours</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

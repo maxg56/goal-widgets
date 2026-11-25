@@ -17,6 +17,8 @@ data class StoredGoal(val id: Long, val goal: Goal)
 class GoalListViewModel(
     private val dao: GoalDao,
     private val clockMillis: () -> Long = System::currentTimeMillis,
+    /** Appelé après chaque écriture (ajout, modification, suppression) : rafraîchit les widgets. */
+    private val onGoalsChanged: suspend () -> Unit = {},
 ) : ViewModel() {
 
     /** `null` tant que la base n'a pas répondu. */
@@ -25,6 +27,9 @@ class GoalListViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun add(goal: Goal) {
-        viewModelScope.launch { dao.insert(GoalEntity.from(goal, createdAtMillis = clockMillis())) }
+        viewModelScope.launch {
+            dao.insert(GoalEntity.from(goal, createdAtMillis = clockMillis()))
+            onGoalsChanged()
+        }
     }
 }

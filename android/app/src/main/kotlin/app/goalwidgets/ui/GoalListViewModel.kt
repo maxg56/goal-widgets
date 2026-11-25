@@ -29,6 +29,8 @@ data class StoredGoal(
     /** UUID portable (format d'export) ; départage aussi les égalités de tri. */
     val uid: String = "",
     val createdAtMillis: Long = 0,
+    /** Interrupteur de notifications de jalons (t08). */
+    val notificationsEnabled: Boolean = false,
 ) {
     val sortKey: SortKey get() = SortKey(uid, goal, Instant.ofEpochMilli(createdAtMillis))
 
@@ -39,6 +41,7 @@ data class StoredGoal(
             style = entity.style(),
             uid = entity.uid,
             createdAtMillis = entity.createdAtMillis,
+            notificationsEnabled = entity.notificationsEnabled,
         )
     }
 }
@@ -53,7 +56,10 @@ sealed interface ImportOutcome {
 class GoalListViewModel(
     private val dao: GoalDao,
     private val clockMillis: () -> Long = System::currentTimeMillis,
-    /** Appelé après chaque écriture (ajout, modification, suppression, import) : rafraîchit les widgets. */
+    /**
+     * Appelé après chaque écriture (ajout, modification, suppression, import) : rafraîchit les
+     * widgets et reprogramme les notifications de jalons.
+     */
     private val onGoalsChanged: suspend () -> Unit = {},
     initialOrder: GoalOrder = GoalOrder.DEFAULT,
     /** Mémorise le tri choisi (préférences). */
@@ -73,15 +79,25 @@ class GoalListViewModel(
         onOrderChanged(order)
     }
 
-    fun add(goal: Goal, style: GoalStyle = GoalStyle.NONE) {
+    fun add(goal: Goal, style: GoalStyle = GoalStyle.NONE, notificationsEnabled: Boolean = false) {
         viewModelScope.launch {
-            dao.insert(GoalEntity.from(goal, createdAtMillis = clockMillis(), style = style))
+            dao.insert(
+                GoalEntity.from(
+                    goal,
+                    createdAtMillis = clockMillis(),
+                    style = style,
+                    notificationsEnabled = notificationsEnabled,
+                ),
+            )
             onGoalsChanged()
         }
     }
 
-    /** Modifie l'objectif [id] (même id, même uid, date de création conservée). */
-    fun update(id: Long, goal: Goal, style: GoalStyle) {
+    /**
+     * Modifie l'objectif [id] (même id, même uid, date de création conservée).
+     * [notificationsEnabled] : nouvel état de l'interrupteur de notifications, `null` = inchangé.
+     */
+    fun update(id: Long, goal: Goal, style: GoalStyle, notificationsEnabled: Boolean? = null) {
         viewModelScope.launch {
             dao.updateContent(
                 id = id,
@@ -92,6 +108,7 @@ class GoalListViewModel(
                 color = style.color?.wire,
                 emoji = style.emoji,
             )
+            if (notificationsEnabled != null) dao.setNotificationsEnabled(id, notificationsEnabled)
             onGoalsChanged()
         }
     }

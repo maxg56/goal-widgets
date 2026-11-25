@@ -22,10 +22,17 @@ interface GoalDao {
     @Query("SELECT * FROM goals WHERE id = :id")
     fun observeById(id: Long): Flow<GoalEntity?>
 
+    @Query("SELECT * FROM goals WHERE id = :id")
+    suspend fun getById(id: Long): GoalEntity?
+
+    /** Interrupteur de notifications d'un objectif ; renvoie le nombre de lignes modifiées. */
+    @Query("UPDATE goals SET notificationsEnabled = :enabled WHERE id = :id")
+    suspend fun setNotificationsEnabled(id: Long, enabled: Boolean): Int
+
     @Insert
     suspend fun insert(goal: GoalEntity): Long
 
-    /** Tous les objectifs, dans l'ordre de création (export). */
+    /** Tous les objectifs, dans l'ordre de création (export, reprogrammation des notifications). */
     @Query("SELECT * FROM goals ORDER BY createdAtMillis, id")
     suspend fun getAll(): List<GoalEntity>
 

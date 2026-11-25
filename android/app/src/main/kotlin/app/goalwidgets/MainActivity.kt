@@ -29,6 +29,8 @@ import app.goalwidgets.ui.GoalListScreen
 import app.goalwidgets.ui.GoalListViewModel
 import app.goalwidgets.ui.GoalWidgetsTheme
 import app.goalwidgets.ui.ImportOutcome
+import app.goalwidgets.ui.NotificationSettingsScreen
+import app.goalwidgets.notifications.NotificationSettings
 import app.goalwidgets.widget.GoalWidgets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -40,7 +42,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Ouvert depuis un widget : objectif à montrer dans la liste.
+        // Ouvert depuis un widget ou une notification : objectif à montrer dans la liste.
         val focusGoalId = intent.getLongExtra(EXTRA_GOAL_ID, -1L).takeIf { it >= 0 }
         setContent {
             GoalWidgetsTheme {
@@ -67,20 +69,31 @@ class MainActivity : ComponentActivity() {
                 }
                 // Écran affiché : liste, création (NEW_GOAL) ou modification de l'objectif d'id donné.
                 var editing by rememberSaveable { mutableStateOf<Long?>(null) }
+                var showingNotificationSettings by rememberSaveable { mutableStateOf(false) }
+                var sendTime by remember { mutableStateOf(NotificationSettings.sendTime(this)) }
                 val current = editing
                 val existing = goals?.firstOrNull { it.id == current }
                 when {
+                    showingNotificationSettings -> NotificationSettingsScreen(
+                        sendTime = sendTime,
+                        onSendTimeChange = {
+                            NotificationSettings.setSendTime(this, it)
+                            sendTime = it
+                            (application as GoalWidgetsApplication).rescheduleNotifications()
+                        },
+                        onBack = { showingNotificationSettings = false },
+                    )
                     current == NEW_GOAL -> GoalFormScreen(
                         existing = null,
                         today = today,
-                        onSave = { goal, style -> vm.add(goal, style); editing = null },
+                        onSave = { goal, style, notify -> vm.add(goal, style, notify); editing = null },
                         onCancel = { editing = null },
                     )
                     current != null && existing != null -> key(current) {
                         GoalFormScreen(
                             existing = existing,
                             today = today,
-                            onSave = { goal, style -> vm.update(current, goal, style); editing = null },
+                            onSave = { goal, style, notify -> vm.update(current, goal, style, notify); editing = null },
                             onCancel = { editing = null },
                             onDelete = { vm.delete(current); editing = null },
                             onContinueAsSince = { vm.continueAsSince(existing); editing = null },
@@ -99,6 +112,7 @@ class MainActivity : ComponentActivity() {
                         onOpen = { editing = it.id },
                         onContinueAsSince = vm::continueAsSince,
                         focusGoalId = focusGoalId,
+                        onOpenNotificationSettings = { showingNotificationSettings = true },
                     )
                 }
             }
@@ -169,7 +183,7 @@ class MainActivity : ComponentActivity() {
         private const val PREFS = "settings"
         private const val PREF_ORDER = "goal_order"
 
-        /** Id (Long) de l'objectif à montrer à l'ouverture (appui sur un widget). */
+        /** Id (Long) de l'objectif à montrer à l'ouverture (appui sur un widget ou une notification). */
         const val EXTRA_GOAL_ID = "app.goalwidgets.extra.GOAL_ID"
 
         /** Valeur de `editing` pour un nouvel objectif (les id Room commencent à 1). */
@@ -181,7 +195,10 @@ class MainActivity : ComponentActivity() {
                 val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 GoalListViewModel(
                     app.database.goalDao(),
-                    onGoalsChanged = { GoalWidgets.refreshAll(app) },
+                    onGoalsChanged = {
+                        GoalWidgets.refreshAll(app)
+                        app.rescheduleNotifications()
+                    },
                     initialOrder = GoalOrder.fromWire(prefs.getString(PREF_ORDER, null)),
                     onOrderChanged = { prefs.edit().putString(PREF_ORDER, it.wire).apply() },
                 )

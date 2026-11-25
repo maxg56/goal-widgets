@@ -125,4 +125,28 @@
     <string name="import_error_invalid_goal">Fichier refusé : l\'objectif n° %1$d est invalide (champ « %2$s »). Aucun objectif n\'a été importé.</string>
     <string name="import_error_duplicate_id">Fichier refusé : un même objectif y figure deux fois. Aucun objectif n\'a été importé.</string>
     <string name="import_error_unreadable">Impossible de lire ce fichier. Aucun objectif n\'a été importé.</string>
+
+    <!-- Notifications de jalons (t08). Mêmes clés qu'iOS (t09) ; le titre d'une notification est
+         celui de l'objectif. %1$s = durée construite avec breakdown_years / breakdown_months. -->
+    <string name="goal_form_notifications">Notifications de jalons</string>
+    <string name="goal_form_notifications_footer">Compteur « depuis » : chaque mois et chaque année. Compte à rebours : rappels mensuels, puis J-30, J-7, J-1 et le jour J.</string>
+    <string name="notifications_settings_title">Notifications</string>
+    <string name="notifications_send_time">Heure d\'envoi</string>
+    <string name="notifications_send_time_footer">Heure à laquelle arrivent les notifications, pour tous les objectifs.</string>
+    <string name="notifications_denied_hint">Les notifications de Goal Widgets sont désactivées dans les paramètres du téléphone.</string>
+    <string name="notifications_open_settings">Ouvrir les paramètres</string>
+    <string name="notifications_battery_title">Notifications en retard ou absentes ?</string>
+    <string name="notifications_battery_hint">Certains téléphones (Xiaomi, Huawei, Honor, Oppo…) arrêtent les applications en arrière-plan pour économiser la batterie. Si les notifications n\'arrivent pas, désactivez l\'optimisation de batterie pour Goal Widgets (et, sur Xiaomi, autorisez le « démarrage automatique »).</string>
+    <string name="notifications_battery_open">Optimisation de batterie</string>
+    <string name="notif_channel_name">Jalons des objectifs</string>
+    <string name="notif_channel_description">Mois-anniversaires, anniversaires et rappels avant une date cible</string>
+    <string name="notif_since_elapsed">Ça fait %1$s</string>
+    <string name="notif_countdown_remaining">Plus que %1$s</string>
+    <string name="notif_countdown_tomorrow">C\'est demain !</string>
+    <string name="notif_countdown_today">C\'est aujourd\'hui !</string>
+    <plurals name="notif_countdown_days_left">
+        <item quantity="one">Plus que %d jour</item>
+        <item quantity="many">Plus que %d jours</item>
+        <item quantity="other">Plus que %d jours</item>
+    </plurals>
 </resources>

@@ -36,6 +36,11 @@ data class GoalEntity(
     val color: String? = null,
     /** Emoji libre, ou `null` (v2). */
     val emoji: String? = null,
+    /**
+     * Notifications de jalons activées pour cet objectif (v3, t08). Désactivées par défaut, y compris
+     * pour les nouveaux objectifs : l'autorisation est demandée quand l'utilisateur les active.
+     */
+    @ColumnInfo(defaultValue = "0") val notificationsEnabled: Boolean = false,
 ) {
     fun toGoal(): Goal = Goal(
         kind = GoalKind.fromWire(kind),
@@ -46,18 +51,23 @@ data class GoalEntity(
 
     fun style(): GoalStyle = GoalStyle(GoalColor.fromWire(color), emoji)
 
-    /** `notificationsEnabled` reste `null` tant que la base ne le stocke pas (ticket 08). */
     fun toExported(): ExportedGoal = ExportedGoal(
         id = uid,
         goal = toGoal(),
         color = GoalColor.fromWire(color),
         emoji = emoji,
-        notificationsEnabled = null,
+        notificationsEnabled = notificationsEnabled,
         createdAt = Instant.ofEpochMilli(createdAtMillis),
     )
 
     companion object {
-        fun from(goal: Goal, createdAtMillis: Long, style: GoalStyle = GoalStyle.NONE, id: Long = 0) = GoalEntity(
+        fun from(
+            goal: Goal,
+            createdAtMillis: Long,
+            style: GoalStyle = GoalStyle.NONE,
+            id: Long = 0,
+            notificationsEnabled: Boolean = false,
+        ) = GoalEntity(
             id = id,
             title = goal.title,
             kind = goal.kind.wire,
@@ -66,13 +76,18 @@ data class GoalEntity(
             createdAtMillis = createdAtMillis,
             color = style.color?.wire,
             emoji = style.emoji,
+            notificationsEnabled = notificationsEnabled,
         )
 
-        /** Objectif importé : garde son UUID et sa date de création d'origine. */
+        /**
+         * Objectif importé : garde son UUID et sa date de création d'origine.
+         * `notificationsEnabled` absent/null dans le fichier → défaut (désactivées).
+         */
         fun fromExported(e: ExportedGoal) = from(
             goal = e.goal,
             createdAtMillis = e.createdAt.toEpochMilli(),
             style = GoalStyle(e.color, e.emoji),
+            notificationsEnabled = e.notificationsEnabled ?: false,
         ).copy(uid = e.id)
     }
 }

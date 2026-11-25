@@ -16,6 +16,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -73,6 +74,8 @@ fun GoalListScreen(
     onContinueAsSince: (StoredGoal) -> Unit = {},
     /** Objectif à faire défiler jusqu'à l'écran (ouverture depuis un widget). */
     focusGoalId: Long? = null,
+    /** Cloche : réglages globaux des notifications (heure d'envoi). */
+    onOpenNotificationSettings: () -> Unit = {},
 ) {
     val sorted = remember(goals, order, today) { goals?.let { order.sort(it, today) { g -> g.sortKey } } }
     val listState = rememberLazyListState()
@@ -84,7 +87,15 @@ fun GoalListScreen(
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.goal_list_title)) },
-                actions = { ListMenu(order, onOrderChange, onExport, onImport) },
+                actions = {
+                    IconButton(onClick = onOpenNotificationSettings) {
+                        Icon(
+                            Icons.Filled.Notifications,
+                            contentDescription = stringResource(R.string.notifications_settings_title),
+                        )
+                    }
+                    ListMenu(order, onOrderChange, onExport, onImport)
+                },
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },

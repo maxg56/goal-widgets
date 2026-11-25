@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Tests JVM de la migration Room (SQLite réel via JDBC, sans appareil ni Robolectric).
     testImplementation(platform("org.junit:junit-bom:5.11.3"))

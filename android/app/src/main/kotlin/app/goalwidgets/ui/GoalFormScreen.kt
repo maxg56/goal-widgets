@@ -81,7 +81,8 @@ import java.time.format.FormatStyle
 fun GoalFormScreen(
     existing: StoredGoal?,
     today: LocalDate,
-    onSave: (Goal, GoalStyle) -> Unit,
+    /** Objectif validé, son style et l'état de l'interrupteur de notifications. */
+    onSave: (Goal, GoalStyle, Boolean) -> Unit,
     onCancel: () -> Unit,
     onDelete: () -> Unit = {},
     onContinueAsSince: () -> Unit = {},
@@ -96,6 +97,8 @@ fun GoalFormScreen(
     // Les erreurs ne s'affichent qu'après une première tentative d'enregistrement.
     var attempted by rememberSaveable { mutableStateOf(false) }
     var confirmingDelete by rememberSaveable { mutableStateOf(false) }
+    // Désactivées par défaut, y compris pour un nouvel objectif (même règle qu'iOS).
+    var notificationsEnabled by rememberSaveable { mutableStateOf(existing?.notificationsEnabled ?: false) }
 
     val draft = GoalDraft(kind, title, startDate, targetDate, today)
     val errors = if (attempted) draft.errors() else emptySet()
@@ -124,7 +127,11 @@ fun GoalFormScreen(
                     TextButton(onClick = {
                         attempted = true
                         if (draft.errors().isEmpty()) {
-                            onSave(draft.toGoal(), GoalStyle(color, emoji?.trim()?.takeIf { it.isNotEmpty() }))
+                            onSave(
+                                draft.toGoal(),
+                                GoalStyle(color, emoji?.trim()?.takeIf { it.isNotEmpty() }),
+                                notificationsEnabled,
+                            )
                         }
                     }) { Text(stringResource(R.string.action_save)) }
                 },
@@ -183,6 +190,7 @@ fun GoalFormScreen(
             }
             ColorSelector(selected = color, onSelect = { color = it })
             EmojiSelector(selected = emoji, onSelect = { emoji = it })
+            NotificationToggle(enabled = notificationsEnabled, onChange = { notificationsEnabled = it })
             if (canContinueAsSince) {
                 OutlinedButton(onClick = onContinueAsSince, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.goal_action_continue_as_since))
@@ -363,7 +371,7 @@ private fun Long.utcMillisToLocalDate(): LocalDate = Instant.ofEpochMilli(this).
 @Preview(showBackground = true)
 @Composable
 private fun GoalFormScreenNewPreview() {
-    GoalWidgetsTheme { GoalFormScreen(existing = null, today = LocalDate.of(2026, 1, 6), onSave = { _, _ -> }, onCancel = {}) }
+    GoalWidgetsTheme { GoalFormScreen(existing = null, today = LocalDate.of(2026, 1, 6), onSave = { _, _, _ -> }, onCancel = {}) }
 }
 
 @Preview(showBackground = true)
@@ -374,7 +382,7 @@ private fun GoalFormScreenEditReachedPreview() {
         GoalFormScreen(
             existing = StoredGoal(1, goal, GoalStyle(GoalColor.BLUE, "🎓")),
             today = LocalDate.of(2026, 1, 6),
-            onSave = { _, _ -> },
+            onSave = { _, _, _ -> },
             onCancel = {},
         )
     }

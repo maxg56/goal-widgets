@@ -61,6 +61,8 @@ targets:
       - GoalWidgetsWidget
       - path: GoalWidgets/Storage
       - path: GoalWidgets/GoalLabels.swift
+      # Teintes clair/sombre des couleurs d'objectif (t11).
+      - path: GoalWidgets/GoalAppearance.swift
       - path: GoalWidgets/fr.lproj
     dependencies:
       - package: GoalCore

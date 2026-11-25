@@ -25,6 +25,9 @@ struct GoalFormView: View {
     /// Notifications de jalons de cet objectif (t09) ; l'autorisation iOS est demandée à l'activation.
     @State private var notificationsEnabled: Bool
     @State private var notificationsDenied = false
+    /// Couleur et emoji (t11).
+    @State private var color: GoalColor?
+    @State private var emoji: String
 
     init(mode: Mode) {
         self.mode = mode
@@ -37,6 +40,8 @@ struct GoalFormView: View {
             _startDate = State(initialValue: now)
             _targetDate = State(initialValue: inThirtyDays)
             _notificationsEnabled = State(initialValue: false)
+            _color = State(initialValue: nil)
+            _emoji = State(initialValue: "")
         case .edit(let record):
             let goal = record.goal
             _title = State(initialValue: record.title)
@@ -44,6 +49,8 @@ struct GoalFormView: View {
             _startDate = State(initialValue: goal.map { Self.date(from: $0.startDate) } ?? now)
             _targetDate = State(initialValue: goal?.targetDate.map { Self.date(from: $0) } ?? inThirtyDays)
             _notificationsEnabled = State(initialValue: record.notificationsEnabled)
+            _color = State(initialValue: record.style.color)
+            _emoji = State(initialValue: record.style.emoji ?? "")
         }
     }
 
@@ -110,6 +117,14 @@ struct GoalFormView: View {
                         Text(message)
                             .foregroundStyle(.red)
                     }
+                }
+
+                Section("goal_form_color") {
+                    ColorSwatchPicker(selection: $color)
+                }
+
+                Section("goal_form_emoji") {
+                    EmojiPicker(selection: $emoji)
                 }
 
                 Section {
@@ -179,6 +194,8 @@ struct GoalFormView: View {
         kind = converted.kind
     }
 
+    private var style: GoalStyle { GoalStyle(color: color, emoji: emoji) }
+
     private func save() {
         guard isValid else { return }
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -196,11 +213,13 @@ struct GoalFormView: View {
                 kind: goal.kind,
                 startDate: goal.startDate,
                 targetDate: goal.targetDate,
-                notificationsEnabled: notificationsEnabled
+                notificationsEnabled: notificationsEnabled,
+                style: style
             ))
         case .edit(let record):
             record.update(title: cleanTitle, goal: goal)
             record.notificationsEnabled = notificationsEnabled
+            record.style = style
         }
         // La sauvegarde déclenche la reprogrammation des notifications (GoalWidgetsApp, ModelContext.didSave).
         try? modelContext.save()

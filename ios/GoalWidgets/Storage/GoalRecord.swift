@@ -19,6 +19,11 @@ final class GoalRecord {
     /// automatique de SwiftData pour les objectifs existants (désactivées, cf. spec 44 : l'autorisation
     /// est demandée quand l'utilisateur active une notification).
     var notificationsEnabled: Bool = false
+    /// Couleur (t11) : `GoalColor.rawValue` ou nil (couleur du thème). Optionnelle avec valeur par
+    /// défaut : migration légère automatique, comme `notificationsEnabled`.
+    var colorRaw: String? = nil
+    /// Emoji affiché devant le titre (t11), nil = aucun.
+    var emoji: String? = nil
 
     init(
         id: UUID = UUID(),
@@ -27,7 +32,8 @@ final class GoalRecord {
         startDate: LocalDate,
         targetDate: LocalDate?,
         createdAt: Date = Date(),
-        notificationsEnabled: Bool = false
+        notificationsEnabled: Bool = false,
+        style: GoalStyle = .none
     ) {
         self.id = id
         self.title = title
@@ -36,6 +42,8 @@ final class GoalRecord {
         self.targetDateISO = targetDate?.iso
         self.createdAt = createdAt
         self.notificationsEnabled = notificationsEnabled
+        self.colorRaw = style.color?.rawValue
+        self.emoji = style.emoji
     }
 }
 
@@ -48,4 +56,19 @@ extension GoalRecord {
         if kind == .countdown && target == nil { return nil }
         return Goal(kind: kind, startDate: start, targetDate: target)
     }
+
+    /// Couleur et emoji (t11) ; une couleur inconnue est ignorée.
+    var style: GoalStyle {
+        get { GoalStyle(color: GoalColor(wire: colorRaw), emoji: emoji) }
+        set {
+            colorRaw = newValue.color?.rawValue
+            emoji = GoalStyle.normalizedEmoji(newValue.emoji)
+        }
+    }
+
+    /// Titre précédé de l'emoji éventuel (liste, widget, choix du widget).
+    var displayTitle: String { style.decorate(title) }
+
+    /// Identifiant du format d'export : `id` en minuscules (`docs/export-format.md`).
+    var exportID: String { id.uuidString.lowercased() }
 }

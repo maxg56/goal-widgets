@@ -44,3 +44,37 @@
 "notif_countdown_remaining" = "Plus que %@";
 "notif_countdown_tomorrow" = "C'est demain !";
 "notif_countdown_today" = "C'est aujourd'hui !";
+
+/* Couleur, emoji, tri, export/import (t11). Mêmes clés qu'Android (t10). */
+/* Pluriels export_done, import_added, import_skipped : voir Localizable.stringsdict. */
+"goal_form_color" = "Couleur";
+"goal_form_emoji" = "Emoji";
+"goal_form_emoji_custom" = "Autre emoji";
+"goal_color_none" = "Aucune couleur";
+"goal_emoji_none" = "Aucun emoji";
+"goal_color_red" = "Rouge";
+"goal_color_orange" = "Orange";
+"goal_color_yellow" = "Jaune";
+"goal_color_green" = "Vert";
+"goal_color_teal" = "Turquoise";
+"goal_color_blue" = "Bleu";
+"goal_color_indigo" = "Indigo";
+"goal_color_purple" = "Violet";
+"goal_color_pink" = "Rose";
+"goal_color_gray" = "Gris";
+"action_more" = "Plus d'options";
+"goal_sort_title" = "Trier par";
+"goal_sort_closest_date" = "Date la plus proche";
+"goal_sort_created" = "Date de création";
+"action_export" = "Exporter les objectifs";
+"action_share_export" = "Partager l'export";
+"action_import" = "Importer des objectifs";
+"export_failed" = "L'export a échoué : le fichier n'a pas pu être écrit.";
+"import_empty" = "Ce fichier ne contient aucun objectif.";
+"import_error_not_export" = "Ce fichier n'est pas un export Goal Widgets. Aucun objectif n'a été modifié.";
+/* %ld = version du format du fichier. */
+"import_error_unsupported_version" = "Ce fichier vient d'une version plus récente de l'app (format %ld). Mettez l'app à jour pour l'importer.";
+/* %1$ld = n° de l'objectif (à partir de 1), %2$@ = nom du champ. */
+"import_error_invalid_goal" = "Fichier refusé : l'objectif n° %1$ld est invalide (champ « %2$@ »). Aucun objectif n'a été importé.";
+"import_error_duplicate_id" = "Fichier refusé : un même objectif y figure deux fois. Aucun objectif n'a été importé.";
+"import_error_unreadable" = "Impossible de lire ce fichier. Aucun objectif n'a été importé.";

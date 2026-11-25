@@ -18,6 +18,8 @@ data class StoredGoal(val id: Long, val goal: Goal)
 class GoalListViewModel(
     private val dao: GoalDao,
     private val clockMillis: () -> Long = System::currentTimeMillis,
+    /** Appelé après chaque écriture (ajout, modification, suppression) : rafraîchit les widgets. */
+    private val onGoalsChanged: suspend () -> Unit = {},
 ) : ViewModel() {
 
     /** `null` tant que la base n'a pas répondu. */
@@ -26,7 +28,10 @@ class GoalListViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun add(goal: Goal) {
-        viewModelScope.launch { dao.insert(GoalEntity.from(goal, createdAtMillis = clockMillis())) }
+        viewModelScope.launch {
+            dao.insert(GoalEntity.from(goal, createdAtMillis = clockMillis()))
+            onGoalsChanged()
+        }
     }
 
     /** Modifie l'objectif [id] (même id, date de création conservée). */
@@ -39,6 +44,7 @@ class GoalListViewModel(
                 startEpochDay = goal.startDate.toEpochDay(),
                 targetEpochDay = goal.targetDate?.toEpochDay(),
             )
+            onGoalsChanged()
         }
     }
 
@@ -46,6 +52,9 @@ class GoalListViewModel(
     fun continueAsSince(stored: StoredGoal) = update(stored.id, stored.goal.continueAsSince())
 
     fun delete(id: Long) {
-        viewModelScope.launch { dao.deleteById(id) }
+        viewModelScope.launch {
+            dao.deleteById(id)
+            onGoalsChanged()
+        }
     }
 }

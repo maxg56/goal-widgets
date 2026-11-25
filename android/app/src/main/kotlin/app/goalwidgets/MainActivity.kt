@@ -20,12 +20,15 @@ import app.goalwidgets.ui.GoalFormScreen
 import app.goalwidgets.ui.GoalListScreen
 import app.goalwidgets.ui.GoalListViewModel
 import app.goalwidgets.ui.GoalWidgetsTheme
+import app.goalwidgets.widget.GoalWidgets
 import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Ouvert depuis un widget : objectif à montrer dans la liste.
+        val focusGoalId = intent.getLongExtra(EXTRA_GOAL_ID, -1L).takeIf { it >= 0 }
         setContent {
             GoalWidgetsTheme {
                 val vm: GoalListViewModel = viewModel(factory = factory)
@@ -64,20 +67,24 @@ class MainActivity : ComponentActivity() {
                         onAdd = { editing = NEW_GOAL },
                         onOpen = { editing = it.id },
                         onContinueAsSince = vm::continueAsSince,
+                        focusGoalId = focusGoalId,
                     )
                 }
             }
         }
     }
 
-    private companion object {
-        /** Valeur de `editing` pour un nouvel objectif (les id Room commencent à 1). */
-        const val NEW_GOAL = -1L
+    companion object {
+        /** Id (Long) de l'objectif à montrer à l'ouverture (appui sur un widget). */
+        const val EXTRA_GOAL_ID = "app.goalwidgets.extra.GOAL_ID"
 
-        val factory = viewModelFactory {
+        /** Valeur de `editing` pour un nouvel objectif (les id Room commencent à 1). */
+        private const val NEW_GOAL = -1L
+
+        private val factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as GoalWidgetsApplication
-                GoalListViewModel(app.database.goalDao())
+                GoalListViewModel(app.database.goalDao(), onGoalsChanged = { GoalWidgets.refreshAll(app) })
             }
         }
     }

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
@@ -23,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,7 +48,14 @@ fun GoalListScreen(
     onAdd: () -> Unit,
     onOpen: (StoredGoal) -> Unit = {},
     onContinueAsSince: (StoredGoal) -> Unit = {},
+    /** Objectif à faire défiler jusqu'à l'écran (ouverture depuis un widget). */
+    focusGoalId: Long? = null,
 ) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(goals != null, focusGoalId) {
+        val index = goals?.indexOfFirst { it.id == focusGoalId } ?: -1
+        if (index >= 0) listState.animateScrollToItem(index)
+    }
     Scaffold(
         topBar = { TopAppBar(title = { Text(stringResource(R.string.goal_list_title)) }) },
         floatingActionButton = {
@@ -71,6 +80,7 @@ fun GoalListScreen(
             }
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
+                state = listState,
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 96.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {

@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 /** Objectif stocké, prêt pour l'affichage (le calcul se fait avec la date du jour, côté écran). */
 data class StoredGoal(val id: Long, val goal: Goal)
 
+/** Toutes les écritures d'objectifs de l'app passent par ici (création, modification, suppression). */
 class GoalListViewModel(
     private val dao: GoalDao,
     private val clockMillis: () -> Long = System::currentTimeMillis,
@@ -26,5 +27,25 @@ class GoalListViewModel(
 
     fun add(goal: Goal) {
         viewModelScope.launch { dao.insert(GoalEntity.from(goal, createdAtMillis = clockMillis())) }
+    }
+
+    /** Modifie l'objectif [id] (même id, date de création conservée). */
+    fun update(id: Long, goal: Goal) {
+        viewModelScope.launch {
+            dao.updateContent(
+                id = id,
+                title = goal.title,
+                kind = goal.kind.wire,
+                startEpochDay = goal.startDate.toEpochDay(),
+                targetEpochDay = goal.targetDate?.toEpochDay(),
+            )
+        }
+    }
+
+    /** « Continuer en compteur depuis » : l'objectif garde son id, devient « depuis » sa cible. */
+    fun continueAsSince(stored: StoredGoal) = update(stored.id, stored.goal.continueAsSince())
+
+    fun delete(id: Long) {
+        viewModelScope.launch { dao.deleteById(id) }
     }
 }

@@ -280,6 +280,409 @@
         "progress": 1.0,
         "percent": 100
       }
+    },
+    {
+      "name": "depuis, 10 jours après la date : phase elapsed, 10 jours, pas de progression",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-01"
+      },
+      "today": "2026-01-11",
+      "expected": {
+        "phase": "elapsed",
+        "days": 10,
+        "progress": null,
+        "percent": null
+      }
+    },
+    {
+      "name": "depuis, le jour même de la date : phase elapsed, 0 jour",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-01"
+      },
+      "today": "2026-01-01",
+      "expected": {
+        "phase": "elapsed",
+        "days": 0
+      }
+    },
+    {
+      "name": "depuis, date dans le futur (tolérée, refusée par le formulaire) : phase elapsed, 0 jour, pas de progression",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-11"
+      },
+      "today": "2026-01-01",
+      "expected": {
+        "phase": "elapsed",
+        "days": 0,
+        "progress": null,
+        "percent": null
+      }
+    },
+    {
+      "name": "depuis, décomposition simple : 1 an 2 mois 3 jours",
+      "goal": {
+        "kind": "since",
+        "startDate": "2025-01-01"
+      },
+      "today": "2026-03-04",
+      "expected": {
+        "phase": "elapsed",
+        "days": 427,
+        "breakdown": {
+          "years": 1,
+          "months": 2,
+          "days": 3
+        }
+      }
+    },
+    {
+      "name": "depuis le 31 janvier, le 28 février (année non bissextile) : 1 mois pile (repli sur le dernier jour du mois)",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-31"
+      },
+      "today": "2026-02-28",
+      "expected": {
+        "phase": "elapsed",
+        "days": 28,
+        "breakdown": {
+          "years": 0,
+          "months": 1,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis le 31 janvier, le 27 février : 0 mois 27 jours",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-31"
+      },
+      "today": "2026-02-27",
+      "expected": {
+        "phase": "elapsed",
+        "days": 27,
+        "breakdown": {
+          "years": 0,
+          "months": 0,
+          "days": 27
+        }
+      }
+    },
+    {
+      "name": "depuis le 31 janvier, le 1er mars : 1 mois 1 jour (jours comptés depuis le 28 février)",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-31"
+      },
+      "today": "2026-03-01",
+      "expected": {
+        "phase": "elapsed",
+        "days": 29,
+        "breakdown": {
+          "years": 0,
+          "months": 1,
+          "days": 1
+        }
+      }
+    },
+    {
+      "name": "depuis le 31 janvier, le 30 mars : 1 mois 30 jours (le 2e mois-anniversaire est le 31 mars)",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-31"
+      },
+      "today": "2026-03-30",
+      "expected": {
+        "phase": "elapsed",
+        "days": 58,
+        "breakdown": {
+          "years": 0,
+          "months": 1,
+          "days": 30
+        }
+      }
+    },
+    {
+      "name": "depuis le 31 janvier, le 31 mars : 2 mois pile",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-31"
+      },
+      "today": "2026-03-31",
+      "expected": {
+        "phase": "elapsed",
+        "days": 59,
+        "breakdown": {
+          "years": 0,
+          "months": 2,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis le 31 mars, le 30 avril : 1 mois pile (31 -> 30)",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-03-31"
+      },
+      "today": "2026-04-30",
+      "expected": {
+        "phase": "elapsed",
+        "days": 30,
+        "breakdown": {
+          "years": 0,
+          "months": 1,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis le 31 janvier d'une année bissextile, le 29 février : 1 mois pile",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-01-31"
+      },
+      "today": "2024-02-29",
+      "expected": {
+        "phase": "elapsed",
+        "days": 29,
+        "breakdown": {
+          "years": 0,
+          "months": 1,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis le 31 janvier d'une année bissextile, le 28 février : 0 mois 28 jours",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-01-31"
+      },
+      "today": "2024-02-28",
+      "expected": {
+        "phase": "elapsed",
+        "days": 28,
+        "breakdown": {
+          "years": 0,
+          "months": 0,
+          "days": 28
+        }
+      }
+    },
+    {
+      "name": "depuis le 29 février, le 28 février suivant : 1 an pile",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-02-29"
+      },
+      "today": "2025-02-28",
+      "expected": {
+        "phase": "elapsed",
+        "days": 365,
+        "breakdown": {
+          "years": 1,
+          "months": 0,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis le 29 février, le 27 février suivant : 11 mois 29 jours",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-02-29"
+      },
+      "today": "2025-02-27",
+      "expected": {
+        "phase": "elapsed",
+        "days": 364,
+        "breakdown": {
+          "years": 0,
+          "months": 11,
+          "days": 29
+        }
+      }
+    },
+    {
+      "name": "depuis le 29 février, le 1er mars suivant : 1 an 1 jour",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-02-29"
+      },
+      "today": "2025-03-01",
+      "expected": {
+        "phase": "elapsed",
+        "days": 366,
+        "breakdown": {
+          "years": 1,
+          "months": 0,
+          "days": 1
+        }
+      }
+    },
+    {
+      "name": "depuis le 29 février, 4 ans plus tard le 29 février : 4 ans pile",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-02-29"
+      },
+      "today": "2028-02-29",
+      "expected": {
+        "phase": "elapsed",
+        "days": 1461,
+        "breakdown": {
+          "years": 4,
+          "months": 0,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis le 1er janvier d'une année bissextile, un an après : 366 jours, 1 an pile",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-01-01"
+      },
+      "today": "2025-01-01",
+      "expected": {
+        "phase": "elapsed",
+        "days": 366,
+        "breakdown": {
+          "years": 1,
+          "months": 0,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis le 31 décembre, passage à la nouvelle année : 1 jour",
+      "goal": {
+        "kind": "since",
+        "startDate": "2025-12-31"
+      },
+      "today": "2026-01-01",
+      "expected": {
+        "phase": "elapsed",
+        "days": 1,
+        "breakdown": {
+          "years": 0,
+          "months": 0,
+          "days": 1
+        }
+      }
+    },
+    {
+      "name": "depuis, le jour même : décomposition 0 an 0 mois 0 jour",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-05-15"
+      },
+      "today": "2026-05-15",
+      "expected": {
+        "phase": "elapsed",
+        "days": 0,
+        "breakdown": {
+          "years": 0,
+          "months": 0,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis, date dans le futur : décomposition 0 an 0 mois 0 jour",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-05-15"
+      },
+      "today": "2026-05-14",
+      "expected": {
+        "phase": "elapsed",
+        "days": 0,
+        "breakdown": {
+          "years": 0,
+          "months": 0,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "compte à rebours atteint : pas de décomposition",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-03-01",
+      "expected": {
+        "phase": "reached",
+        "days": 49,
+        "breakdown": null
+      }
+    },
+    {
+      "name": "compte à rebours atteint converti en « depuis » : compte depuis la date cible",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-03-15"
+      },
+      "action": "continueAsSince",
+      "today": "2026-04-20",
+      "expected": {
+        "phase": "elapsed",
+        "days": 36,
+        "progress": null,
+        "percent": null,
+        "breakdown": {
+          "years": 0,
+          "months": 1,
+          "days": 5
+        }
+      }
+    },
+    {
+      "name": "compte à rebours converti en « depuis » le jour J : 0 jour écoulé",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-03-15"
+      },
+      "action": "continueAsSince",
+      "today": "2026-03-15",
+      "expected": {
+        "phase": "elapsed",
+        "days": 0,
+        "breakdown": {
+          "years": 0,
+          "months": 0,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis, une date cible éventuelle est ignorée",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-05"
+      },
+      "today": "2026-01-16",
+      "expected": {
+        "phase": "elapsed",
+        "days": 15,
+        "progress": null,
+        "percent": null,
+        "breakdown": {
+          "years": 0,
+          "months": 0,
+          "days": 15
+        }
+      }
     }
   ]
 }

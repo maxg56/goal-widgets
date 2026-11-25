@@ -1,0 +1,3 @@
+/* Langue par défaut : français. Clés identiques aux noms de res/values/strings.xml côté Android. */
+"goal_list_title" = "Mes objectifs";
+"goal_list_empty" = "Aucun objectif pour l'instant";

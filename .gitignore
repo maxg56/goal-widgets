@@ -14,3 +14,4 @@ xcuserdata/
 .build/
 # OS
 .DS_Store
+*.xcodeproj/

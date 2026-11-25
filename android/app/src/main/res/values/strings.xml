@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Langue par défaut : français. Ajouter values-xx/strings.xml pour d'autres langues. -->
+<resources>
+    <string name="app_name">Goal Widgets</string>
+    <string name="goal_list_title">Mes objectifs</string>
+    <string name="goal_list_empty">Aucun objectif pour l\'instant</string>
+</resources>

@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "description": "Moteur de compte à rebours : objectif + date du jour -> état d'affichage. Seuls les champs présents dans `expected` sont vérifiés.",
+  "cases": [
+    {
+      "name": "compte à rebours, jour de départ : 10 jours restants, 0 %",
+      "goal": { "kind": "countdown", "startDate": "2026-01-01", "targetDate": "2026-01-11" },
+      "today": "2026-01-01",
+      "expected": { "phase": "upcoming", "days": 10, "progress": 0.0 }
+    }
+  ]
+}

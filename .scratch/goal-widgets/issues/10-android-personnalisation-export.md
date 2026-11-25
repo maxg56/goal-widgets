@@ -4,11 +4,11 @@
 
 **Blocked by:** 04 — Android : objectifs « depuis », modifier, supprimer
 
-**Status:** ready-for-agent
+**Status:** done (t10) — vérifié par `./gradlew test assembleDebug` ; rendu à l'écran (formulaire, liste, widget, sélecteurs SAF) non vérifié faute d'appareil/émulateur. Format : `docs/export-format.md`.
 
-- [ ] Choix de couleur et d'emoji ; visibles dans la liste et les widgets
-- [ ] Tri par date la plus proche et par création
-- [ ] Export de tous les objectifs dans un fichier via le partage système
-- [ ] Import d'un fichier : ajout des objectifs, sans doublons si on importe deux fois
-- [ ] Format d'export versionné et documenté
-- [ ] Fichier invalide → message d'erreur clair, aucune donnée perdue
+- [x] Choix de couleur et d'emoji ; visibles dans la liste et les widgets
+- [x] Tri par date la plus proche et par création
+- [x] Export de tous les objectifs dans un fichier via le partage système
+- [x] Import d'un fichier : ajout des objectifs, sans doublons si on importe deux fois
+- [x] Format d'export versionné et documenté
+- [x] Fichier invalide → message d'erreur clair, aucune donnée perdue

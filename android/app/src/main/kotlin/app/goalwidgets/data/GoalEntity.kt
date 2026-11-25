@@ -1,16 +1,26 @@
 package app.goalwidgets.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
+import app.goalwidgets.core.ExportedGoal
 import app.goalwidgets.core.Goal
+import app.goalwidgets.core.GoalColor
 import app.goalwidgets.core.GoalKind
+import app.goalwidgets.core.GoalStyle
+import java.time.Instant
 import java.time.LocalDate
+import java.util.UUID
 
 /**
  * Ligne Room d'un objectif. Distinct de [Goal] (valeur pure de `:core`) : les dates sont
  * stockées en jours epoch (`LocalDate.toEpochDay()`), calendaires et sans fuseau.
+ *
+ * [id] (entier) reste la clé locale (widgets, liens) ; [uid] (UUID) est l'identifiant portable
+ * du format d'export, qui évite les doublons à l'import (schéma v2, `MIGRATION_1_2`).
  */
-@Entity(tableName = "goals")
+@Entity(tableName = "goals", indices = [Index(value = ["uid"], unique = true)])
 data class GoalEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String,
@@ -20,6 +30,12 @@ data class GoalEntity(
     val targetEpochDay: Long?,
     /** Instant de création, en millisecondes epoch. */
     val createdAtMillis: Long,
+    /** UUID en minuscules (v2). Le défaut SQL '' n'existe que pour l'`ALTER TABLE` de la migration. */
+    @ColumnInfo(defaultValue = "") val uid: String = UUID.randomUUID().toString(),
+    /** Valeur `GoalColor.wire`, ou `null` (couleur par défaut du thème) (v2). */
+    val color: String? = null,
+    /** Emoji libre, ou `null` (v2). */
+    val emoji: String? = null,
 ) {
     fun toGoal(): Goal = Goal(
         kind = GoalKind.fromWire(kind),
@@ -28,14 +44,35 @@ data class GoalEntity(
         title = title,
     )
 
+    fun style(): GoalStyle = GoalStyle(GoalColor.fromWire(color), emoji)
+
+    /** `notificationsEnabled` reste `null` tant que la base ne le stocke pas (ticket 08). */
+    fun toExported(): ExportedGoal = ExportedGoal(
+        id = uid,
+        goal = toGoal(),
+        color = GoalColor.fromWire(color),
+        emoji = emoji,
+        notificationsEnabled = null,
+        createdAt = Instant.ofEpochMilli(createdAtMillis),
+    )
+
     companion object {
-        fun from(goal: Goal, createdAtMillis: Long, id: Long = 0) = GoalEntity(
+        fun from(goal: Goal, createdAtMillis: Long, style: GoalStyle = GoalStyle.NONE, id: Long = 0) = GoalEntity(
             id = id,
             title = goal.title,
             kind = goal.kind.wire,
             startEpochDay = goal.startDate.toEpochDay(),
             targetEpochDay = goal.targetDate?.toEpochDay(),
             createdAtMillis = createdAtMillis,
+            color = style.color?.wire,
+            emoji = style.emoji,
         )
+
+        /** Objectif importé : garde son UUID et sa date de création d'origine. */
+        fun fromExported(e: ExportedGoal) = from(
+            goal = e.goal,
+            createdAtMillis = e.createdAt.toEpochMilli(),
+            style = GoalStyle(e.color, e.emoji),
+        ).copy(uid = e.id)
     }
 }

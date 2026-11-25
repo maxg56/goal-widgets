@@ -1,0 +1,29 @@
+{
+  "format": "goal-widgets-export",
+  "version": 1,
+  "exportedAt": "2026-11-25T08:30:00Z",
+  "goals": [
+    {
+      "id": "3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b",
+      "title": "Examen",
+      "kind": "countdown",
+      "startDate": "2026-09-01",
+      "targetDate": "2027-06-15",
+      "color": "blue",
+      "emoji": "🎓",
+      "notificationsEnabled": true,
+      "createdAt": "2026-09-01T07:12:45.123Z"
+    },
+    {
+      "id": "a1b2c3d4-0000-4000-8000-00000000abcd",
+      "title": "Arrêt du tabac",
+      "kind": "since",
+      "startDate": "2024-02-29",
+      "targetDate": null,
+      "color": null,
+      "emoji": null,
+      "notificationsEnabled": false,
+      "createdAt": "2024-02-29T20:00:00Z"
+    }
+  ]
+}

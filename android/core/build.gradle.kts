@@ -9,7 +9,8 @@ kotlin {
 }
 
 dependencies {
-    testImplementation(libs.kotlinx.serialization.json)
+    // Arbre JSON (sans plugin de sérialisation) : format d'export (GoalExport) et cas partagés.
+    implementation(libs.kotlinx.serialization.json)
     testImplementation(platform("org.junit:junit-bom:5.11.3"))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)

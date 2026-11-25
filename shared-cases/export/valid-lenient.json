@@ -1,0 +1,18 @@
+{
+  "format": "goal-widgets-export",
+  "version": 1,
+  "futureTopLevelField": "ignoré",
+  "goals": [
+    {
+      "id": "B7E1C9A0-1234-4ABC-8DEF-0123456789AB",
+      "title": "  Voyage  ",
+      "kind": "since",
+      "startDate": "2025-07-14",
+      "targetDate": "2025-08-01",
+      "color": "chartreuse",
+      "emoji": "   ",
+      "createdAt": "2025-07-14T10:00:00+02:00",
+      "futureGoalField": 42
+    }
+  ]
+}

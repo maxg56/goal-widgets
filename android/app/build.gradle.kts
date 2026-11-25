@@ -32,6 +32,9 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.all { it.useJUnitPlatform() }
+    }
 }
 
 ksp {
@@ -55,4 +58,18 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.glance.appwidget)
+
+    // Tests JVM de la migration Room (SQLite réel via JDBC, sans appareil ni Robolectric).
+    testImplementation(platform("org.junit:junit-bom:5.11.3"))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
+    testImplementation(libs.sqlite.jdbc)
+    testImplementation(libs.kotlinx.serialization.json)
+}
+
+tasks.withType<Test>().configureEach {
+    // Schémas Room exportés (app/schemas) lus par Migration1To2Test.
+    val schemas = layout.projectDirectory.dir("schemas")
+    inputs.dir(schemas).withPropertyName("roomSchemas")
+    systemProperty("roomSchemasDir", schemas.asFile.absolutePath)
 }

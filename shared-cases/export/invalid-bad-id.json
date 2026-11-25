@@ -1,0 +1,7 @@
+{
+  "format": "goal-widgets-export",
+  "version": 1,
+  "goals": [
+    { "id": "42", "title": "Examen", "kind": "since", "startDate": "2026-01-01", "createdAt": "2026-01-01T00:00:00Z" }
+  ]
+}

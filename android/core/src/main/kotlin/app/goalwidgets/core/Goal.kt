@@ -20,4 +20,15 @@ data class Goal(
     val targetDate: LocalDate? = null,
     /** Titre affiché (déjà nettoyé des espaces de bord). */
     val title: String = "",
-)
+) {
+    /**
+     * « Continuer en compteur depuis » : le compte à rebours devient un objectif « depuis »
+     * sa date cible (même titre). L'app ne le propose qu'une fois la cible atteinte
+     * (phase `today` ou `reached`), mais la conversion elle-même ne dépend pas du jour.
+     */
+    fun continueAsSince(): Goal {
+        require(kind == GoalKind.COUNTDOWN) { "Seul un compte à rebours se convertit" }
+        val target = requireNotNull(targetDate) { "Un compte à rebours exige une date cible" }
+        return copy(kind = GoalKind.SINCE, startDate = target, targetDate = null)
+    }
+}

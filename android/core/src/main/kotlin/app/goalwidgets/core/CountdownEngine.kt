@@ -14,6 +14,9 @@ enum class Phase(val wire: String) {
 
     /** Cible dépassée : `days` = jours écoulés depuis la cible. */
     REACHED("reached"),
+
+    /** Objectif « depuis » : `days` = jours écoulés depuis la date (0 si elle est future). */
+    ELAPSED("elapsed"),
 }
 
 /** État d'affichage d'un objectif pour une date du jour donnée. */
@@ -29,11 +32,60 @@ data class DisplayState(
      * à partir du jour J.
      */
     val percent: Int?,
+    /**
+     * Décomposition années/mois/jours du temps écoulé, uniquement pour un objectif « depuis »
+     * (null pour un compte à rebours). Voir [Breakdown.between].
+     */
+    val breakdown: Breakdown? = null,
 )
+
+/** Durée lisible « 1 an 2 mois 3 jours » (chaque champ ≥ 0, `months` < 12). */
+data class Breakdown(val years: Int, val months: Int, val days: Int) {
+    companion object {
+        /**
+         * Décomposition de [start] à [end] (inclus, `end` ≥ `start`) par mois-anniversaires.
+         *
+         * Le k-ième mois-anniversaire de `start` est `start.plusMonths(k)`, ramené au dernier
+         * jour du mois quand le jour n'existe pas (31 janvier + 1 mois = 28/29 février ;
+         * 29 février + 12 mois = 28 février). On prend le plus grand k dont l'anniversaire
+         * est ≤ `end` : `years = k / 12`, `months = k % 12`, `days` = jours de cet
+         * anniversaire à `end`. C'est la même règle de repli que les notifications de
+         * mois-anniversaire, donc « 1 mois » s'affiche le jour de la notification.
+         */
+        fun between(start: LocalDate, end: LocalDate): Breakdown {
+            require(!end.isBefore(start)) { "end ($end) avant start ($start)" }
+            var months = (end.year - start.year) * 12 + (end.monthValue - start.monthValue)
+            if (start.plusMonths(months.toLong()).isAfter(end)) months -= 1
+            val anniversary = start.plusMonths(months.toLong())
+            return Breakdown(
+                years = months / 12,
+                months = months % 12,
+                days = ChronoUnit.DAYS.between(anniversary, end).toInt(),
+            )
+        }
+    }
+}
 
 /** Moteur pur : objectif + date du jour → état d'affichage. Aucune dépendance OS. */
 object CountdownEngine {
-    fun compute(goal: Goal, today: LocalDate): DisplayState {
+    fun compute(goal: Goal, today: LocalDate): DisplayState = when (goal.kind) {
+        GoalKind.COUNTDOWN -> countdown(goal, today)
+        GoalKind.SINCE -> since(goal, today)
+    }
+
+    private fun since(goal: Goal, today: LocalDate): DisplayState {
+        // Date « depuis » future (refusée par le formulaire, mais tolérée) : 0 jour, jamais négatif.
+        val end = maxOf(today, goal.startDate)
+        return DisplayState(
+            phase = Phase.ELAPSED,
+            days = ChronoUnit.DAYS.between(goal.startDate, end).toInt(),
+            progress = null,
+            percent = null,
+            breakdown = Breakdown.between(goal.startDate, end),
+        )
+    }
+
+    private fun countdown(goal: Goal, today: LocalDate): DisplayState {
         val target = requireNotNull(goal.targetDate) { "Un compte à rebours exige une date cible" }
         val total = ChronoUnit.DAYS.between(goal.startDate, target)
         val elapsed = ChronoUnit.DAYS.between(goal.startDate, today)

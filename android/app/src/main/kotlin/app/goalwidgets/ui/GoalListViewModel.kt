@@ -14,9 +14,12 @@ import kotlinx.coroutines.launch
 /** Objectif stocké, prêt pour l'affichage (le calcul se fait avec la date du jour, côté écran). */
 data class StoredGoal(val id: Long, val goal: Goal)
 
+/** Toutes les écritures d'objectifs de l'app passent par ici (création, modification, suppression). */
 class GoalListViewModel(
     private val dao: GoalDao,
     private val clockMillis: () -> Long = System::currentTimeMillis,
+    /** Appelé après chaque écriture (ajout, modification, suppression) : rafraîchit les widgets. */
+    private val onGoalsChanged: suspend () -> Unit = {},
 ) : ViewModel() {
 
     /** `null` tant que la base n'a pas répondu. */
@@ -25,6 +28,33 @@ class GoalListViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), null)
 
     fun add(goal: Goal) {
-        viewModelScope.launch { dao.insert(GoalEntity.from(goal, createdAtMillis = clockMillis())) }
+        viewModelScope.launch {
+            dao.insert(GoalEntity.from(goal, createdAtMillis = clockMillis()))
+            onGoalsChanged()
+        }
+    }
+
+    /** Modifie l'objectif [id] (même id, date de création conservée). */
+    fun update(id: Long, goal: Goal) {
+        viewModelScope.launch {
+            dao.updateContent(
+                id = id,
+                title = goal.title,
+                kind = goal.kind.wire,
+                startEpochDay = goal.startDate.toEpochDay(),
+                targetEpochDay = goal.targetDate?.toEpochDay(),
+            )
+            onGoalsChanged()
+        }
+    }
+
+    /** « Continuer en compteur depuis » : l'objectif garde son id, devient « depuis » sa cible. */
+    fun continueAsSince(stored: StoredGoal) = update(stored.id, stored.goal.continueAsSince())
+
+    fun delete(id: Long) {
+        viewModelScope.launch {
+            dao.deleteById(id)
+            onGoalsChanged()
+        }
     }
 }

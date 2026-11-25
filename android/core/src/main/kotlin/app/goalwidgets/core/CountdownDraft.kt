@@ -2,7 +2,7 @@ package app.goalwidgets.core
 
 import java.time.LocalDate
 
-/** Erreur de saisie du formulaire de création d'un compte à rebours. */
+/** Erreur de saisie du formulaire d'objectif (voir [CountdownDraft], [GoalDraft]). */
 enum class DraftError {
     /** Titre vide ou composé uniquement d'espaces. */
     TITLE_BLANK,
@@ -12,6 +12,9 @@ enum class DraftError {
 
     /** La date cible doit être strictement postérieure à la date de départ. */
     TARGET_NOT_AFTER_START,
+
+    /** Objectif « depuis » : la date ne doit pas être dans le futur (aujourd'hui accepté). */
+    START_IN_FUTURE,
 }
 
 /** Saisie en cours d'un compte à rebours, validée avant d'être enregistrée. */

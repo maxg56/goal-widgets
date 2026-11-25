@@ -4,7 +4,7 @@ import XCTest
 import GoalCore
 
 /// Rejoue `shared-cases/engine.json` (même fichier que les tests JUnit).
-/// Seuls les champs présents dans `expected` sont vérifiés.
+/// Seuls les champs présents dans `expected` sont vérifiés ; `action` (facultatif) transforme l'objectif.
 final class EngineSharedCasesTests: XCTestCase {
 
     /// ios/GoalCore/Tests/GoalCoreTests/<ce fichier> → racine du dépôt (5 niveaux plus haut).
@@ -71,6 +71,9 @@ final class EngineSharedCasesTests: XCTestCase {
         }
         let name: String
         let goal: GoalJSON
+        /// Transformation facultative appliquée à l'objectif avant le calcul (ajout t04) :
+        /// `"continueAsSince"` = `Goal.continuedAsSince()`.
+        let action: String?
         let today: String
         let expected: Expected
     }
@@ -86,7 +89,12 @@ final class EngineSharedCasesTests: XCTestCase {
             let target = try c.goal.targetDate.map { try XCTUnwrap(LocalDate(iso: $0), "\(c.name): targetDate") }
             let today = try XCTUnwrap(LocalDate(iso: c.today), "\(c.name): today")
 
-            let state = CountdownEngine.compute(Goal(kind: kind, startDate: start, targetDate: target), today: today)
+            var goal = Goal(kind: kind, startDate: start, targetDate: target)
+            if let action = c.action {
+                XCTAssertEqual(action, "continueAsSince", "\(c.name): action inconnue")
+                goal = try XCTUnwrap(goal.continuedAsSince(), "\(c.name): conversion impossible")
+            }
+            let state = CountdownEngine.compute(goal, today: today)
 
             if let phase = c.expected.phase {
                 XCTAssertEqual(state.phase.rawValue, phase, "\(c.name): phase")

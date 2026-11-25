@@ -18,7 +18,8 @@ import java.time.LocalDate
 
 /**
  * Rejoue `shared-cases/engine.json` : chaque cas devient un test JUnit.
- * Seuls les champs présents dans `expected` sont vérifiés.
+ * Seuls les champs présents dans `expected` sont vérifiés. `action` (facultatif) transforme
+ * l'objectif avant le calcul : `continueAsSince` = [Goal.continueAsSince].
  */
 class EngineSharedCasesTest {
 
@@ -36,11 +37,17 @@ class EngineSharedCasesTest {
 
     private fun check(case: JsonObject) {
         val g = case.getValue("goal").jsonObject
-        val goal = Goal(
+        val stored = Goal(
             kind = GoalKind.fromWire(g.str("kind")),
             startDate = LocalDate.parse(g.str("startDate")),
             targetDate = g["targetDate"]?.jsonPrimitive?.content?.let(LocalDate::parse),
         )
+        // `action` facultatif : transformation appliquée à l'objectif avant le calcul.
+        val goal = when (val action = case["action"]?.jsonPrimitive?.content) {
+            null -> stored
+            "continueAsSince" -> stored.continueAsSince()
+            else -> error("action inconnue : $action")
+        }
         val state = CountdownEngine.compute(goal, today = LocalDate.parse(case.str("today")))
         val expected = case.getValue("expected").jsonObject
 
@@ -60,6 +67,19 @@ class EngineSharedCasesTest {
                 assertNull(state.percent, "percent doit être null")
             } else {
                 assertEquals(it.jsonPrimitive.int, state.percent ?: error("percent attendu mais absent"), "percent")
+            }
+        }
+        expected["breakdown"]?.let {
+            if (it is JsonNull) {
+                assertNull(state.breakdown, "breakdown doit être null")
+            } else {
+                val b = it.jsonObject
+                val expectedBreakdown = Breakdown(
+                    years = b.getValue("years").jsonPrimitive.int,
+                    months = b.getValue("months").jsonPrimitive.int,
+                    days = b.getValue("days").jsonPrimitive.int,
+                )
+                assertEquals(expectedBreakdown, state.breakdown, "breakdown")
             }
         }
     }

@@ -25,26 +25,47 @@ final class EngineSharedCasesTests: XCTestCase {
             let startDate: String
             let targetDate: String?
         }
+        /// `"breakdown": { "years": 1, "months": 2, "days": 3 }` (objectifs « depuis »).
+        struct BreakdownJSON: Decodable {
+            let years: Int
+            let months: Int
+            let days: Int
+        }
         /// Chaque champ est vérifié seulement s'il est présent.
-        /// `progress` distingue « absent » (non vérifié) de `null` explicite (doit valoir nil).
+        /// `progress`, `percent` et `breakdown` distinguent « absent » (non vérifié) de `null` explicite (doit valoir nil).
         struct Expected: Decodable {
             let phase: String?
             let days: Int?
             let progress: Double??
+            let percent: Int??
+            let breakdown: BreakdownJSON??
 
-            private enum CodingKeys: String, CodingKey { case phase, days, progress }
+            private enum CodingKeys: String, CodingKey { case phase, days, progress, percent, breakdown }
 
             init(from decoder: Decoder) throws {
                 let c = try decoder.container(keyedBy: CodingKeys.self)
                 phase = try c.decodeIfPresent(String.self, forKey: .phase)
                 days = try c.decodeIfPresent(Int.self, forKey: .days)
-                if c.contains(.progress) {
-                    let value: Double? = try c.decodeNil(forKey: .progress)
-                        ? nil
-                        : try c.decode(Double.self, forKey: .progress)
-                    progress = .some(value)
-                } else {
+                if !c.contains(.progress) {
                     progress = .none
+                } else if try c.decodeNil(forKey: .progress) {
+                    progress = .some(nil)
+                } else {
+                    progress = try c.decode(Double.self, forKey: .progress)
+                }
+                if !c.contains(.percent) {
+                    percent = .none
+                } else if try c.decodeNil(forKey: .percent) {
+                    percent = .some(nil)
+                } else {
+                    percent = try c.decode(Int.self, forKey: .percent)
+                }
+                if !c.contains(.breakdown) {
+                    breakdown = .none
+                } else if try c.decodeNil(forKey: .breakdown) {
+                    breakdown = .some(nil)
+                } else {
+                    breakdown = try c.decode(BreakdownJSON.self, forKey: .breakdown)
                 }
             }
         }
@@ -81,6 +102,27 @@ final class EngineSharedCasesTests: XCTestCase {
             case .some(.some(let progress)):
                 let actual = try XCTUnwrap(state.progress, "\(c.name): progress attendu mais absent")
                 XCTAssertEqual(actual, progress, accuracy: 1e-6, "\(c.name): progress")
+            }
+            switch c.expected.percent {
+            case .none:
+                break // champ absent : non vérifié
+            case .some(.none):
+                XCTAssertNil(state.percent, "\(c.name): percent devrait être absent (null)")
+            case .some(.some(let percent)):
+                XCTAssertEqual(state.percent, percent, "\(c.name): percent")
+            }
+            switch c.expected.breakdown {
+            case .none:
+                break // champ absent : non vérifié
+            case .some(.none):
+                XCTAssertNil(state.breakdown, "\(c.name): breakdown devrait être absent (null)")
+            case .some(.some(let expected)):
+                let actual = try XCTUnwrap(state.breakdown, "\(c.name): breakdown attendu mais absent")
+                XCTAssertEqual(
+                    actual,
+                    Breakdown(years: expected.years, months: expected.months, days: expected.days),
+                    "\(c.name): breakdown"
+                )
             }
         }
     }

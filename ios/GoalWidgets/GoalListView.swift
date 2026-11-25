@@ -5,11 +5,16 @@ import SwiftData
 import GoalCore
 
 /// Écran « Mes objectifs » : liste des objectifs avec leur état du jour.
+/// Toucher une ligne : modifier. Balayer vers la gauche : supprimer (avec confirmation).
+/// Balayer vers la droite sur un compte à rebours atteint : « Continuer en compteur depuis ».
 struct GoalListView: View {
     @Query(sort: \GoalRecord.createdAt, order: .forward) private var records: [GoalRecord]
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.scenePhase) private var scenePhase
     @State private var today = LocalDate.today()
     @State private var isCreating = false
+    @State private var editing: GoalRecord?
+    @State private var pendingDeletion: GoalRecord?
 
     var body: some View {
         NavigationStack {
@@ -17,8 +22,10 @@ struct GoalListView: View {
                 if records.isEmpty {
                     ContentUnavailableView("goal_list_empty", systemImage: "calendar")
                 } else {
-                    List(records) { record in
-                        GoalRowView(record: record, today: today)
+                    List {
+                        ForEach(records) { record in
+                            row(for: record)
+                        }
                     }
                 }
             }
@@ -33,7 +40,21 @@ struct GoalListView: View {
                 }
             }
             .sheet(isPresented: $isCreating) {
-                CreateCountdownView()
+                GoalFormView(mode: .create)
+            }
+            .sheet(item: $editing) { record in
+                GoalFormView(mode: .edit(record))
+            }
+            .confirmationDialog(
+                "goal_delete_confirm_title",
+                isPresented: isConfirmingDeletion,
+                titleVisibility: .visible,
+                presenting: pendingDeletion
+            ) { record in
+                Button("action_delete", role: .destructive) { delete(record) }
+                Button("action_cancel", role: .cancel) {}
+            } message: { _ in
+                Text("goal_delete_confirm_message")
             }
         }
         // Recalcule « aujourd'hui » au retour au premier plan et au passage de minuit.
@@ -43,6 +64,72 @@ struct GoalListView: View {
         .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
             today = LocalDate.today()
         }
+    }
+
+    private func row(for record: GoalRecord) -> some View {
+        Button {
+            editing = record
+        } label: {
+            GoalRowView(record: record, today: today)
+                .foregroundStyle(.primary)
+        }
+        // Pas de `role: .destructive` : il retirerait la ligne avant la confirmation.
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button {
+                pendingDeletion = record
+            } label: {
+                Label("action_delete", systemImage: "trash")
+            }
+            .tint(.red)
+        }
+        .swipeActions(edge: .leading) {
+            if isReached(record) {
+                Button {
+                    continueAsSince(record)
+                } label: {
+                    Label("goal_action_continue_as_since", systemImage: "arrow.forward.circle")
+                }
+                .tint(.blue)
+            }
+        }
+        .contextMenu {
+            if isReached(record) {
+                Button {
+                    continueAsSince(record)
+                } label: {
+                    Label("goal_action_continue_as_since", systemImage: "arrow.forward.circle")
+                }
+            }
+            Button(role: .destructive) {
+                pendingDeletion = record
+            } label: {
+                Label("action_delete", systemImage: "trash")
+            }
+        }
+    }
+
+    private var isConfirmingDeletion: Binding<Bool> {
+        Binding(
+            get: { pendingDeletion != nil },
+            set: { if !$0 { pendingDeletion = nil } }
+        )
+    }
+
+    private func isReached(_ record: GoalRecord) -> Bool {
+        guard let goal = record.goal else { return false }
+        return CountdownEngine.compute(goal, today: today).phase == .reached
+    }
+
+    private func continueAsSince(_ record: GoalRecord) {
+        if record.continueAsSince() {
+            try? modelContext.save()
+        }
+    }
+
+    private func delete(_ record: GoalRecord) {
+        modelContext.delete(record)
+        try? modelContext.save()
+        pendingDeletion = nil
     }
 }
 

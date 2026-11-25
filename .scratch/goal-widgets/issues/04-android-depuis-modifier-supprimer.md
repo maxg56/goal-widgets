@@ -4,11 +4,11 @@
 
 **Blocked by:** 02 — Android : créer un compte à rebours
 
-**Status:** ready-for-agent
+**Status:** done (branche `t04`) — vérifié par `./gradlew test assembleDebug` ; rendu Compose non vérifié sur appareil (pas d'émulateur).
 
-- [ ] Choix du type (compte à rebours / depuis) à la création
-- [ ] Affichage « depuis N jours » + décomposition années/mois/jours
-- [ ] Jour J : « Aujourd'hui » ; après : « Atteint il y a N jours » (jamais de nombre négatif)
-- [ ] Action « Continuer en compteur depuis » sur un objectif atteint
-- [ ] Modification de tous les champs ; suppression avec confirmation
-- [ ] Cas partagés ajoutés : phases upcoming/today/reached/elapsed, fins de mois (31 → 30/28), années bissextiles
+- [x] Choix du type (compte à rebours / depuis) à la création
+- [x] Affichage « depuis N jours » + décomposition années/mois/jours
+- [x] Jour J : « Aujourd'hui » ; après : « Atteint il y a N jours » (jamais de nombre négatif)
+- [x] Action « Continuer en compteur depuis » sur un objectif atteint
+- [x] Modification de tous les champs ; suppression avec confirmation
+- [x] Cas partagés ajoutés : phases upcoming/today/reached/elapsed, fins de mois (31 → 30/28), années bissextiles

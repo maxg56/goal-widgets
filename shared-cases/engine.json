@@ -683,6 +683,57 @@
           "days": 15
         }
       }
+    },
+    {
+      "name": "depuis le 31 mars, le 29 avril : 0 mois 29 jours",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-03-31"
+      },
+      "today": "2026-04-29",
+      "expected": {
+        "phase": "elapsed",
+        "days": 29,
+        "breakdown": {
+          "years": 0,
+          "months": 0,
+          "days": 29
+        }
+      }
+    },
+    {
+      "name": "depuis le 30 mars, le 28 février suivant : 11 mois pile (repli sur le dernier jour de février)",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-03-30"
+      },
+      "today": "2027-02-28",
+      "expected": {
+        "phase": "elapsed",
+        "days": 335,
+        "breakdown": {
+          "years": 0,
+          "months": 11,
+          "days": 0
+        }
+      }
+    },
+    {
+      "name": "depuis le 29 février, 4 ans plus tard le 28 février : 3 ans 11 mois 30 jours",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-02-29"
+      },
+      "today": "2028-02-28",
+      "expected": {
+        "phase": "elapsed",
+        "days": 1460,
+        "breakdown": {
+          "years": 3,
+          "months": 11,
+          "days": 30
+        }
+      }
     }
   ]
 }

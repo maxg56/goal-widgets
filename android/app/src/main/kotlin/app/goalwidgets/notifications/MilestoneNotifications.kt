@@ -119,12 +119,13 @@ object MilestoneNotifications {
         val kind = intent.getStringExtra(EXTRA_KIND)?.let(MilestoneKind::fromWire) ?: return
         val milestone = Milestone(goalId.toString(), date, kind, intent.getIntExtra(EXTRA_VALUE, 0))
 
-        // Alarme très en retard (téléphone éteint, Doze…) : on ne notifie pas un jalon d'avant-hier.
-        if (date < LocalDate.now().minusDays(1)) return
-        val row = (app as GoalWidgetsApplication).database.goalDao().getById(goalId) ?: return
-        // Objectif modifié ou désactivé depuis la programmation : le planificateur fait foi.
-        val stillPlanned = MilestonePlanner.plan(goalId.toString(), row.toGoal(), row.notificationsEnabled, date, 0)
-        if (milestone !in stillPlanned || !canPost(app)) return
+        // Alarme en retard (téléphone éteint, Doze…) : seulement le jour même du jalon, sinon le
+        // texte serait faux d'un jour. Objectif modifié, désactivé ou supprimé : le planificateur fait foi.
+        val today = LocalDate.now()
+        if (date != today) return
+        val row = (app as GoalWidgetsApplication).database.goalDao().getById(goalId)
+        val deliver = MilestonePlanner.shouldDeliver(milestone, row?.toGoal(), row?.notificationsEnabled == true, today)
+        if (row == null || !deliver || !canPost(app)) return
 
         val notification = NotificationCompat.Builder(app, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
@@ -164,7 +165,10 @@ object MilestoneNotifications {
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
     )
 
-    /** Appui sur la notification : ouvre l'app sur l'objectif (même extra que le widget, t06). */
+    /**
+     * Appui sur la notification : ouvre l'app sur l'objectif (même extra que le widget, t06).
+     * `SINGLE_TOP` : app déjà ouverte → `MainActivity.onNewIntent`, formulaire en cours conservé.
+     */
     private fun openGoalIntent(context: Context, goalId: Long, milestoneId: String): PendingIntent =
         PendingIntent.getActivity(
             context,
@@ -172,7 +176,7 @@ object MilestoneNotifications {
             Intent(context, MainActivity::class.java)
                 .setData(Uri.parse(uriOf(milestoneId)))
                 .putExtra(MainActivity.EXTRA_GOAL_ID, goalId)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
 }

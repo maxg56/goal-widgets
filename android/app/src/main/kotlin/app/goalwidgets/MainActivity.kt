@@ -1,6 +1,7 @@
 package app.goalwidgets
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -17,7 +18,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -30,20 +30,26 @@ import app.goalwidgets.ui.GoalListViewModel
 import app.goalwidgets.ui.GoalWidgetsTheme
 import app.goalwidgets.ui.ImportOutcome
 import app.goalwidgets.ui.NotificationSettingsScreen
+import app.goalwidgets.ui.rememberLocalToday
 import app.goalwidgets.notifications.NotificationSettings
 import app.goalwidgets.widget.GoalWidgets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
-import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
+    /**
+     * Objectif à montrer dans la liste (appui sur un widget ou une notification), `null` une fois
+     * montré. Un nouvel appui sur le même objectif crée une nouvelle demande (défilement rejoué).
+     */
+    private var focusRequest by mutableStateOf<FocusRequest?>(null)
+    private var focusRequestCount = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Ouvert depuis un widget ou une notification : objectif à montrer dans la liste.
-        val focusGoalId = intent.getLongExtra(EXTRA_GOAL_ID, -1L).takeIf { it >= 0 }
+        requestFocus(intent)
         setContent {
             GoalWidgetsTheme {
                 val vm: GoalListViewModel = viewModel(factory = factory)
@@ -61,12 +67,8 @@ class MainActivity : ComponentActivity() {
                 val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                     if (uri != null) scope.launch { show(importFrom(uri, vm)) }
                 }
-                // Date du jour locale (fuseau du téléphone), relue à chaque retour au premier plan.
-                var today by remember { mutableStateOf(LocalDate.now()) }
-                LifecycleResumeEffect(Unit) {
-                    today = LocalDate.now()
-                    onPauseOrDispose { }
-                }
+                // Date du jour locale : relue au retour au premier plan, à minuit et au changement d'heure.
+                val today by rememberLocalToday()
                 // Écran affiché : liste, création (NEW_GOAL) ou modification de l'objectif d'id donné.
                 var editing by rememberSaveable { mutableStateOf<Long?>(null) }
                 var showingNotificationSettings by rememberSaveable { mutableStateOf(false) }
@@ -111,13 +113,33 @@ class MainActivity : ComponentActivity() {
                         snackbarHostState = snackbar,
                         onOpen = { editing = it.id },
                         onContinueAsSince = vm::continueAsSince,
-                        focusGoalId = focusGoalId,
+                        focusGoalId = focusRequest?.goalId,
+                        focusRequestKey = focusRequest,
+                        onFocusHandled = { focusRequest = null },
                         onOpenNotificationSettings = { showingNotificationSettings = true },
                     )
                 }
             }
         }
     }
+
+    /**
+     * App déjà ouverte (widget/notification : `CLEAR_TOP | SINGLE_TOP`) : l'activité est réutilisée,
+     * un formulaire en cours est conservé ; l'objectif est montré dès que la liste est affichée.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        requestFocus(intent)
+    }
+
+    private fun requestFocus(intent: Intent) {
+        val goalId = intent.getLongExtra(EXTRA_GOAL_ID, -1L).takeIf { it >= 0 } ?: return
+        focusRequest = FocusRequest(goalId, ++focusRequestCount)
+    }
+
+    /** Demande de défilement vers [goalId] ; [serial] distingue deux appuis sur le même objectif. */
+    private data class FocusRequest(val goalId: Long, val serial: Int)
 
     /** Écrit l'export dans [uri] ; renvoie le message à afficher. */
     private suspend fun exportTo(uri: Uri, vm: GoalListViewModel): String = try {

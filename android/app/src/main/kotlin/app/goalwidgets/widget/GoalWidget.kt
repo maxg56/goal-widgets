@@ -173,12 +173,16 @@ private fun Message(text: String) {
     )
 }
 
-/** Ouvre l'app sur l'objectif (une URI distincte par objectif évite de fusionner les PendingIntent). */
+/**
+ * Ouvre l'app sur l'objectif (une URI distincte par objectif évite de fusionner les PendingIntent).
+ * `CLEAR_TOP | SINGLE_TOP` : si l'app est déjà ouverte, `MainActivity` est réutilisée
+ * (`onNewIntent`) → un formulaire en cours n'est pas perdu.
+ */
 private fun openGoal(context: Context, goalId: Long): Action = actionStartActivity(
     Intent(context, MainActivity::class.java)
         .setData(Uri.parse("goalwidgets://goal/$goalId"))
         .putExtra(MainActivity.EXTRA_GOAL_ID, goalId)
-        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK),
+        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP),
 )
 
 /** Ouvre l'écran de choix de l'objectif pour ce widget. */

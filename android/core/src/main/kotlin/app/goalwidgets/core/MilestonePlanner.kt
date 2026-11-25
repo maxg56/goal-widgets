@@ -84,6 +84,17 @@ object MilestonePlanner {
     }
 
     /**
+     * Alarme d'un jalon déclenchée : faut-il afficher la notification ?
+     * Seulement le jour même du jalon ([today] = date locale), car son texte (« dans 7 jours »,
+     * « c'est aujourd'hui »…) serait faux d'un jour pour une alarme en retard. Et seulement si
+     * le planificateur le prévoit encore pour cet objectif aujourd'hui ([goal] `null` = supprimé).
+     */
+    fun shouldDeliver(milestone: Milestone, goal: Goal?, notificationsEnabled: Boolean, today: LocalDate): Boolean {
+        if (milestone.date != today || goal == null) return false
+        return milestone in plan(milestone.goalId, goal, notificationsEnabled, today, horizonDays = 0)
+    }
+
+    /**
      * Les [limit] jalons les plus proches, tous objectifs confondus (plafond d'alarmes).
      * Ordre : date, puis jalon le plus fort, puis identifiant (déterministe).
      */

@@ -72,16 +72,22 @@ fun GoalListScreen(
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onOpen: (StoredGoal) -> Unit = {},
     onContinueAsSince: (StoredGoal) -> Unit = {},
-    /** Objectif à faire défiler jusqu'à l'écran (ouverture depuis un widget). */
+    /** Objectif à faire défiler jusqu'à l'écran (ouverture depuis un widget ou une notification). */
     focusGoalId: Long? = null,
+    /** Identité de la demande de défilement : une nouvelle valeur rejoue le défilement. */
+    focusRequestKey: Any? = focusGoalId,
+    /** Demande traitée (objectif montré, ou introuvable) : l'appelant peut l'oublier. */
+    onFocusHandled: () -> Unit = {},
     /** Cloche : réglages globaux des notifications (heure d'envoi). */
     onOpenNotificationSettings: () -> Unit = {},
 ) {
     val sorted = remember(goals, order, today) { goals?.let { order.sort(it, today) { g -> g.sortKey } } }
     val listState = rememberLazyListState()
-    LaunchedEffect(goals != null, focusGoalId) {
-        val index = sorted?.indexOfFirst { it.id == focusGoalId } ?: -1
+    LaunchedEffect(goals != null, focusRequestKey) {
+        if (focusGoalId == null || sorted == null) return@LaunchedEffect
+        val index = sorted.indexOfFirst { it.id == focusGoalId }
         if (index >= 0) listState.animateScrollToItem(index)
+        onFocusHandled()
     }
     Scaffold(
         topBar = {

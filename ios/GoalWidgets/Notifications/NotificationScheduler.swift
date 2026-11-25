@@ -87,14 +87,12 @@ enum NotificationScheduler {
             content.threadIdentifier = milestone.goalID
             content.userInfo = [goalURLKey: GoalDeepLink.url(forGoal: uuid).absoluteString]
 
-            // Composantes sans fuseau : heure « flottante », qui suit le fuseau courant de l'appareil.
-            let components = DateComponents(
-                year: milestone.date.year,
-                month: milestone.date.month,
-                day: milestone.date.day,
-                hour: sendMinutes / 60,
-                minute: sendMinutes % 60
-            )
+            // Composantes tirées de l'instant résolu (`fireDate`), pas de l'heure demandée : si
+            // l'heure d'envoi n'existe pas ce jour-là (passage à l'heure d'été, ex. 02:30 à Paris),
+            // `fireDate` est décalé au prochain instant valide (03:30) et le déclencheur reste
+            // atteignable. Composantes sans fuseau : heure « flottante », qui suit le fuseau courant.
+            let resolved = fireDate(for: milestone.date, sendMinutes: sendMinutes, calendar: calendar)
+            let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: resolved)
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
             let request = UNNotificationRequest(identifier: milestone.id, content: content, trigger: trigger)
             // Même identifiant qu'une demande en attente : elle est remplacée, pas dupliquée.
@@ -121,6 +119,8 @@ enum NotificationScheduler {
         }
     }
 
+    /// Instant d'envoi d'un jalon. Une heure inexistante (saut de l'heure d'été) est résolue par
+    /// `Calendar.date(from:)` vers l'instant valide suivant (heure décalée de la durée du saut).
     private static func fireDate(for date: LocalDate, sendMinutes: Int, calendar: Calendar) -> Date {
         let components = DateComponents(
             year: date.year, month: date.month, day: date.day,

@@ -73,6 +73,28 @@ interface GoalDao {
         emoji: String?,
     ): Int
 
+    /**
+     * Modification d'un objectif depuis l'app : contenu ([updateContent]) et, si
+     * [notificationsEnabled] n'est pas `null`, interrupteur de notifications, en une seule
+     * transaction (aucun lecteur — widget, reprogrammation — ne voit un état à moitié écrit).
+     * Renvoie le nombre de lignes modifiées par [updateContent] (0 si l'objectif n'existe plus).
+     */
+    @Transaction
+    suspend fun updateGoal(
+        id: Long,
+        title: String,
+        kind: String,
+        startEpochDay: Long,
+        targetEpochDay: Long?,
+        color: String?,
+        emoji: String?,
+        notificationsEnabled: Boolean?,
+    ): Int {
+        val updated = updateContent(id, title, kind, startEpochDay, targetEpochDay, color, emoji)
+        if (notificationsEnabled != null) setNotificationsEnabled(id, notificationsEnabled)
+        return updated
+    }
+
     /** Supprime un objectif ; renvoie le nombre de lignes supprimées. */
     @Query("DELETE FROM goals WHERE id = :id")
     suspend fun deleteById(id: Long): Int

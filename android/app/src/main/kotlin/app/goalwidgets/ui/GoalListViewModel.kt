@@ -99,7 +99,8 @@ class GoalListViewModel(
      */
     fun update(id: Long, goal: Goal, style: GoalStyle, notificationsEnabled: Boolean? = null) {
         viewModelScope.launch {
-            dao.updateContent(
+            // Une seule transaction : contenu + interrupteur de notifications.
+            dao.updateGoal(
                 id = id,
                 title = goal.title,
                 kind = goal.kind.wire,
@@ -107,8 +108,8 @@ class GoalListViewModel(
                 targetEpochDay = goal.targetDate?.toEpochDay(),
                 color = style.color?.wire,
                 emoji = style.emoji,
+                notificationsEnabled = notificationsEnabled,
             )
-            if (notificationsEnabled != null) dao.setNotificationsEnabled(id, notificationsEnabled)
             onGoalsChanged()
         }
     }

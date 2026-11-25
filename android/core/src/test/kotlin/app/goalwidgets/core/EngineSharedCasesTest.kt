@@ -1,6 +1,7 @@
 package app.goalwidgets.core
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.double
 import kotlinx.serialization.json.int
@@ -8,6 +9,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
@@ -44,9 +46,21 @@ class EngineSharedCasesTest {
 
         expected["phase"]?.let { assertEquals(it.jsonPrimitive.content, state.phase.wire, "phase") }
         expected["days"]?.let { assertEquals(it.jsonPrimitive.int, state.days, "days") }
+        // Champ absent : non vérifié. `null` explicite : doit être absent (null) dans l'état.
         expected["progress"]?.let {
-            val actual = state.progress ?: error("progress attendu mais absent")
-            assertEquals(it.jsonPrimitive.double, actual, 1e-6, "progress")
+            if (it is JsonNull) {
+                assertNull(state.progress, "progress doit être null")
+            } else {
+                val actual = state.progress ?: error("progress attendu mais absent")
+                assertEquals(it.jsonPrimitive.double, actual, 1e-6, "progress")
+            }
+        }
+        expected["percent"]?.let {
+            if (it is JsonNull) {
+                assertNull(state.percent, "percent doit être null")
+            } else {
+                assertEquals(it.jsonPrimitive.int, state.percent ?: error("percent attendu mais absent"), "percent")
+            }
         }
     }
 

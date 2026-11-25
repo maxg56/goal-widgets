@@ -18,4 +18,6 @@ data class Goal(
     val kind: GoalKind,
     val startDate: LocalDate,
     val targetDate: LocalDate? = null,
+    /** Titre affiché (déjà nettoyé des espaces de bord). */
+    val title: String = "",
 )

@@ -4,9 +4,282 @@
   "cases": [
     {
       "name": "compte à rebours, jour de départ : 10 jours restants, 0 %",
-      "goal": { "kind": "countdown", "startDate": "2026-01-01", "targetDate": "2026-01-11" },
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
       "today": "2026-01-01",
-      "expected": { "phase": "upcoming", "days": 10, "progress": 0.0 }
+      "expected": {
+        "phase": "upcoming",
+        "days": 10,
+        "progress": 0.0
+      }
+    },
+    {
+      "name": "compte à rebours, avant la date de départ : progression bornée à 0 %, jours jusqu'à la cible",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-10",
+        "targetDate": "2026-01-20"
+      },
+      "today": "2026-01-05",
+      "expected": {
+        "phase": "upcoming",
+        "days": 15,
+        "progress": 0.0
+      }
+    },
+    {
+      "name": "compte à rebours, à mi-parcours : 5 jours restants, 50 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-06",
+      "expected": {
+        "phase": "upcoming",
+        "days": 5,
+        "progress": 0.5
+      }
+    },
+    {
+      "name": "compte à rebours, la veille de la cible : 1 jour restant, 90 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-10",
+      "expected": {
+        "phase": "upcoming",
+        "days": 1,
+        "progress": 0.9
+      }
+    },
+    {
+      "name": "passage à minuit (1/2) : le 3 janvier, il reste 8 jours",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-03",
+      "expected": {
+        "days": 8,
+        "progress": 0.2
+      }
+    },
+    {
+      "name": "passage à minuit (2/2) : le 4 janvier (lendemain), il reste exactement un jour de moins",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-04",
+      "expected": {
+        "days": 7,
+        "progress": 0.3
+      }
+    },
+    {
+      "name": "29 février compté comme un jour : du 28 février au 1er mars 2028 = 2 jours",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2028-02-28",
+        "targetDate": "2028-03-01"
+      },
+      "today": "2028-02-28",
+      "expected": {
+        "days": 2,
+        "progress": 0.0
+      }
+    },
+    {
+      "name": "aujourd'hui 29 février : 1 jour restant jusqu'au 1er mars, 50 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2028-02-28",
+        "targetDate": "2028-03-01"
+      },
+      "today": "2028-02-29",
+      "expected": {
+        "phase": "upcoming",
+        "days": 1,
+        "progress": 0.5
+      }
+    },
+    {
+      "name": "année bissextile : du 1er janvier 2028 au 1er janvier 2029 = 366 jours",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2028-01-01",
+        "targetDate": "2029-01-01"
+      },
+      "today": "2028-01-01",
+      "expected": {
+        "days": 366,
+        "progress": 0.0
+      }
+    },
+    {
+      "name": "compte à rebours sur une année non bissextile : 365 jours",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2027-01-01"
+      },
+      "today": "2026-01-01",
+      "expected": {
+        "days": 365
+      }
+    },
+    {
+      "name": "jour J : phase today, 0 jour, 100 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-11",
+      "expected": {
+        "phase": "today",
+        "days": 0,
+        "progress": 1.0
+      }
+    },
+    {
+      "name": "après la cible : phase reached, jours écoulés depuis la cible, progression bornée à 100 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-20",
+      "expected": {
+        "phase": "reached",
+        "days": 9,
+        "progress": 1.0
+      }
+    },
+    {
+      "name": "départ égal à la cible (donnée invalide tolérée), avant la cible : 0 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-11",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-05",
+      "expected": {
+        "days": 6,
+        "progress": 0.0
+      }
+    },
+    {
+      "name": "départ égal à la cible (donnée invalide tolérée), le jour J : 100 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-11",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-11",
+      "expected": {
+        "days": 0,
+        "progress": 1.0,
+        "phase": "today"
+      }
+    },
+    {
+      "name": "pourcentage affiché arrondi à l'entier inférieur : 2/3 → 66 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-04"
+      },
+      "today": "2026-01-03",
+      "expected": {
+        "progress": 0.6666666666666666,
+        "percent": 66
+      }
+    },
+    {
+      "name": "pourcentage exact sans erreur d'arrondi flottant : 29/100 → 29 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-04-11"
+      },
+      "today": "2026-01-30",
+      "expected": {
+        "days": 71,
+        "percent": 29
+      }
+    },
+    {
+      "name": "pourcentage jamais à 100 % avant le jour J : 999/1000 → 99 %",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2028-09-27"
+      },
+      "today": "2028-09-26",
+      "expected": {
+        "days": 1,
+        "percent": 99
+      }
+    },
+    {
+      "name": "pourcentage à 100 % le jour J",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-11",
+      "expected": {
+        "percent": 100
+      }
+    },
+    {
+      "name": "pourcentage borné à 0 % avant la date de départ",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-10",
+        "targetDate": "2026-01-20"
+      },
+      "today": "2026-01-05",
+      "expected": {
+        "percent": 0
+      }
+    },
+    {
+      "name": "pourcentage borné à 100 % après la cible",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-20",
+      "expected": {
+        "percent": 100
+      }
+    },
+    {
+      "name": "lendemain de la cible : phase reached, 1 jour depuis la cible",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-12",
+      "expected": {
+        "phase": "reached",
+        "days": 1,
+        "progress": 1.0,
+        "percent": 100
+      }
     }
   ]
 }

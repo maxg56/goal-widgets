@@ -1,0 +1,15 @@
+/* Table « Widget » : chaînes de l'extension widget et du lien profond (partagée app + extension). */
+"widget_name" = "Objectif";
+"widget_description" = "Affiche un objectif et son compte à rebours.";
+"widget_intent_title" = "Choisir un objectif";
+"widget_intent_description" = "Objectif affiché par ce widget.";
+"widget_intent_goal" = "Objectif";
+"widget_goal_entity" = "Objectif";
+"widget_sample_title" = "Vacances";
+"widget_not_configured_title" = "Aucun objectif choisi";
+"widget_not_configured_hint" = "Touchez longuement puis « Modifier le widget » pour en choisir un";
+"widget_goal_deleted" = "Objectif supprimé";
+"widget_goal_deleted_hint" = "Touchez longuement puis « Modifier le widget » pour en choisir un autre";
+
+"deeplink_close" = "Fermer";
+"deeplink_goal_not_found" = "Cet objectif n'existe plus";

@@ -4,13 +4,16 @@
 
 **Blocked by:** 03 — iOS : créer un compte à rebours
 
-**Status:** ready-for-agent
+**Status:** done (non vérifié)
 
-- [ ] Widget configurable : choix de l'objectif
-- [ ] Plusieurs widgets possibles, y compris sur le même objectif
-- [ ] Tailles petite et moyenne ; mode clair/sombre
-- [ ] Timeline avec une entrée par jour à minuit local
-- [ ] Rechargement des timelines après modification/suppression dans l'app
-- [ ] État « Objectif supprimé » clair
-- [ ] Appui → ouvre l'app sur l'objectif
-- [ ] Vérifié à la main sur simulateur
+> Écrit sans Xcode (machine Linux) : ni compilé, ni testé (XCTest non exécuté), ni lancé sur simulateur. Cases cochées = code écrit.
+
+- [x] Widget configurable : choix de l'objectif
+- [x] Plusieurs widgets possibles, y compris sur le même objectif
+- [x] Tailles petite et moyenne ; mode clair/sombre
+- [x] Timeline avec une entrée par jour à minuit local
+- [x] Rechargement des timelines après modification/suppression dans l'app
+- [x] État « Objectif supprimé » clair
+- [x] Appui → ouvre l'app sur l'objectif
+- [ ] Vérifié à la main sur simulateur (impossible ici : pas de Xcode)
+- [x] Bonus : écran verrouillé (`accessoryRectangular`, `accessoryCircular`)

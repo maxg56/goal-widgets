@@ -101,6 +101,29 @@
     { "name": "type inconnu", "file": "invalid-unknown-kind.json", "existingIds": [], "expected": { "error": "invalidGoal", "index": 0, "field": "kind" } },
     { "name": "id qui n'est pas un UUID", "file": "invalid-bad-id.json", "existingIds": [], "expected": { "error": "invalidGoal", "index": 0, "field": "id" } },
     { "name": "createdAt absent", "file": "invalid-missing-created-at.json", "existingIds": [], "expected": { "error": "invalidGoal", "index": 0, "field": "createdAt" } },
-    { "name": "même id deux fois dans le fichier", "file": "invalid-duplicate-id.json", "existingIds": [], "expected": { "error": "duplicateId", "id": "11111111-1111-4111-8111-111111111111" } }
+    { "name": "même id deux fois dans le fichier", "file": "invalid-duplicate-id.json", "existingIds": [], "expected": { "error": "duplicateId", "id": "11111111-1111-4111-8111-111111111111" } },
+    {
+      "name": "single-goal-share : fichier de partage (un objectif, notificationsEnabled null) ajouté",
+      "file": "valid-single-goal-share.goalwidgets.json",
+      "existingIds": [],
+      "expected": {
+        "goals": [
+          {
+            "id": "3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b",
+            "title": "Examen",
+            "kind": "countdown",
+            "startDate": "2026-09-01",
+            "targetDate": "2027-06-15",
+            "color": "blue",
+            "emoji": "🎓",
+            "notificationsEnabled": null,
+            "createdAt": "2026-09-01T07:12:45.123Z"
+          }
+        ],
+        "added": ["3f2b8c1e-4d5a-4e6f-9a7b-1c2d3e4f5a6b"],
+        "skipped": 0
+      }
+    },
+    { "name": "single-goal-share : objectif déjà présent (id en majuscules localement), signalé et non dupliqué", "file": "valid-single-goal-share.goalwidgets.json", "existingIds": ["3F2B8C1E-4D5A-4E6F-9A7B-1C2D3E4F5A6B"], "expected": { "added": [], "skipped": 1 } }
   ]
 }

@@ -4,6 +4,7 @@ import android.app.Application
 import app.goalwidgets.data.GoalDatabase
 import app.goalwidgets.notifications.DailyRescheduleWorker
 import app.goalwidgets.notifications.MilestoneNotifications
+import app.goalwidgets.widget.GoalWidgets
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,6 +21,15 @@ class GoalWidgetsApplication : Application() {
         // Démarrage de l'app : canal, tâche quotidienne et reprogrammation de l'horizon.
         MilestoneNotifications.createChannel(this)
         DailyRescheduleWorker.enqueue(this)
+        rescheduleNotifications()
+    }
+
+    /**
+     * Après toute écriture d'objectifs (ajout, modification, suppression, import, objectif partagé
+     * reçu) : widgets redessinés et notifications reprogrammées.
+     */
+    suspend fun onGoalsChanged() {
+        GoalWidgets.refreshAll(this)
         rescheduleNotifications()
     }
 

@@ -21,6 +21,43 @@
             </intent-filter>
         </activity>
 
+        <!-- Objectif partagé reçu (t13) : fichier .goalwidgets.json ouvert depuis une messagerie,
+             un mail ou un gestionnaire de fichiers (VIEW), ou « Partager avec » (SEND).
+             octet-stream / text/plain : messageries qui perdent le type du fichier. -->
+        <activity
+            android:name=".share.SharedGoalActivity"
+            android:exported="true"
+            android:label="@string/shared_open_with"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="content" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/json" />
+                <data android:mimeType="application/octet-stream" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <!-- Fichier d'un objectif partagé (t13), exposé en lecture seule à l'app choisie. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/shared_files" />
+        </provider>
+
         <!-- Widget d'écran d'accueil (Glance) et son écran de choix d'objectif. -->
         <receiver
             android:name=".widget.GoalWidgetReceiver"

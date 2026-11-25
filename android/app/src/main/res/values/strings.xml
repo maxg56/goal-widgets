@@ -82,6 +82,20 @@
     <string name="widget_grid_name">Grille</string>
     <string name="widget_grid_description">Un point par jour : écoulés, aujourd\'hui, restants</string>
     <string name="widget_grid_description_a11y">Grille de points : écoulés, aujourd\'hui, restants</string>
+    <!-- Partage d'un objectif (t13) -->
+    <string name="action_share">Partager</string>
+    <string name="action_add">Ajouter</string>
+    <string name="share_chooser_title">Partager l\'objectif</string>
+    <string name="shared_open_with">Ajouter à Goal Widgets</string>
+    <string name="shared_title">Objectif reçu</string>
+    <string name="shared_already_present">Déjà dans tes objectifs</string>
+    <string name="shared_dates_countdown">Du %1$s au %2$s</string>
+    <string name="shared_dates_since">Depuis le %1$s</string>
+    <plurals name="shared_count">
+        <item quantity="one">%d objectif dans ce fichier</item>
+        <item quantity="many">%d objectifs dans ce fichier</item>
+        <item quantity="other">%d objectifs dans ce fichier</item>
+    </plurals>
     <string name="widget_config_period">Période affichée</string>
     <string name="widget_period_whole">Objectif entier</string>
     <string name="widget_period_month">Mois en cours</string>

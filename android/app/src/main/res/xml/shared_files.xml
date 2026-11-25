@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fichiers exposés par le FileProvider : uniquement les objectifs partagés (ticket 13). -->
+<paths>
+    <cache-path name="shared" path="shared/" />
+</paths>

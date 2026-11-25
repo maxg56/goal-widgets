@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -86,6 +87,8 @@ fun GoalFormScreen(
     onCancel: () -> Unit,
     onDelete: () -> Unit = {},
     onContinueAsSince: () -> Unit = {},
+    /** « Partager » (objectif enregistré seulement) : fichier `<titre>.goalwidgets.json` (t13). */
+    onShare: (() -> Unit)? = null,
 ) {
     val initial = existing?.goal
     var kind by rememberSaveable { mutableStateOf(initial?.kind ?: GoalKind.COUNTDOWN) }
@@ -119,6 +122,11 @@ fun GoalFormScreen(
                     }
                 },
                 actions = {
+                    if (existing != null && onShare != null) {
+                        IconButton(onClick = onShare) {
+                            Icon(Icons.Filled.Share, contentDescription = stringResource(R.string.action_share))
+                        }
+                    }
                     if (existing != null) {
                         IconButton(onClick = { confirmingDelete = true }) {
                             Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))

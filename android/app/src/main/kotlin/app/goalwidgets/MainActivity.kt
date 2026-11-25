@@ -23,7 +23,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.goalwidgets.core.GoalOrder
-import app.goalwidgets.core.ImportError
+import app.goalwidgets.share.GoalFiles
+import app.goalwidgets.share.GoalSharing
 import app.goalwidgets.ui.GoalFormScreen
 import app.goalwidgets.ui.GoalListScreen
 import app.goalwidgets.ui.GoalListViewModel
@@ -32,7 +33,6 @@ import app.goalwidgets.ui.ImportOutcome
 import app.goalwidgets.ui.NotificationSettingsScreen
 import app.goalwidgets.ui.rememberLocalToday
 import app.goalwidgets.notifications.NotificationSettings
-import app.goalwidgets.widget.GoalWidgets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -99,6 +99,7 @@ class MainActivity : ComponentActivity() {
                             onCancel = { editing = null },
                             onDelete = { vm.delete(current); editing = null },
                             onContinueAsSince = { vm.continueAsSince(existing); editing = null },
+                            onShare = { scope.launch { GoalSharing.share(this@MainActivity, current) } },
                         )
                     }
                     // Objectif introuvable (supprimé entre-temps) ou liste pas encore chargée.
@@ -156,17 +157,12 @@ class MainActivity : ComponentActivity() {
     /** Lit puis importe [uri] ; un fichier invalide ne modifie rien. Renvoie le message à afficher. */
     private suspend fun importFrom(uri: Uri, vm: GoalListViewModel): String {
         val text = try {
-            withContext(Dispatchers.IO) { readLimited(uri) }
+            withContext(Dispatchers.IO) { GoalFiles.readText(contentResolver, uri) }
         } catch (e: Exception) {
             null
         } ?: return getString(R.string.import_error_unreadable)
         return when (val outcome = vm.import(text)) {
-            is ImportOutcome.Rejected -> when (val error = outcome.error) {
-                ImportError.NotJson, ImportError.NotAnExport -> getString(R.string.import_error_not_export)
-                is ImportError.UnsupportedVersion -> getString(R.string.import_error_unsupported_version, error.version)
-                is ImportError.InvalidGoal -> getString(R.string.import_error_invalid_goal, error.index + 1, error.field)
-                is ImportError.DuplicateId -> getString(R.string.import_error_duplicate_id)
-            }
+            is ImportOutcome.Rejected -> GoalFiles.errorMessage(resources, outcome.error)
             is ImportOutcome.Imported -> {
                 val added = outcome.plan.toAdd.size
                 val skipped = outcome.plan.skipped
@@ -180,28 +176,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    /** Contenu UTF-8 du fichier, `null` s'il dépasse [MAX_IMPORT_BYTES] (pas un export plausible). */
-    private fun readLimited(uri: Uri): String? {
-        val input = contentResolver.openInputStream(uri) ?: throw IOException("flux indisponible")
-        val out = java.io.ByteArrayOutputStream()
-        input.use {
-            val buffer = ByteArray(64 * 1024)
-            while (true) {
-                val n = it.read(buffer)
-                if (n < 0) break
-                out.write(buffer, 0, n)
-                if (out.size() > MAX_IMPORT_BYTES) return null
-            }
-        }
-        return out.toString(Charsets.UTF_8.name())
-    }
-
     companion object {
         private const val EXPORT_MIME_TYPE = "application/json"
 
         /** Certains fournisseurs (Drive, messageries) ne déclarent pas le type JSON. */
         private val IMPORT_MIME_TYPES = arrayOf("application/json", "text/*", "application/octet-stream")
-        private const val MAX_IMPORT_BYTES = 5 * 1024 * 1024
         private const val PREFS = "settings"
         private const val PREF_ORDER = "goal_order"
 
@@ -217,10 +196,7 @@ class MainActivity : ComponentActivity() {
                 val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 GoalListViewModel(
                     app.database.goalDao(),
-                    onGoalsChanged = {
-                        GoalWidgets.refreshAll(app)
-                        app.rescheduleNotifications()
-                    },
+                    onGoalsChanged = app::onGoalsChanged,
                     initialOrder = GoalOrder.fromWire(prefs.getString(PREF_ORDER, null)),
                     onOrderChanged = { prefs.edit().putString(PREF_ORDER, it.wire).apply() },
                 )

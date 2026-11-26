@@ -41,6 +41,18 @@ cd android
 
 Ou ouvrir le dossier `android/` dans Android Studio et lancer la configuration `app`.
 
+### Builds « preview » des branches
+
+Chaque push sur une branche autre que `main` (workflow `android-preview.yml`) lance les tests et publie
+un APK en **pré-release GitHub `preview-<branche>`** (onglet *Releases* du dépôt), avec les captures des
+widgets (`widget-screenshots.zip`) quand la branche les produit.
+
+- L'APK preview s'installe **à côté** de l'app (`app.goalwidgets.preview`, « Goal Widgets (test) »,
+  icône orange) : aucun risque pour les données de l'app principale.
+- Pour y retrouver ses objectifs : *Exporter* dans l'app, puis *Importer* dans la preview.
+- Il est minifié comme la release (R8) et ne se met pas à jour tout seul. Une pré-release n'est jamais
+  « latest » : la mise à jour automatique de l'app l'ignore.
+
 ## iOS
 
 Prérequis : macOS, Xcode 15+, [XcodeGen](https://github.com/yonaskolb/XcodeGen).

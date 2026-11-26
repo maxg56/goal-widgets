@@ -78,7 +78,8 @@ targets:
         SWIFT_VERSION: "5.0"
 
   # Extension widget (t07) : WidgetKit + AppIntent de configuration.
-  # Partage avec l'app : stockage SwiftData (Storage/), libellés (GoalLabels) et chaînes (fr.lproj).
+  # Partage avec l'app : stockage SwiftData (Storage/), libellés (GoalLabels), teintes (GoalAppearance),
+  # dessin des graphiques (Charts/) et chaînes (fr.lproj).
   GoalWidgetsWidget:
     type: app-extension
     platform: iOS
@@ -88,6 +89,8 @@ targets:
       - path: GoalWidgets/GoalLabels.swift
       # Teintes clair/sombre des couleurs d'objectif (t11).
       - path: GoalWidgets/GoalAppearance.swift
+      # Dessin des graphiques (modern-ui), commun au détail de l'app et au widget à graphique.
+      - path: GoalWidgets/Charts
       - path: GoalWidgets/fr.lproj
     dependencies:
       - package: GoalCore

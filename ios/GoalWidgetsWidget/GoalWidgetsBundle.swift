@@ -11,7 +11,9 @@ struct GoalWidgetsBundle: WidgetBundle {
     }
 }
 
-/// Widget configurable : chaque instance choisit son objectif (plusieurs instances, même objectif possible).
+/// Widget configurable : chaque instance choisit son objectif (plusieurs instances, même objectif possible),
+/// son graphique (anneau par défaut) et les éléments masqués. Même `kind` qu'avant : les widgets déjà
+/// posés restent en place et prennent les valeurs par défaut des nouveaux paramètres.
 struct GoalWidget: Widget {
     static let kind = "GoalWidget"
 
@@ -21,6 +23,6 @@ struct GoalWidget: Widget {
         }
         .configurationDisplayName(Text("widget_name", tableName: "Widget"))
         .description(Text("widget_description", tableName: "Widget"))
-        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular, .accessoryCircular])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryCircular])
     }
 }

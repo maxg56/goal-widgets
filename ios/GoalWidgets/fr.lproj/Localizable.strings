@@ -6,7 +6,6 @@
 
 "goal_form_new" = "Nouvel objectif";
 "goal_form_edit" = "Modifier l'objectif";
-"goal_form_kind" = "Type";
 "goal_kind_countdown" = "Compte à rebours";
 "goal_kind_since" = "Depuis";
 "goal_form_since_date" = "Depuis le";
@@ -23,7 +22,6 @@
 
 "goal_action_continue_as_since" = "Continuer en compteur depuis";
 "goal_delete_confirm_title" = "Supprimer cet objectif ?";
-"goal_delete_confirm_message" = "Cette action est définitive.";
 
 "countdown_today" = "Aujourd'hui";
 "since_today" = "Depuis aujourd'hui";
@@ -82,7 +80,6 @@
 /* Partager un objectif (t13). */
 "action_share" = "Partager";
 "action_add" = "Ajouter";
-"share_footer" = "Envoie un fichier que la personne ouvre avec Goal Widgets pour avoir sa propre copie.";
 "share_preview_title" = "Objectif reçu";
 "share_already_present" = "Déjà dans tes objectifs";
 "share_nothing_to_add" = "Tout est déjà dans tes objectifs.";
@@ -104,7 +101,6 @@
 "caption_short_today" = "aujourd'hui";
 "relative_today" = "aujourd'hui";
 "joined_dot" = "%1$@ · %2$@";
-"action_back" = "Retour";
 "action_edit" = "Modifier";
 "action_continue" = "Continuer";
 "detail_position" = "%1$@ / %2$@";

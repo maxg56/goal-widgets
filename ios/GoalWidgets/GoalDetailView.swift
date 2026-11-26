@@ -139,6 +139,15 @@ struct GoalDetailView: View {
     /// Pager iOS 17 : défilement horizontal par pages (`scrollTargetBehavior(.paging)`), position liée à
     /// `shownID` ; les pages voisines s'estompent et rétrécissent (`scrollTransition`).
     private var pager: some View {
+        ScrollViewReader { scroller in
+            pagerScroll
+                // Filet : la position initiale de `scrollPosition` n'est pas toujours appliquée
+                // à une pile paresseuse au premier affichage.
+                .onAppear { scroller.scrollTo(initialID) }
+        }
+    }
+
+    private var pagerScroll: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 0) {
                 ForEach(records) { record in

@@ -156,6 +156,8 @@ struct RootView: View {
 
     /// Ouverture externe (widget, notification) : pile = accueil + détail.
     private func requestOpen(_ id: UUID) {
+        // Objectif supprimé entre-temps (notification ancienne) : l'accueil suffit.
+        guard records.contains(where: { $0.id == id }) else { return }
         if form != nil {
             pendingOpen = id
             return

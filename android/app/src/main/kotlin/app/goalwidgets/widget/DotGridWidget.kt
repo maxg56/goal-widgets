@@ -38,6 +38,7 @@ import androidx.glance.unit.ColorProvider
 import app.goalwidgets.GoalWidgetsApplication
 import app.goalwidgets.R
 import app.goalwidgets.core.DotGrid
+import app.goalwidgets.core.DotGridLayout
 import app.goalwidgets.core.DotPeriod
 import app.goalwidgets.core.DotState
 import app.goalwidgets.core.GoalStyle
@@ -207,15 +208,7 @@ internal object DotGridBitmaps {
             }
             DotPeriod.WEEK -> Layout(7, 1, min(widthPx / 7f, heightPx.toFloat()), 0)
             // Objectif entier : nombre de colonnes qui donne les plus gros points.
-            DotPeriod.WHOLE -> {
-                var best = Layout(n, 1, min(widthPx / n.toFloat(), heightPx.toFloat()), 0)
-                for (columns in 1..n) {
-                    val rows = (n + columns - 1) / columns
-                    val pitch = min(widthPx / columns.toFloat(), heightPx / rows.toFloat())
-                    if (pitch > best.pitch) best = Layout(columns, rows, pitch, 0)
-                }
-                best
-            }
+            DotPeriod.WHOLE -> DotGridLayout.fit(n, widthPx.toFloat(), heightPx.toFloat()).let { Layout(it.columns, it.rows, it.pitch, 0) }
         }
     }
 }

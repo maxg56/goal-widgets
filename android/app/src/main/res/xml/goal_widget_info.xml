@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Petite taille par défaut (2×1) ; redimensionnable vers la taille moyenne (progression).
+<!-- Widget « Objectif » à graphique : moyen (4×2) par défaut, redimensionnable de la rangée compacte
+     (2×1, taille des widgets posés avant les graphiques) au grand (4×4).
      updatePeriodMillis = filet de sécurité (6 h) en plus de l'alarme de minuit. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:configure="app.goalwidgets.widget.GoalWidgetConfigureActivity"
     android:description="@string/widget_description"
     android:initialLayout="@layout/glance_default_loading_layout"
-    android:minWidth="110dp"
-    android:minHeight="40dp"
+    android:minWidth="250dp"
+    android:minHeight="110dp"
     android:minResizeWidth="110dp"
     android:minResizeHeight="40dp"
-    android:targetCellWidth="2"
-    android:targetCellHeight="1"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="21600000"
     android:widgetCategory="home_screen"

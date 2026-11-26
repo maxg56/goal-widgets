@@ -50,7 +50,7 @@ Un widget de bureau (ordinateur) est un bonus facultatif, hors périmètre de ce
 26. En tant qu'utilisateur, je veux que le widget se mette à jour automatiquement au changement de jour, afin que le chiffre soit toujours juste sans ouvrir l'app.
 27. En tant qu'utilisateur, je veux qu'un widget reflète immédiatement une modification de l'objectif faite dans l'app, afin de ne pas voir d'information périmée.
 28. En tant qu'utilisateur, je veux qu'un widget dont l'objectif a été supprimé affiche un état clair (« Objectif supprimé — touchez pour en choisir un »), afin de ne pas rester bloqué.
-29. En tant qu'utilisateur, je veux qu'un appui sur le widget ouvre l'app sur l'objectif concerné, afin de le consulter ou le modifier.
+29. En tant qu'utilisateur, je veux qu'un appui sur le widget ouvre le détail de l'objectif concerné dans l'app, afin de le consulter ou le modifier.
 30. En tant qu'utilisateur, je veux pouvoir changer l'objectif affiché par un widget existant, afin de ne pas devoir le supprimer et le recréer.
 31. En tant qu'utilisateur, je veux que les widgets respectent le mode clair/sombre du système, afin qu'ils s'intègrent à mon écran.
 32. En tant qu'utilisateur Android, je veux que les widgets fonctionnent sur les lanceurs courants (Pixel, Samsung, Xiaomi…), afin que l'app marche « sur tous les téléphones ».
@@ -66,7 +66,7 @@ Un widget de bureau (ordinateur) est un bonus facultatif, hors périmètre de ce
 40. En tant qu'utilisateur, je veux que les notifications des 31 du mois tombent sur le dernier jour des mois plus courts, afin de ne jamais rater un mois-anniversaire.
 41. En tant qu'utilisateur, je veux que les notifications continuent d'arriver même si je n'ouvre pas l'app pendant longtemps, afin de pouvoir lui faire confiance.
 42. En tant qu'utilisateur, je veux que les notifications soient reprogrammées après un redémarrage du téléphone ou un changement de fuseau horaire, afin qu'elles restent justes.
-43. En tant qu'utilisateur, je veux qu'un appui sur une notification ouvre l'objectif concerné, afin d'avoir le détail.
+43. En tant qu'utilisateur, je veux qu'un appui sur une notification ouvre le détail de l'objectif concerné, afin d'avoir le détail.
 44. En tant qu'utilisateur, je veux que l'app me demande l'autorisation de notifier au moment pertinent (quand j'active une notification), afin de comprendre pourquoi elle la demande.
 
 ### Données et confidentialité
@@ -94,7 +94,8 @@ Un widget de bureau (ordinateur) est un bonus facultatif, hors périmètre de ce
 - **Couche OS (mince, non testée unitairement)** :
   - Stockage local : Room (Android) / SwiftData (iOS), partagé avec l'extension widget (App Group sur iOS).
   - Programmation : à chaque modification d'objectif, au démarrage de l'app, au redémarrage du téléphone, au changement de fuseau et via une tâche périodique quotidienne (WorkManager / BGTaskScheduler), on annule et reprogramme les notifications de l'horizon à partir du planificateur. L'horizon glissant contourne la limite iOS de 64 notifications en attente.
-  - Widgets : chaque instance de widget stocke l'`id` de l'objectif choisi (configuration via un écran de choix sur Android, `AppIntent` configurable sur iOS). Rafraîchissement programmé à minuit local (timeline iOS ; `updatePeriodMillis` + alarme minuit sur Android) et forcé après toute modification dans l'app.
+  - Widgets : chaque instance de widget stocke l'`id` de l'objectif choisi, et pour le widget « Objectif » le graphique affiché (anneau par défaut, arcs, barres, points) et les éléments retirés (configuration via un écran de choix sur Android, `AppIntent` configurable sur iOS). Rafraîchissement programmé à minuit local (timeline iOS ; `updatePeriodMillis` + alarme minuit sur Android) et forcé après toute modification dans l'app.
+- **Interface (modern-ui)** : accueil en cartes ; appui → détail de l'objectif (grand nombre, graphique au choix — points, anneau, arcs, barres —, frise de l'objectif, personnalisable) ; frise de tous les objectifs en sous-écran. Les calculs des graphiques (périodes, hauteurs, prochain cap d'un « depuis », positions de la frise) sont dans le module pur et figés par `shared-cases/charts.json`.
 - **Localisation** : chaînes externalisées dès le départ, français par défaut.
 - **Cohérence entre les deux plateformes** : le moteur et le planificateur sont écrits deux fois (Kotlin et Swift). Leur comportement est figé par un **jeu de cas partagé** (fichier de données : objectif + date du jour → sortie attendue) que les deux suites de tests exécutent.
 

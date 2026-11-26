@@ -62,13 +62,13 @@ object GoalImageShare {
     fun render(context: Context, entity: GoalEntity, today: LocalDate): Bitmap {
         val res = context.resources
         val goal = entity.toGoal()
-        val style = entity.style()
+        val goalStyle = entity.style()
         val state = CountdownEngine.compute(goal, today)
         val bmp = Bitmap.createBitmap(W, H, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
 
         // Fond : dégradé de la couleur + halos (même esprit que les cartes et le widget « Vif »).
-        val stops = GoalTint.gradient(GoalTint.deepColor(style)).map { it.toArgb() }.toIntArray()
+        val stops = GoalTint.gradient(GoalTint.deepColor(goalStyle)).map { it.toArgb() }.toIntArray()
         c.drawRect(0f, 0f, W.toFloat(), H.toFloat(), Paint().apply { shader = LinearGradient(0f, 0f, W * 0.4f, H.toFloat(), stops, null, Shader.TileMode.CLAMP) })
         c.drawCircle(W * 0.9f, H * 0.05f, W * 0.8f, Paint(Paint.ANTI_ALIAS_FLAG).apply {
             shader = RadialGradient(W * 0.9f, H * 0.05f, W * 0.8f, 0x40FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP)
@@ -84,7 +84,7 @@ object GoalImageShare {
         var y = 200f
 
         // Emoji et titre.
-        style.emoji?.takeIf { it.isNotBlank() }?.let {
+        goalStyle.emoji?.takeIf { it.isNotBlank() }?.let {
             c.drawText(it, pad, y, text(110f))
             y += 140f
         }

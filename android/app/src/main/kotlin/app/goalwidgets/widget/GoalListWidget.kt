@@ -87,7 +87,7 @@ object GoalListOrder {
 }
 
 @Composable
-private fun ListBody(goals: List<GoalEntity>?, order: GoalOrder) {
+internal fun ListBody(goals: List<GoalEntity>?, order: GoalOrder, today: LocalDate = LocalDate.now()) {
     val context = LocalContext.current
     val openApp = actionStartActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     Column(
@@ -129,7 +129,6 @@ private fun ListBody(goals: List<GoalEntity>?, order: GoalOrder) {
                 )
             }
             else -> {
-                val today = LocalDate.now()
                 val sorted = order.sort(goals, today) { SortKey(it.uid, it.toGoal(), Instant.ofEpochMilli(it.createdAtMillis)) }
                 LazyColumn(GlanceModifier.fillMaxSize()) {
                     items(sorted, itemId = { it.id }) { row -> GoalRow(row, today) }

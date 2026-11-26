@@ -12,6 +12,8 @@ import androidx.glance.GlanceTheme
 import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
 import androidx.glance.appwidget.GlanceRemoteViews
 import app.goalwidgets.core.ChartKind
+import app.goalwidgets.core.GoalOrder
+import app.goalwidgets.data.GoalEntity
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalColor
 import app.goalwidgets.core.GoalKind
@@ -66,6 +68,18 @@ class WidgetScreenshots {
                     }
                 }
             }
+        }
+    }
+
+    @Test
+    fun renderList() {
+        assumeTrue(System.getProperty("widgetScreenshots") == "true")
+        val out = File(System.getProperty("widgetScreenshotsDir")!!).apply { mkdirs() }
+        val rows = goals.mapIndexed { i, (goal, style, _) ->
+            GoalEntity.from(goal, createdAtMillis = i.toLong(), style = style, id = i + 1L)
+        }
+        for (night in listOf(false, true)) {
+            render(night, 320f, 230f, File(out, "${if (night) "night" else "day"}-list.png")) { ListBody(rows, GoalOrder.CLOSEST_DATE, today) }
         }
     }
 

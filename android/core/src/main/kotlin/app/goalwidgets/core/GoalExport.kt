@@ -56,6 +56,24 @@ data class ExportedGoal(
     /** `null` = non précisé par le fichier (l'app applique sa valeur par défaut). */
     val notificationsEnabled: Boolean? = null,
     val createdAt: Instant,
+    /**
+     * Réglages propres à l'app Android, facultatifs (clés ignorées par les lecteurs qui ne les
+     * connaissent pas) : écrits seulement s'ils diffèrent de la valeur par défaut.
+     */
+    val options: ExportedOptions = ExportedOptions(),
+)
+
+/**
+ * Champs facultatifs du format v1 ajoutés après coup (cf. `docs/export-format.md`) : unité des
+ * graphiques, compteur « série » et son historique, « chaque année », archivé. Une valeur invalide
+ * est ignorée (valeur par défaut) plutôt que de refuser le fichier.
+ */
+data class ExportedOptions(
+    val chartUnit: ChartUnit? = null,
+    val streak: Boolean = false,
+    val streakHistory: List<PastStreak> = emptyList(),
+    val repeatYearly: Boolean = false,
+    val archived: Boolean = false,
 )
 
 /** Raison pour laquelle un fichier est refusé en entier (aucun objectif n'est importé). */
@@ -112,6 +130,12 @@ object GoalExport {
         put("emoji", g.emoji)
         put("notificationsEnabled", g.notificationsEnabled)
         put("createdAt", formatInstant(g.createdAt))
+        val o = g.options
+        o.chartUnit?.let { put("chartUnit", it.wire) }
+        if (o.streak) put("streak", true)
+        if (o.streakHistory.isNotEmpty()) put("streakHistory", Streaks.encode(o.streakHistory))
+        if (o.repeatYearly) put("repeatYearly", true)
+        if (o.archived) put("archived", true)
     }
 
     /** Lit un fichier entier ; au moindre objectif invalide, tout le fichier est refusé. */
@@ -169,8 +193,19 @@ object GoalExport {
             emoji = o.string("emoji")?.trim()?.takeIf { it.isNotEmpty() },
             notificationsEnabled = notifications,
             createdAt = createdAt,
+            options = ExportedOptions(
+                chartUnit = ChartUnit.fromWire(o.string("chartUnit")),
+                streak = o.flag("streak"),
+                streakHistory = Streaks.decode(o.string("streakHistory")),
+                repeatYearly = o.flag("repeatYearly") && kind == GoalKind.COUNTDOWN,
+                archived = o.flag("archived"),
+            ),
         )
     }
+
+    /** Booléen facultatif : `true` seulement si la clé vaut le booléen JSON `true`. */
+    private fun JsonObject.flag(key: String): Boolean =
+        (get(key) as? JsonPrimitive)?.takeUnless { it.isString }?.booleanOrNull == true
 
     private val UUID_PATTERN = Regex("^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
     private val DATE_PATTERN = Regex("^\\d{4}-\\d{2}-\\d{2}$")

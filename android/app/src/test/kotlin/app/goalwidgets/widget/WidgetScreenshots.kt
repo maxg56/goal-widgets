@@ -23,6 +23,7 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.padding
 import app.goalwidgets.core.GoalOrder
 import app.goalwidgets.data.GoalEntity
+import app.goalwidgets.share.GoalImageShare
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalColor
 import app.goalwidgets.core.GoalKind
@@ -110,6 +111,17 @@ class WidgetScreenshots {
                     }
                 }
             }
+        }
+    }
+
+    /** Carte « Partager en image ». */
+    @Test
+    fun renderShareImage() {
+        assumeTrue(System.getProperty("widgetScreenshots") == "true")
+        val out = File(System.getProperty("widgetScreenshotsDir")!!).apply { mkdirs() }
+        goals.forEachIndexed { i, (goal, style, name) ->
+            val bmp = GoalImageShare.render(RuntimeEnvironment.getApplication(), GoalEntity.from(goal, i.toLong(), style), today)
+            File(out, "share-$name.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
     }
 

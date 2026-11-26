@@ -111,13 +111,14 @@ internal fun ListBody(
                 maxLines = 1,
                 modifier = GlanceModifier.defaultWeight(),
             )
-            if (!goals.isNullOrEmpty()) {
+            val count = goals?.count { !it.archived } ?: 0
+            if (count > 0) {
                 Box(
                     GlanceModifier.height(22.dp).cornerRadius(11.dp).background(GlanceTheme.colors.secondaryContainer).padding(horizontal = 8.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        goals.size.toString(),
+                        count.toString(),
                         style = TextStyle(color = GlanceTheme.colors.onSecondaryContainer, fontSize = 12.sp, fontWeight = FontWeight.Bold),
                         maxLines = 1,
                     )
@@ -127,7 +128,7 @@ internal fun ListBody(
         Spacer(GlanceModifier.height(6.dp))
         when {
             goals == null -> Unit
-            goals.isEmpty() -> Box(GlanceModifier.fillMaxSize().clickable(openApp), contentAlignment = Alignment.Center) {
+            goals.none { !it.archived } -> Box(GlanceModifier.fillMaxSize().clickable(openApp), contentAlignment = Alignment.Center) {
                 Text(
                     context.getString(R.string.widget_list_empty),
                     style = TextStyle(color = GlanceTheme.colors.onSurfaceVariant, fontSize = 13.sp),
@@ -135,7 +136,8 @@ internal fun ListBody(
                 )
             }
             else -> {
-                val sorted = order.sort(goals, today) { SortKey(it.uid, it.toGoal(), Instant.ofEpochMilli(it.createdAtMillis)) }
+                // Objectifs archivés : hors de la liste (comme à l'accueil).
+                val sorted = order.sort(goals.filterNot { it.archived }, today) { SortKey(it.uid, it.toGoal(), Instant.ofEpochMilli(it.createdAtMillis)) }
                 if (scrollable) {
                     LazyColumn(GlanceModifier.fillMaxSize()) {
                         items(sorted, itemId = { it.id }) { row -> GoalRow(row, today) }

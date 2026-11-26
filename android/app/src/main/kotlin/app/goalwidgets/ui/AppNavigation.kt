@@ -85,14 +85,20 @@ private val StackSaver = Saver<List<Screen>, ArrayList<String>>(
     restore = { saved -> saved.mapNotNull(Screen::decode).ifEmpty { listOf(Screen.Home) } },
 )
 
-/** Demande d'ouverture d'un objectif (widget, notification, objectif partagé reçu) ; [serial] distingue deux appuis. */
-data class OpenGoalRequest(val goalId: Long, val serial: Int)
+/**
+ * Demande d'ouverture d'un objectif (widget, notification, objectif partagé reçu, raccourci) ou du
+ * formulaire de création ([goalId] = null, raccourci « Nouvel objectif ») ; [serial] distingue deux appuis.
+ */
+data class OpenGoalRequest(val goalId: Long?, val serial: Int)
 
 /** Écritures et actions système, fournies par l'activité. */
 class AppActions(
-    /** Objectif, style, notifications, option « série ». */
-    val add: (Goal, GoalStyle, Boolean, Boolean) -> Unit,
-    val update: (Long, Goal, GoalStyle, Boolean, Boolean) -> Unit,
+    val add: (Goal, GoalStyle, GoalOptions) -> Unit,
+    val update: (Long, Goal, GoalStyle, GoalOptions) -> Unit,
+    /** « Dupliquer » : copie de l'objectif avec le titre donné. */
+    val duplicate: (StoredGoal, String) -> Unit,
+    /** Archive un objectif (ou le sort de l'archive). */
+    val setArchived: (Long, Boolean) -> Unit,
     /** Remise à zéro d'un compteur « série » à la date donnée (aujourd'hui par défaut). */
     val resetStreak: (Long, LocalDate) -> Unit,
     val delete: (Long) -> Unit,
@@ -101,6 +107,8 @@ class AppActions(
     val export: () -> Unit,
     val import: () -> Unit,
     val share: (Long) -> Unit,
+    /** « Partager en image » (carte PNG). */
+    val shareImage: (Long) -> Unit,
     val setSendTime: (LocalTime) -> Unit,
 )
 
@@ -132,7 +140,9 @@ fun GoalWidgetsApp(
     var focusedGoalId by rememberSaveable { mutableStateOf<Long?>(null) }
     var homeAnimated by rememberSaveable { mutableStateOf(false) }
     val homeListState = rememberLazyListState()
-    val sorted = remember(goals, order, today) { goals?.let { order.sort(it, today) { g -> g.sortKey } } }
+    // Objectifs archivés à la fin (même ordre entre eux) : section repliable de l'accueil.
+    val sorted = remember(goals, order, today) { goals?.let { order.sort(it, today) { g -> g.sortKey }.sortedBy(StoredGoal::archived) } }
+    var showArchived by rememberSaveable { mutableStateOf(false) }
 
     if (sorted == null) {
         // Base pas encore lue (quelques ms) : fond seul.
@@ -159,7 +169,9 @@ fun GoalWidgetsApp(
         val next = valid.dropLast(1).ifEmpty { listOf(Screen.Home) }
         if (leaving is Screen.Detail && next.last() == Screen.Home) {
             // La carte de l'objectif affiché doit être visible pour que la transition la retrouve.
-            val index = sorted.indexOfFirst { it.id == focusedGoalId }
+            // Index dans la liste de l'accueil : actifs, en-tête « Archivés », archivés.
+            val position = sorted.indexOfFirst { it.id == focusedGoalId }
+            val index = if (position >= 0 && sorted[position].archived) position + 1 else position
             val visible = homeListState.layoutInfo.visibleItemsInfo.map { it.index }
             if (index >= 0 && index !in visible) homeListState.requestScrollToItem(index)
         }
@@ -169,9 +181,12 @@ fun GoalWidgetsApp(
     LaunchedEffect(openRequest, screen is Screen.Form) {
         val request = openRequest ?: return@LaunchedEffect
         if (screen is Screen.Form) return@LaunchedEffect // repris à la fermeture du formulaire
-        if (exists(request.goalId)) {
-            focusedGoalId = request.goalId
-            stack = listOf(Screen.Home, Screen.Detail(request.goalId))
+        val id = request.goalId
+        if (id == null) {
+            stack = listOf(Screen.Home, Screen.Form(null))
+        } else if (exists(id)) {
+            focusedGoalId = id
+            stack = listOf(Screen.Home, Screen.Detail(id))
         }
         onOpenRequestHandled()
     }
@@ -219,6 +234,8 @@ fun GoalWidgetsApp(
                         order = order,
                         listState = homeListState,
                         animateEntrance = animate,
+                        showArchived = showArchived,
+                        onShowArchivedChange = { showArchived = it },
                         sharedCard = shared,
                         snackbarHostState = snackbarHostState,
                         actions = HomeActions(
@@ -233,7 +250,7 @@ fun GoalWidgetsApp(
                         ),
                     )
                 }
-                Screen.Timeline -> GoalTimelineScreen(sorted, today, onOpen = { push(Screen.Detail(it.id)) }, onBack = ::pop)
+                Screen.Timeline -> GoalTimelineScreen(sorted.filterNot(StoredGoal::archived), today, onOpen = { push(Screen.Detail(it.id)) }, onBack = ::pop)
                 Screen.NotificationSettings -> NotificationSettingsScreen(sendTime, actions.setSendTime, onBack = ::pop)
                 is Screen.Detail -> GoalDetailScreen(
                     goals = sorted,
@@ -244,6 +261,7 @@ fun GoalWidgetsApp(
                     onBack = ::pop,
                     onEdit = { push(Screen.Form(it.id)) },
                     onShare = { actions.share(it.id) },
+                    onShareImage = { actions.shareImage(it.id) },
                     onResetStreak = actions.resetStreak,
                 )
                 is Screen.Form -> {
@@ -251,9 +269,28 @@ fun GoalWidgetsApp(
                     GoalFormScreen(
                         existing = existing,
                         today = today,
-                        onSave = { goal, style, notify, streak ->
-                            if (existing == null) actions.add(goal, style, notify, streak) else actions.update(existing.id, goal, style, notify, streak)
+                        onSave = { goal, style, options ->
+                            if (existing == null) actions.add(goal, style, options) else actions.update(existing.id, goal, style, options)
                             pop()
+                        },
+                        onArchive = existing?.let { e ->
+                            {
+                                actions.setArchived(e.id, !e.archived)
+                                if (!e.archived) {
+                                    // Archivé : retour à l'accueil, section « Archivés » ouverte.
+                                    showArchived = true
+                                    stack = listOf(Screen.Home)
+                                } else {
+                                    pop()
+                                }
+                            }
+                        },
+                        onDuplicate = existing?.let { e ->
+                            { title: String ->
+                                actions.duplicate(e, title)
+                                // Retour à l'accueil : la copie y apparaît.
+                                stack = listOf(Screen.Home)
+                            }
                         },
                         onCancel = ::pop,
                         onDelete = {

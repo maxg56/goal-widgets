@@ -65,10 +65,12 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
@@ -111,6 +113,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.annotation.StringRes
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -160,10 +163,14 @@ private enum class Confirm { DELETE, SINCE }
 fun GoalFormScreen(
     existing: StoredGoal?,
     today: LocalDate,
-    /** Objectif validé, son style, l'état des notifications et l'option « série ». */
-    onSave: (Goal, GoalStyle, Boolean, Boolean) -> Unit,
+    /** Objectif validé, son style et ses options (notifications, « série », « chaque année »). */
+    onSave: (Goal, GoalStyle, GoalOptions) -> Unit,
     onCancel: () -> Unit,
     onDelete: () -> Unit = {},
+    /** « Dupliquer » (objectif enregistré seulement) : copie sous le titre donné. */
+    onDuplicate: ((String) -> Unit)? = null,
+    /** « Archiver » / « Sortir de l'archive » (objectif enregistré seulement). */
+    onArchive: (() -> Unit)? = null,
     onContinueAsSince: () -> Unit = {},
     /** « Partager » (objectif enregistré seulement). */
     onShare: (() -> Unit)? = null,
@@ -181,6 +188,8 @@ fun GoalFormScreen(
     var notify by rememberSaveable { mutableStateOf(existing?.notificationsEnabled ?: false) }
     // Option « série » : n'a d'effet (et n'est proposée) que pour un compteur « depuis ».
     var streak by rememberSaveable { mutableStateOf(existing?.streak ?: false) }
+    // Option « chaque année » : compte à rebours seulement.
+    var repeatYearly by rememberSaveable { mutableStateOf(existing?.repeatYearly ?: false) }
     var attempted by rememberSaveable { mutableStateOf(false) }
     var sheet by rememberSaveable { mutableStateOf<DateField?>(null) }
     var confirm by rememberSaveable { mutableStateOf<Confirm?>(null) }
@@ -198,7 +207,7 @@ fun GoalFormScreen(
     fun save() {
         attempted = true
         if (draft.errors().isEmpty()) {
-            onSave(draft.toGoal(), style, notify, streak)
+            onSave(draft.toGoal(), style, GoalOptions(notify, streak, repeatYearly))
         } else {
             scope.launch { for (x in listOf(22f, -18f, 12f, -8f, 4f, 0f)) shake.animateTo(x, tween(45)) }
         }
@@ -231,13 +240,20 @@ fun GoalFormScreen(
                 }
                 Section(stringResource(R.string.goal_form_chart_unit)) { ChartUnitPicker(chartUnit, base) { chartUnit = it } }
                 AnimatedVisibility(kind == GoalKind.SINCE, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                    StreakCard(streak, base) { streak = it }
+                    OptionCard(Icons.Filled.Refresh, R.string.goal_form_streak, R.string.goal_form_streak_footer, streak, base) { streak = it }
+                }
+                AnimatedVisibility(kind == GoalKind.COUNTDOWN, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                    OptionCard(Icons.Filled.DateRange, R.string.goal_form_repeat_yearly, R.string.goal_form_repeat_yearly_footer, repeatYearly, base) { repeatYearly = it }
                 }
                 NotificationCard(notify, base) { notify = it }
                 if (existing != null) {
+                    val copyTitle = stringResource(R.string.form_duplicate_title, initial?.title.orEmpty())
                     ManageCard(
-                        canContinueAsSince = canContinueAsSince,
+                        canContinueAsSince = canContinueAsSince && !repeatYearly,
                         onContinue = { confirm = Confirm.SINCE },
+                        onDuplicate = onDuplicate?.let { dup -> { dup(copyTitle) } },
+                        archived = existing.archived,
+                        onArchive = onArchive,
                         onDelete = { confirm = Confirm.DELETE },
                     )
                 }
@@ -961,10 +977,13 @@ private fun NotificationCard(enabled: Boolean, base: Color, onChange: (Boolean) 
     }
 }
 
-/** Carte « Série » : remise à zéro possible, record et historique (compteur « depuis » seulement). */
+/**
+ * Carte d'option à interrupteur : « Série » (remise à zéro, record et historique — compteur « depuis »)
+ * ou « Chaque année » (compte à rebours).
+ */
 @Composable
-private fun StreakCard(enabled: Boolean, base: Color, onChange: (Boolean) -> Unit) {
-    val tint by animateColorAsState(if (enabled) base else MaterialTheme.colorScheme.onSurfaceVariant, label = "streak")
+private fun OptionCard(icon: ImageVector, @StringRes title: Int, @StringRes footer: Int, enabled: Boolean, base: Color, onChange: (Boolean) -> Unit) {
+    val tint by animateColorAsState(if (enabled) base else MaterialTheme.colorScheme.onSurfaceVariant, label = "option")
     val dark = isSystemInDarkTheme()
     Row(
         Modifier
@@ -976,12 +995,12 @@ private fun StreakCard(enabled: Boolean, base: Color, onChange: (Boolean) -> Uni
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(48.dp).clip(CircleShape).background(tint.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
-            Icon(Icons.Filled.Refresh, contentDescription = null, tint = if (dark && enabled) lerp(base, Color.White, 0.45f) else tint)
+            Icon(icon, contentDescription = null, tint = if (dark && enabled) lerp(base, Color.White, 0.45f) else tint)
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
-            Text(stringResource(R.string.goal_form_streak), fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            Text(stringResource(R.string.goal_form_streak_footer), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(title), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(footer), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Switch(
             checked = enabled,
@@ -993,7 +1012,14 @@ private fun StreakCard(enabled: Boolean, base: Color, onChange: (Boolean) -> Uni
 
 /** Modification : « Continuer en compteur depuis » (cible dépassée) et « Supprimer », tous deux confirmés. */
 @Composable
-private fun ManageCard(canContinueAsSince: Boolean, onContinue: () -> Unit, onDelete: () -> Unit) {
+private fun ManageCard(
+    canContinueAsSince: Boolean,
+    onContinue: () -> Unit,
+    onDuplicate: (() -> Unit)?,
+    archived: Boolean,
+    onArchive: (() -> Unit)?,
+    onDelete: () -> Unit,
+) {
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(vertical = 6.dp)) {
         if (canContinueAsSince) {
             ManageRow(
@@ -1002,6 +1028,24 @@ private fun ManageCard(canContinueAsSince: Boolean, onContinue: () -> Unit, onDe
                 stringResource(R.string.form_continue_hint),
                 MaterialTheme.colorScheme.primary,
                 onContinue,
+            )
+        }
+        if (onDuplicate != null) {
+            ManageRow(
+                Icons.Filled.Add,
+                stringResource(R.string.form_duplicate),
+                stringResource(R.string.form_duplicate_hint),
+                MaterialTheme.colorScheme.primary,
+                onDuplicate,
+            )
+        }
+        if (onArchive != null) {
+            ManageRow(
+                Icons.Filled.Done,
+                stringResource(if (archived) R.string.form_unarchive else R.string.form_archive),
+                stringResource(if (archived) R.string.form_unarchive_hint else R.string.form_archive_hint),
+                MaterialTheme.colorScheme.primary,
+                onArchive,
             )
         }
         ManageRow(Icons.Filled.Delete, stringResource(R.string.form_delete), stringResource(R.string.form_delete_hint), MaterialTheme.colorScheme.error, onDelete)

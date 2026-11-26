@@ -30,7 +30,9 @@ object GoalSharing {
             dir.deleteRecursively()
             dir.mkdirs()
             File(dir, GoalShare.fileName(entity.title)).apply {
-                writeText(GoalShare.encode(entity.toExported(), sharedAt = Instant.now()), Charsets.UTF_8)
+                // Partage à quelqu'un d'autre : ni l'archive ni l'historique personnel des séries.
+                val exported = entity.toExported().let { it.copy(options = it.options.copy(archived = false, streakHistory = emptyList())) }
+                writeText(GoalShare.encode(exported, sharedAt = Instant.now()), Charsets.UTF_8)
             }
         }
         val uri = FileProvider.getUriForFile(context, authority(context), file)

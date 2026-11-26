@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.ExportedGoal
+import app.goalwidgets.core.ExportedOptions
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalColor
 import app.goalwidgets.core.GoalKind
@@ -53,6 +54,10 @@ data class GoalEntity(
     @ColumnInfo(defaultValue = "0") val streak: Boolean = false,
     /** Séries terminées, ordre chronologique (`Streaks.encode`, v5). Conservé si [streak] est désactivé. */
     @ColumnInfo(defaultValue = "") val streakHistory: String = "",
+    /** Compte à rebours « chaque année » : repart vers l'occurrence suivante une fois la cible passée (v6). */
+    @ColumnInfo(defaultValue = "0") val repeatYearly: Boolean = false,
+    /** Archivé : hors de l'accueil (section « Archivés »), sans notification ; widgets inchangés (v6). */
+    @ColumnInfo(defaultValue = "0") val archived: Boolean = false,
 ) {
     fun toGoal(): Goal = Goal(
         kind = GoalKind.fromWire(kind),
@@ -78,6 +83,13 @@ data class GoalEntity(
         emoji = emoji,
         notificationsEnabled = notificationsEnabled,
         createdAt = Instant.ofEpochMilli(createdAtMillis),
+        options = ExportedOptions(
+            chartUnit = ChartUnit.fromWire(chartUnit),
+            streak = streak,
+            streakHistory = history(),
+            repeatYearly = repeatYearly,
+            archived = archived,
+        ),
     )
 
     companion object {
@@ -88,6 +100,7 @@ data class GoalEntity(
             id: Long = 0,
             notificationsEnabled: Boolean = false,
             streak: Boolean = false,
+            repeatYearly: Boolean = false,
         ) = GoalEntity(
             id = id,
             title = goal.title,
@@ -100,6 +113,7 @@ data class GoalEntity(
             notificationsEnabled = notificationsEnabled,
             chartUnit = style.chartUnit?.wire,
             streak = streak,
+            repeatYearly = repeatYearly && goal.kind == GoalKind.COUNTDOWN,
         )
 
         /**
@@ -109,8 +123,10 @@ data class GoalEntity(
         fun fromExported(e: ExportedGoal) = from(
             goal = e.goal,
             createdAtMillis = e.createdAt.toEpochMilli(),
-            style = GoalStyle(e.color, e.emoji),
+            style = GoalStyle(e.color, e.emoji, e.options.chartUnit),
             notificationsEnabled = e.notificationsEnabled ?: false,
-        ).copy(uid = e.id)
+            streak = e.options.streak,
+            repeatYearly = e.options.repeatYearly,
+        ).copy(uid = e.id, streakHistory = Streaks.encode(e.options.streakHistory), archived = e.options.archived)
     }
 }

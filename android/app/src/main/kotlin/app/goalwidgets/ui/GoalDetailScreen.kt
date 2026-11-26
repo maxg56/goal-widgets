@@ -47,6 +47,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -136,6 +138,8 @@ fun GoalDetailScreen(
     onBack: () -> Unit,
     onEdit: (StoredGoal) -> Unit,
     onShare: (StoredGoal) -> Unit,
+    /** « Partager en image » : carte PNG de l'objectif. */
+    onShareImage: (StoredGoal) -> Unit = {},
     /** Remise à zéro d'un compteur « série », après confirmation. */
     onResetStreak: (Long, LocalDate) -> Unit = { _, _ -> },
 ) {
@@ -220,7 +224,7 @@ fun GoalDetailScreen(
                         Pill(stringResource(R.string.detail_done), Icons.Filled.Check, solid = true) { editing = false }
                     } else {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            RoundIcon(Icons.Filled.Share, stringResource(R.string.action_share)) { onShare(current) }
+                            ShareMenu(onImage = { onShareImage(current) }, onFile = { onShare(current) })
                             Spacer(Modifier.width(8.dp))
                             RoundIcon(Icons.Filled.Edit, stringResource(R.string.detail_customize)) { editing = true }
                             Spacer(Modifier.width(8.dp))
@@ -299,6 +303,25 @@ private fun hiddenItems(
     } + ChartKind.entries.filter { it !in layout.charts }.map { kind ->
         resources.getString(R.string.detail_hidden_chart, GoalLabels.chartName(resources, kind)) to { update(layout.restore(kind)) }
     }
+
+/** Bouton « Partager » : en image (carte PNG) ou en fichier (à importer dans Goal Widgets). */
+@Composable
+private fun ShareMenu(onImage: () -> Unit, onFile: () -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    Box {
+        RoundIcon(Icons.Filled.Share, stringResource(R.string.action_share)) { open = true }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.share_as_image)) },
+                onClick = { open = false; onImage() },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.share_as_file)) },
+                onClick = { open = false; onFile() },
+            )
+        }
+    }
+}
 
 @Composable
 private fun RoundIcon(icon: ImageVector, description: String, onClick: () -> Unit) {

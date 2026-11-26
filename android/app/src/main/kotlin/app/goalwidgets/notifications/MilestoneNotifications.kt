@@ -111,7 +111,8 @@ object MilestoneNotifications {
             MilestonePlanner.plan(
                 goalId = row.id.toString(),
                 goal = row.toGoal(),
-                notificationsEnabled = row.notificationsEnabled,
+                // Objectif archivé : plus de notification (réactivées s'il sort de l'archive).
+                notificationsEnabled = row.notificationsEnabled && !row.archived,
                 today = today,
                 horizonDays = HORIZON_DAYS,
             )
@@ -141,7 +142,7 @@ object MilestoneNotifications {
         val today = if (date == windowStartDay) date else now.toLocalDate()
         if (date != today) return
         val row = (app as GoalWidgetsApplication).database.goalDao().getById(goalId)
-        val deliver = MilestonePlanner.shouldDeliver(milestone, row?.toGoal(), row?.notificationsEnabled == true, today)
+        val deliver = MilestonePlanner.shouldDeliver(milestone, row?.toGoal(), row != null && row.notificationsEnabled && !row.archived, today)
         if (row == null || !deliver) return
         show(app, row.title, milestone)
     }

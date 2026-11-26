@@ -82,6 +82,9 @@
     <string name="action_share">Partager</string>
     <string name="action_add">Ajouter</string>
     <string name="share_chooser_title">Partager l\'objectif</string>
+    <string name="share_image_chooser_title">Partager l\'image</string>
+    <string name="share_as_image">Partager en image</string>
+    <string name="share_as_file">Envoyer l\'objectif (à importer)</string>
     <string name="shared_open_with">Ajouter à Goal Widgets</string>
     <string name="shared_title">Objectif reçu</string>
     <string name="shared_already_present">Déjà dans tes objectifs</string>
@@ -364,6 +367,21 @@
     <string name="update_failed">Mise à jour impossible</string>
 
     <!-- Compteurs « série » : remise à zéro, record et historique. -->
+    <string name="goal_form_repeat_yearly">Chaque année</string>
+    <string name="goal_form_repeat_yearly_footer">Anniversaire, fête, échéance annuelle : une fois la date passée, le compte à rebours repart pour l\'année suivante.</string>
+    <string name="shortcut_new_goal">Nouvel objectif</string>
+    <string name="form_archive">Archiver</string>
+    <string name="form_archive_hint">Ranger dans « Archivés » en bas de l\'accueil, sans notification</string>
+    <string name="form_unarchive">Sortir de l\'archive</string>
+    <string name="form_unarchive_hint">Remettre l\'objectif dans la liste principale</string>
+    <plurals name="home_archived_count">
+        <item quantity="one">Archivé (%d)</item>
+        <item quantity="many">Archivés (%d)</item>
+        <item quantity="other">Archivés (%d)</item>
+    </plurals>
+    <string name="form_duplicate">Dupliquer</string>
+    <string name="form_duplicate_hint">Créer une copie avec les mêmes dates et réglages</string>
+    <string name="form_duplicate_title">%1$s (copie)</string>
     <string name="goal_form_streak">Série (remise à zéro)</string>
     <string name="goal_form_streak_footer">Ajoute un bouton pour remettre le compteur à zéro (rechute, nouvel essai), avec le record et l\'historique des séries.</string>
     <string name="streak_reset_action">Remettre à zéro</string>

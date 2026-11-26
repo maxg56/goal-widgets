@@ -61,6 +61,18 @@ sur l'autre.
 | `notificationsEnabled` | booléen ou `null` | non | `true`/`false` quand l'app le stocke (ticket 08/09), sinon `null` | `null`/absent = « non précisé » : l'app importatrice applique sa valeur par défaut. Autre type : `invalidGoal`/`notificationsEnabled`. |
 | `createdAt` | instant | oui | | sert au tri « par création ». Absent/invalide : `invalidGoal`/`createdAt`. |
 
+**Champs facultatifs (réglages Android, ajoutés en v1)** — écrits seulement s'ils diffèrent de la valeur
+par défaut ; une valeur absente ou invalide vaut la valeur par défaut (jamais une erreur) ; un lecteur
+qui ne les connaît pas les ignore (iOS aujourd'hui) :
+
+| Clé | Type | Défaut | Sens |
+|---|---|---|---|
+| `chartUnit` | `"auto"` \| `"day"` \| `"week"` \| `"month"` | absent = réglage général | unité des graphiques propre à l'objectif |
+| `streak` | booléen | `false` | compteur « série » (remise à zéro) |
+| `streakHistory` | chaîne `AAAA-MM-JJ/AAAA-MM-JJ;…` | vide | séries terminées, ordre chronologique (pas dans un objectif partagé) |
+| `repeatYearly` | booléen | `false` | compte à rebours « chaque année » (ignoré pour `since`) |
+| `archived` | booléen | `false` | objectif archivé (pas dans un objectif partagé) |
+
 Un élément de `goals` qui n'est pas un objet JSON : `invalidGoal` avec `field` = `"goal"`.
 
 **Instant** : RFC 3339 / ISO 8601 avec décalage obligatoire. Écriture : **UTC, suffixe `Z`, exactement 3

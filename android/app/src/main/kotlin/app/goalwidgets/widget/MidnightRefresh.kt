@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import app.goalwidgets.GoalWidgetsApplication
 import app.goalwidgets.core.LocalMidnight
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -46,6 +47,8 @@ class MidnightRefreshReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.Default).launch {
             try {
+                // Changement de jour : comptes à rebours « chaque année » passés avancés avant le redessin.
+                (context.applicationContext as GoalWidgetsApplication).rollYearly()
                 if (GoalWidgets.hasAny(context)) {
                     GoalWidgets.refreshAll(context)
                     MidnightRefresh.schedule(context)

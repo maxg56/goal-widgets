@@ -82,6 +82,9 @@
     <string name="action_share">Partager</string>
     <string name="action_add">Ajouter</string>
     <string name="share_chooser_title">Partager l\'objectif</string>
+    <string name="share_image_chooser_title">Partager l\'image</string>
+    <string name="share_as_image">Partager en image</string>
+    <string name="share_as_file">Envoyer l\'objectif (à importer)</string>
     <string name="shared_open_with">Ajouter à Goal Widgets</string>
     <string name="shared_title">Objectif reçu</string>
     <string name="shared_already_present">Déjà dans tes objectifs</string>

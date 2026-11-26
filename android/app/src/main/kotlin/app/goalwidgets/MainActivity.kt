@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import app.goalwidgets.core.GoalOrder
 import app.goalwidgets.share.GoalFiles
+import app.goalwidgets.share.GoalImageShare
 import app.goalwidgets.share.GoalSharing
 import app.goalwidgets.ui.AppActions
 import app.goalwidgets.ui.GoalWidgetsApp
@@ -112,6 +113,7 @@ class MainActivity : ComponentActivity() {
                             export = { exportLauncher.launch("goal-widgets-$today.json") },
                             import = { importLauncher.launch(IMPORT_MIME_TYPES) },
                             share = { id -> scope.launch { GoalSharing.share(this@MainActivity, id) } },
+                            shareImage = { id -> scope.launch { GoalImageShare.share(this@MainActivity, id) } },
                             setSendTime = {
                                 NotificationSettings.setSendTime(this@MainActivity, it)
                                 sendTime = it

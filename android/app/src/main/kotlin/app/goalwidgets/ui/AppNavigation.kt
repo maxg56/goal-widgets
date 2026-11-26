@@ -107,6 +107,8 @@ class AppActions(
     val export: () -> Unit,
     val import: () -> Unit,
     val share: (Long) -> Unit,
+    /** « Partager en image » (carte PNG). */
+    val shareImage: (Long) -> Unit,
     val setSendTime: (LocalTime) -> Unit,
 )
 
@@ -259,6 +261,7 @@ fun GoalWidgetsApp(
                     onBack = ::pop,
                     onEdit = { push(Screen.Form(it.id)) },
                     onShare = { actions.share(it.id) },
+                    onShareImage = { actions.shareImage(it.id) },
                     onResetStreak = actions.resetStreak,
                 )
                 is Screen.Form -> {

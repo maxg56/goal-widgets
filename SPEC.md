@@ -99,6 +99,14 @@ Un widget de bureau (ordinateur) est un bonus facultatif, hors périmètre de ce
 - **Localisation** : chaînes externalisées dès le départ, français par défaut.
 - **Cohérence entre les deux plateformes** : le moteur et le planificateur sont écrits deux fois (Kotlin et Swift). Leur comportement est figé par un **jeu de cas partagé** (fichier de données : objectif + date du jour → sortie attendue) que les deux suites de tests exécutent.
 
+### Mises à jour automatiques (Android)
+
+- **Publication** : chaque push sur `main` touchant `android/`, `shared-cases/` ou le workflow lance `.github/workflows/android-release.yml` (aussi déclenchable à la main) : `./gradlew test assembleRelease`, APK signé avec la clé de debug de l'appareil (secrets `SIGNING_*`), GitHub Release `build-<versionCode>` « Goal Widgets <versionName> » marquée *latest* (corps = message du commit, 10 dernières gardées). `versionCode` = 1000 + numéro d'exécution (toujours au-dessus du build de debug local, `versionCode` 1), `versionName` = `1.<run> (<sha court>)`.
+- **Recherche, seulement app ouverte** : à chaque retour au premier plan puis toutes les 15 min tant qu'elle reste visible (aucun service, aucune tâche de fond). Un `GET` anonyme sur `api.github.com/repos/maxg56/goal-widgets/releases/latest` (User-Agent `GoalWidgets-Updater`, aucune donnée personnelle) ; échec réseau = rien. Logique pure dans `:core` (`LatestRelease.parse` / `isNewerThan`, testée).
+- **Installation** : APK téléchargé dans le cache (taille vérifiée), signature comparée à l'app installée (différente → « Mise à jour impossible (signature différente) », pas de nouvel essai automatique pour cette version), puis session `PackageInstaller`. La première fois Android demande l'autorisation « sources inconnues » (pastille discrète, jamais de popup forcée) puis une confirmation ; ensuite, sur Android 12+, les mises à jour suivantes s'installent sans confirmation. L'app se ferme à la fin de l'installation (remplacement par le système) ; les données sont conservées.
+- **Interface** : pastille « Mise à jour en cours… » pendant le téléchargement ; ligne « Version x · Rechercher une mise à jour » dans les réglages des notifications.
+- **Samsung** : le « Bloqueur automatique » (Auto Blocker) interdit l'installation d'applications hors Play Store ; il doit rester désactivé pour que l'app se mette à jour.
+
 ## Testing Decisions
 
 - **Ce qu'est un bon test** : il vérifie uniquement le comportement externe — « pour cet objectif et cette date du jour, j'obtiens cet affichage / ces notifications » — sans dépendre de la structure interne. Pas de mock de l'horloge système : la date du jour est un paramètre.

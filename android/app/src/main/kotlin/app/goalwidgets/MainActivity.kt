@@ -9,14 +9,22 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
@@ -31,10 +39,14 @@ import app.goalwidgets.ui.GoalWidgetsTheme
 import app.goalwidgets.ui.ImportOutcome
 import app.goalwidgets.ui.rememberLocalToday
 import app.goalwidgets.notifications.NotificationSettings
+import app.goalwidgets.update.UpdateIndicator
+import app.goalwidgets.update.UpdateState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import kotlin.time.Duration.Companion.minutes
 
 class MainActivity : ComponentActivity() {
     /**
@@ -48,6 +60,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         requestOpen(intent)
+        checkForUpdatesWhileVisible()
         setContent {
             GoalWidgetsTheme {
                 val vm: GoalListViewModel = viewModel(factory = factory)
@@ -68,30 +81,57 @@ class MainActivity : ComponentActivity() {
                 // Date du jour locale : relue au retour au premier plan, à minuit et au changement d'heure.
                 val today by rememberLocalToday()
                 var sendTime by remember { mutableStateOf(NotificationSettings.sendTime(this)) }
-                GoalWidgetsApp(
-                    goals = goals,
-                    order = order,
-                    today = today,
-                    sendTime = sendTime,
-                    snackbarHostState = snackbar,
-                    openRequest = openRequest,
-                    onOpenRequestHandled = { openRequest = null },
-                    actions = AppActions(
-                        add = vm::add,
-                        update = { id, goal, style, notify -> vm.update(id, goal, style, notify) },
-                        delete = vm::delete,
-                        continueAsSince = vm::continueAsSince,
-                        setOrder = vm::setOrder,
-                        export = { exportLauncher.launch("goal-widgets-$today.json") },
-                        import = { importLauncher.launch(IMPORT_MIME_TYPES) },
-                        share = { id -> scope.launch { GoalSharing.share(this@MainActivity, id) } },
-                        setSendTime = {
-                            NotificationSettings.setSendTime(this, it)
-                            sendTime = it
-                            (application as GoalWidgetsApplication).rescheduleNotifications()
-                        },
-                    ),
-                )
+                // Confirmation d'installation demandée par le système : lancée seulement app visible.
+                val updater = (application as GoalWidgetsApplication).updater
+                val updateState by updater.state.collectAsStateWithLifecycle()
+                LaunchedEffect(updateState) {
+                    val confirm = updateState as? UpdateState.ConfirmationRequired ?: return@LaunchedEffect
+                    runCatching { startActivity(confirm.intent) }
+                    updater.onConfirmationShown(confirm)
+                }
+                Box(Modifier.fillMaxSize()) {
+                    GoalWidgetsApp(
+                        goals = goals,
+                        order = order,
+                        today = today,
+                        sendTime = sendTime,
+                        snackbarHostState = snackbar,
+                        openRequest = openRequest,
+                        onOpenRequestHandled = { openRequest = null },
+                        actions = AppActions(
+                            add = vm::add,
+                            update = { id, goal, style, notify -> vm.update(id, goal, style, notify) },
+                            delete = vm::delete,
+                            continueAsSince = vm::continueAsSince,
+                            setOrder = vm::setOrder,
+                            export = { exportLauncher.launch("goal-widgets-$today.json") },
+                            import = { importLauncher.launch(IMPORT_MIME_TYPES) },
+                            share = { id -> scope.launch { GoalSharing.share(this@MainActivity, id) } },
+                            setSendTime = {
+                                NotificationSettings.setSendTime(this@MainActivity, it)
+                                sendTime = it
+                                (application as GoalWidgetsApplication).rescheduleNotifications()
+                            },
+                        ),
+                    )
+                    UpdateIndicator(Modifier.align(Alignment.TopCenter))
+                }
+            }
+        }
+    }
+
+    /**
+     * Mises à jour : une recherche à chaque retour au premier plan, puis toutes les 15 min tant que
+     * l'app reste visible. Rien en arrière-plan (pas de service ni de WorkManager).
+     */
+    private fun checkForUpdatesWhileVisible() {
+        val updater = (application as GoalWidgetsApplication).updater
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    updater.requestCheck()
+                    delay(UPDATE_CHECK_INTERVAL)
+                }
             }
         }
     }
@@ -150,6 +190,7 @@ class MainActivity : ComponentActivity() {
 
         /** Certains fournisseurs (Drive, messageries) ne déclarent pas le type JSON. */
         private val IMPORT_MIME_TYPES = arrayOf("application/json", "text/*", "application/octet-stream")
+        private val UPDATE_CHECK_INTERVAL = 15.minutes
         private const val PREFS = "settings"
         private const val PREF_ORDER = "goal_order"
 

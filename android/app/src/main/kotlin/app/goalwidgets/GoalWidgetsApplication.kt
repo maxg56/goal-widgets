@@ -4,6 +4,7 @@ import android.app.Application
 import app.goalwidgets.data.GoalDatabase
 import app.goalwidgets.notifications.DailyRescheduleWorker
 import app.goalwidgets.notifications.MilestoneNotifications
+import app.goalwidgets.update.AppUpdater
 import app.goalwidgets.widget.GoalWidgets
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +16,9 @@ class GoalWidgetsApplication : Application() {
 
     /** Travail de fond lié au processus (reprogrammation des notifications). */
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** Mises à jour depuis les GitHub Releases, déclenchées par MainActivity quand l'app est ouverte. */
+    val updater: AppUpdater by lazy { AppUpdater(this, scope) }
 
     override fun onCreate() {
         super.onCreate()

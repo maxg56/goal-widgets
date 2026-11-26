@@ -46,6 +46,7 @@ import app.goalwidgets.BuildConfig
 import app.goalwidgets.R
 import app.goalwidgets.debug.NotificationDebugSection
 import app.goalwidgets.notifications.MilestoneNotifications
+import app.goalwidgets.update.UpdateSettingsRow
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -114,6 +115,9 @@ fun NotificationSettingsScreen(
                     Text(stringResource(R.string.notifications_battery_open))
                 }
             }
+            HorizontalDivider()
+            // Mises à jour automatiques : version installée et recherche manuelle.
+            UpdateSettingsRow()
             // Outils de test (t14) : le code n'existe que dans les builds de debug (src/debug).
             if (BuildConfig.DEBUG) NotificationDebugSection()
         }

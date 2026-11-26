@@ -325,4 +325,15 @@
     <string name="widget_config_add">Ajouter le widget</string>
     <string name="widget_config_update">Mettre à jour le widget</string>
     <string name="widget_preview_a11y">Aperçu du widget</string>
+    <!-- Mises à jour automatiques (GitHub Releases, app ouverte uniquement). -->
+    <string name="update_version_check">Version %1$s · Rechercher une mise à jour</string>
+    <string name="update_checking">Recherche…</string>
+    <string name="update_up_to_date">Application à jour</string>
+    <string name="update_check_failed">Recherche impossible (pas de connexion ?)</string>
+    <string name="update_in_progress">Mise à jour en cours…</string>
+    <string name="update_needs_permission">Mise à jour disponible — autoriser l\'installation</string>
+    <string name="update_available_install">Mise à jour disponible — installer</string>
+    <string name="update_failed_signature">Mise à jour impossible (signature différente)</string>
+    <string name="update_failed_blocked">Mise à jour bloquée par le système (Bloqueur automatique ?)</string>
+    <string name="update_failed">Mise à jour impossible</string>
 </resources>

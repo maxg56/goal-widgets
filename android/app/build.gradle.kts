@@ -13,13 +13,31 @@ android {
         applicationId = "app.goalwidgets"
         minSdk = 26 // Android 8.0
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        // Surchargés par la CI (-PversionCode=1000+run, -PversionName="1.<run> (<sha>)") ;
+        // en local : valeurs historiques (versionCode 1 = build de debug installé à la main).
+        versionCode = providers.gradleProperty("versionCode").orNull?.toInt() ?: 1
+        versionName = providers.gradleProperty("versionName").orNull ?: "0.1.0"
+    }
+
+    // Signature de la release publiée par la CI (.github/workflows/android-release.yml) : la clé
+    // de debug de l'appareil, pour que la mise à jour s'installe par-dessus le build de debug
+    // sans perte de données. Sans ces variables (build local), la release reste non signée.
+    val releaseKeystore = providers.environmentVariable("SIGNING_KEYSTORE_PATH").orNull
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = file(releaseKeystore)
+                storePassword = providers.environmentVariable("SIGNING_STORE_PASSWORD").orNull
+                keyAlias = providers.environmentVariable("SIGNING_KEY_ALIAS").orNull
+                keyPassword = providers.environmentVariable("SIGNING_KEY_PASSWORD").orNull
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (releaseKeystore != null) signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

@@ -21,6 +21,12 @@ struct GoalWidgetView: View {
 
     var body: some View {
         content
+            // Compteur « série » : bouton ↺ (double appui) dans le coin, hors écran verrouillé.
+            .overlay(alignment: .topTrailing) {
+                if let streak = resettable {
+                    ResetButton(streak: streak)
+                }
+            }
             .containerBackground(for: .widget) {
                 if isAccessory {
                     Color.clear
@@ -29,6 +35,12 @@ struct GoalWidgetView: View {
                 }
             }
             .widgetURL(link)
+    }
+
+    /// Compteur « série » affiché sur l'écran d'accueil (pas sur l'écran verrouillé).
+    private var resettable: WidgetStreak? {
+        guard !isAccessory, case .goal = entry.display else { return nil }
+        return entry.streak
     }
 
     private var link: URL? {
@@ -105,12 +117,46 @@ private struct WidgetTexts {
     let number: String
     let caption: String
     let shortCaption: String
+    /// « Record 47 j » d'un compteur « série » déjà remis à zéro, sinon nil.
+    let record: String?
 
-    init(title: String, state: DisplayState) {
+    init(title: String, state: DisplayState, streak: WidgetStreak? = nil) {
         self.title = title
         number = GoalLabels.bigNumber(state)
         caption = GoalLabels.caption(state)
         shortCaption = GoalLabels.shortCaption(state)
+        record = streak?.recordDays.map {
+            String(format: NSLocalizedString("widget_record", tableName: "Widget", comment: ""), "\($0)")
+        }
+    }
+
+    /// Légende longue suivie du record éventuel.
+    var captionWithRecord: String { [caption, record].compactMap { $0 }.joined(separator: " · ") }
+}
+
+/// Bouton ↺ / « Confirmer ? » d'un compteur « série » (widget interactif, `ResetStreakIntent`).
+private struct ResetButton: View {
+    let streak: WidgetStreak
+
+    var body: some View {
+        Button(intent: ResetStreakIntent(goalID: streak.goalID)) {
+            if streak.armed {
+                Text("widget_reset_confirm", tableName: "Widget")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(.black.opacity(0.85))
+                    .padding(.horizontal, 10)
+                    .frame(height: 28)
+                    .background(Capsule().fill(.white))
+            } else {
+                Image(systemName: "arrow.counterclockwise")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(Circle().fill(.white.opacity(0.25)))
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("widget_reset_accessibility", tableName: "Widget"))
     }
 }
 
@@ -121,7 +167,7 @@ private struct SmallChartView: View {
     let entry: GoalWidgetEntry
 
     var body: some View {
-        let t = WidgetTexts(title: title, state: state)
+        let t = WidgetTexts(title: title, state: state, streak: entry.streak)
         let config = entry.config
         VStack(alignment: .leading, spacing: 4) {
             if config.shows(.title) {
@@ -147,6 +193,12 @@ private struct SmallChartView: View {
                             .opacity(0.8)
                             .lineLimit(1)
                     }
+                    if let record = t.record {
+                        Text(record)
+                            .font(.system(size: 9, weight: .bold))
+                            .opacity(0.8)
+                            .lineLimit(1)
+                    }
                 }
                 .foregroundStyle(.white)
                 .padding(.horizontal, config.shows(.chart) ? 18 : 0)
@@ -165,7 +217,7 @@ private struct MediumChartView: View {
     let entry: GoalWidgetEntry
 
     var body: some View {
-        let t = WidgetTexts(title: title, state: state)
+        let t = WidgetTexts(title: title, state: state, streak: entry.streak)
         let config = entry.config
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 12) {
@@ -184,7 +236,7 @@ private struct MediumChartView: View {
                             .lineLimit(1)
                     }
                     if config.shows(.caption) {
-                        Text(t.caption)
+                        Text(t.captionWithRecord)
                             .font(.system(size: 13))
                             .foregroundStyle(.white.opacity(0.82))
                             .lineLimit(1)
@@ -214,7 +266,7 @@ private struct LargeChartView: View {
     let entry: GoalWidgetEntry
 
     var body: some View {
-        let t = WidgetTexts(title: title, state: state)
+        let t = WidgetTexts(title: title, state: state, streak: entry.streak)
         let config = entry.config
         VStack(alignment: .leading, spacing: 8) {
             if config.shows(.title) {
@@ -232,7 +284,7 @@ private struct LargeChartView: View {
                             .lineLimit(1)
                     }
                     if config.shows(.caption) {
-                        Text(t.caption)
+                        Text(t.captionWithRecord)
                             .font(.system(size: 13))
                             .opacity(0.82)
                             .lineLimit(1)

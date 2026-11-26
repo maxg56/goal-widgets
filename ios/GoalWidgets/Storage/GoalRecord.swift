@@ -24,6 +24,12 @@ final class GoalRecord {
     var colorRaw: String? = nil
     /// Emoji affiché devant le titre (t11), nil = aucun.
     var emoji: String? = nil
+    /// Compteur « depuis » marqué « série » : bouton de remise à zéro, record et historique. Valeur par
+    /// défaut à la déclaration : migration légère automatique (désactivée pour les objectifs existants).
+    var streak: Bool = false
+    /// Séries terminées, ordre chronologique (`Streaks.encode`, même texte qu'Android). Gardé si
+    /// `streak` est désactivé.
+    var streakHistoryRaw: String = ""
 
     init(
         id: UUID = UUID(),

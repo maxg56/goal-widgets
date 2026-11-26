@@ -140,9 +140,7 @@ import app.goalwidgets.core.Phase
 import app.goalwidgets.core.RingChart
 import app.goalwidgets.notifications.MilestoneNotifications
 import kotlinx.coroutines.launch
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 import java.time.temporal.ChronoUnit
 import kotlin.math.min
 import kotlin.math.sin
@@ -162,8 +160,8 @@ private enum class Confirm { DELETE, SINCE }
 fun GoalFormScreen(
     existing: StoredGoal?,
     today: LocalDate,
-    /** Objectif validé, son style et l'état des notifications. */
-    onSave: (Goal, GoalStyle, Boolean) -> Unit,
+    /** Objectif validé, son style, l'état des notifications et l'option « série ». */
+    onSave: (Goal, GoalStyle, Boolean, Boolean) -> Unit,
     onCancel: () -> Unit,
     onDelete: () -> Unit = {},
     onContinueAsSince: () -> Unit = {},
@@ -181,6 +179,8 @@ fun GoalFormScreen(
     var chartUnit by rememberSaveable { mutableStateOf(existing?.style?.chartUnit) }
     // Désactivées par défaut, y compris pour un nouvel objectif (même règle qu'iOS).
     var notify by rememberSaveable { mutableStateOf(existing?.notificationsEnabled ?: false) }
+    // Option « série » : n'a d'effet (et n'est proposée) que pour un compteur « depuis ».
+    var streak by rememberSaveable { mutableStateOf(existing?.streak ?: false) }
     var attempted by rememberSaveable { mutableStateOf(false) }
     var sheet by rememberSaveable { mutableStateOf<DateField?>(null) }
     var confirm by rememberSaveable { mutableStateOf<Confirm?>(null) }
@@ -198,7 +198,7 @@ fun GoalFormScreen(
     fun save() {
         attempted = true
         if (draft.errors().isEmpty()) {
-            onSave(draft.toGoal(), style, notify)
+            onSave(draft.toGoal(), style, notify, streak)
         } else {
             scope.launch { for (x in listOf(22f, -18f, 12f, -8f, 4f, 0f)) shake.animateTo(x, tween(45)) }
         }
@@ -230,6 +230,9 @@ fun GoalFormScreen(
                     EmojiPicker(style.emoji, emoji, base) { emoji = it }
                 }
                 Section(stringResource(R.string.goal_form_chart_unit)) { ChartUnitPicker(chartUnit, base) { chartUnit = it } }
+                AnimatedVisibility(kind == GoalKind.SINCE, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+                    StreakCard(streak, base) { streak = it }
+                }
                 NotificationCard(notify, base) { notify = it }
                 if (existing != null) {
                     ManageCard(
@@ -764,10 +767,6 @@ private fun DateSheet(
     }
 }
 
-private fun LocalDate.toUtcMillis(): Long = atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
-
-private fun Long.utcMillisToLocalDate(): LocalDate = Instant.ofEpochMilli(this).atZone(ZoneOffset.UTC).toLocalDate()
-
 // --- Couleur, emoji, notifications ---------------------------------------------------------------
 
 @Composable
@@ -959,6 +958,36 @@ private fun NotificationCard(enabled: Boolean, base: Color, onChange: (Boolean) 
                 }) { Text(stringResource(R.string.notifications_open_settings)) }
             }
         }
+    }
+}
+
+/** Carte « Série » : remise à zéro possible, record et historique (compteur « depuis » seulement). */
+@Composable
+private fun StreakCard(enabled: Boolean, base: Color, onChange: (Boolean) -> Unit) {
+    val tint by animateColorAsState(if (enabled) base else MaterialTheme.colorScheme.onSurfaceVariant, label = "streak")
+    val dark = isSystemInDarkTheme()
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(28.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable(role = Role.Switch) { onChange(!enabled) }
+            .padding(18.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(48.dp).clip(CircleShape).background(tint.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
+            Icon(Icons.Filled.Refresh, contentDescription = null, tint = if (dark && enabled) lerp(base, Color.White, 0.45f) else tint)
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.goal_form_streak), fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.goal_form_streak_footer), fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Switch(
+            checked = enabled,
+            onCheckedChange = onChange,
+            colors = SwitchDefaults.colors(checkedTrackColor = base, checkedThumbColor = Color.White),
+        )
     }
 }
 

@@ -29,3 +29,10 @@
 "widget_part_caption" = "Légende";
 "widget_part_chart" = "Graphique";
 "widget_part_timeline" = "Mini frise";
+
+/* Compteurs « série » : bouton ↺ (double appui) et record. */
+"widget_reset_intent_title" = "Remettre à zéro";
+"widget_reset_confirm" = "Confirmer ?";
+"widget_reset_accessibility" = "Remettre à zéro (appuyer deux fois)";
+/* %@ = nombre de jours. */
+"widget_record" = "Record %@ j";

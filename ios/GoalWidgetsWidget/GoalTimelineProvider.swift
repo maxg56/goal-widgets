@@ -15,6 +15,16 @@ struct GoalWidgetEntry: TimelineEntry {
     var style: GoalStyle = .none
     /// Graphique et éléments masqués choisis dans la configuration du widget.
     var config: WidgetChartConfig = .default
+    /// Compteur « série » : bouton ↺ et record ; nil sinon.
+    var streak: WidgetStreak? = nil
+}
+
+/// Bouton ↺ d'un compteur « série » et record à afficher (nil tant qu'il n'y a eu aucune remise à
+/// zéro : le record serait la série en cours).
+struct WidgetStreak {
+    let goalID: UUID
+    let armed: Bool
+    let recordDays: Int?
 }
 
 /// Couche mince : lit le stockage partagé (App Group), délègue le calcul à `WidgetTimelinePlanner`
@@ -53,15 +63,38 @@ struct GoalTimelineProvider: AppIntentTimelineProvider {
         let style = selectedID.flatMap { loaded.styles[$0] } ?? .none
         let config = configuration.chartConfig
         let calendar = Calendar.current
-        let entries = plan.entries.map { day in
+        let history = selectedID.flatMap { loaded.streakHistories[$0] }
+        func streak(on day: LocalDate, armed: Bool) -> WidgetStreak? {
+            guard let selectedID, let goal, let history else { return nil }
+            let summary = Streaks.summary(goal: goal, history: history, today: day)
+            return WidgetStreak(goalID: selectedID, armed: armed, recordDays: summary.resetCount > 0 ? summary.bestDays : nil)
+        }
+        var entries = plan.entries.map { day in
             GoalWidgetEntry(
                 date: day.day.startOfDay(in: calendar),
                 day: day.day,
                 display: day.display,
                 goal: goal,
                 style: style,
-                config: config
+                config: config,
+                streak: streak(on: day.day, armed: false)
             )
+        }
+        // Bouton ↺ armé (premier appui) : « Confirmer ? » maintenant, retour au repos à la fin de la
+        // fenêtre de confirmation (deux entrées insérées dans la journée en cours).
+        let now = Date()
+        if let selectedID, let first = entries.first, first.streak != nil,
+           let armedAt = ResetArming.armedAt(selectedID), WidgetResetTap.isArmed(armedAt: armedAt, now: now) {
+            let armed = GoalWidgetEntry(
+                date: now, day: first.day, display: first.display, goal: goal, style: style, config: config,
+                streak: streak(on: first.day, armed: true)
+            )
+            let calm = GoalWidgetEntry(
+                date: armedAt.addingTimeInterval(WidgetResetTap.window), day: first.day, display: first.display,
+                goal: goal, style: style, config: config, streak: streak(on: first.day, armed: false)
+            )
+            entries.insert(contentsOf: [armed, calm], at: 1)
+            entries.sort { $0.date < $1.date }
         }
         return (entries, plan.reloadOn)
     }
@@ -93,6 +126,8 @@ enum WidgetGoalLoader {
         let goals: [WidgetGoal]
         /// Couleur et emoji par objectif.
         let styles: [UUID: GoalStyle]
+        /// Séries passées des compteurs « série » (absents pour les autres objectifs).
+        var streakHistories: [UUID: [PastStreak]] = [:]
 
         /// Couleur par objectif (widget « Grille »).
         var colors: [UUID: GoalColor] { styles.compactMapValues(\.color) }
@@ -104,11 +139,13 @@ enum WidgetGoalLoader {
         let context = ModelContext(container)
         let records = (try? context.fetch(FetchDescriptor<GoalRecord>())) ?? []
         var styles: [UUID: GoalStyle] = [:]
+        var streakHistories: [UUID: [PastStreak]] = [:]
         for record in records {
             styles[record.id] = record.style
+            if record.isStreak { streakHistories[record.id] = record.streakHistory }
         }
         let goals = records.map { WidgetGoal(id: $0.id, title: $0.displayTitle, goal: $0.goal) }
-        return Loaded(goals: goals, styles: styles)
+        return Loaded(goals: goals, styles: styles, streakHistories: streakHistories)
     }
 
     static func loadGoals() -> [WidgetGoal] {

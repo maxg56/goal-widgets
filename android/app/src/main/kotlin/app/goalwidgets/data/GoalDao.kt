@@ -7,7 +7,9 @@ import androidx.room.Transaction
 import app.goalwidgets.core.ExportedGoal
 import app.goalwidgets.core.GoalImport
 import app.goalwidgets.core.ImportPlan
+import app.goalwidgets.core.Streaks
 import kotlinx.coroutines.flow.Flow
+import java.time.LocalDate
 
 @Dao
 interface GoalDao {
@@ -28,6 +30,28 @@ interface GoalDao {
     /** Interrupteur de notifications d'un objectif ; renvoie le nombre de lignes modifiées. */
     @Query("UPDATE goals SET notificationsEnabled = :enabled WHERE id = :id")
     suspend fun setNotificationsEnabled(id: Long, enabled: Boolean): Int
+
+    /** Option « série » d'un objectif ; renvoie le nombre de lignes modifiées. */
+    @Query("UPDATE goals SET streak = :enabled WHERE id = :id")
+    suspend fun setStreak(id: Long, enabled: Boolean): Int
+
+    @Query("UPDATE goals SET startEpochDay = :startEpochDay, streakHistory = :history WHERE id = :id")
+    suspend fun updateStreak(id: Long, startEpochDay: Long, history: String): Int
+
+    /**
+     * Remise à zéro d'un compteur « série » le jour [on] : la série en cours rejoint l'historique et le
+     * compteur repart de [on] ([Streaks.reset]). Lecture et écriture dans une même transaction (deux
+     * appuis rapprochés, app + widget, n'archivent pas deux fois la même série en concurrence).
+     * Renvoie `false` si l'objectif n'existe plus, n'est pas une série, ou si [on] est refusée.
+     */
+    @Transaction
+    suspend fun resetStreak(id: Long, on: LocalDate, today: LocalDate): Boolean {
+        val entity = getById(id)?.takeIf { it.isStreak } ?: return false
+        val goal = entity.toGoal()
+        if (Streaks.validate(goal, on, today) != null) return false
+        val reset = Streaks.reset(goal, entity.history(), on, today)
+        return updateStreak(id, reset.goal.startDate.toEpochDay(), Streaks.encode(reset.history)) > 0
+    }
 
     @Insert
     suspend fun insert(goal: GoalEntity): Long
@@ -75,8 +99,8 @@ interface GoalDao {
     ): Int
 
     /**
-     * Modification d'un objectif depuis l'app : contenu ([updateContent]) et, si
-     * [notificationsEnabled] n'est pas `null`, interrupteur de notifications, en une seule
+     * Modification d'un objectif depuis l'app : contenu ([updateContent]) et, s'ils ne sont pas `null`,
+     * interrupteur de notifications et option « série », en une seule
      * transaction (aucun lecteur — widget, reprogrammation — ne voit un état à moitié écrit).
      * Renvoie le nombre de lignes modifiées par [updateContent] (0 si l'objectif n'existe plus).
      */
@@ -91,9 +115,11 @@ interface GoalDao {
         emoji: String?,
         chartUnit: String?,
         notificationsEnabled: Boolean?,
+        streak: Boolean?,
     ): Int {
         val updated = updateContent(id, title, kind, startEpochDay, targetEpochDay, color, emoji, chartUnit)
         if (notificationsEnabled != null) setNotificationsEnabled(id, notificationsEnabled)
+        if (streak != null) setStreak(id, streak)
         return updated
     }
 

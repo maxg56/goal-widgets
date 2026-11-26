@@ -22,6 +22,7 @@ Le moteur et le planificateur sont écrits deux fois (Kotlin et Swift). Leur com
 JSON de `shared-cases/` que les deux suites de tests exécutent :
 
 - `shared-cases/engine.json` : moteur de compte à rebours (objectif + date du jour → état d'affichage).
+- `shared-cases/streaks.json` : compteurs « série » (remise à zéro, record, historique stocké, double appui du widget).
 
 Format : `{ "version": 1, "cases": [ { "name", "goal": {...}, "today": "AAAA-MM-JJ", "expected": {...} } ] }`.
 Seuls les champs présents dans `expected` sont vérifiés, ce qui permet d'ajouter de nouveaux champs sans réécrire

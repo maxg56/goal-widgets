@@ -3,6 +3,7 @@ package app.goalwidgets.widget
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.graphics.Color
@@ -23,6 +24,7 @@ import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.provideContent
+import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
@@ -49,13 +51,16 @@ import app.goalwidgets.core.CountdownEngine
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalKind
 import app.goalwidgets.core.GoalStyle
+import app.goalwidgets.core.Streaks
 import app.goalwidgets.core.WidgetChartConfig
 import app.goalwidgets.core.WidgetContent
 import app.goalwidgets.core.WidgetPart
+import app.goalwidgets.core.WidgetResetTap
 import app.goalwidgets.core.WidgetSize
 import app.goalwidgets.ui.DateFormats
 import app.goalwidgets.ui.GoalLabels
 import app.goalwidgets.ui.titleWithEmoji
+import kotlinx.coroutines.delay
 import java.time.LocalDate
 
 /**
@@ -80,6 +85,14 @@ class GoalWidget : GlanceAppWidget() {
             val goals by dao.observeAll().collectAsState(initial = null)
             val goalId = currentState(GoalWidgets.GOAL_ID)
             val config = WidgetChartConfig.decode(currentState(GoalWidgets.CHART), currentState(GoalWidgets.HIDDEN))
+            // Bouton ↺ armé (premier appui) : retour au repos passé le délai de confirmation.
+            val armedAt = currentState(RESET_ARMED_AT)
+            LaunchedEffect(armedAt) {
+                if (armedAt == null) return@LaunchedEffect
+                delay((armedAt + WidgetResetTap.WINDOW_MILLIS - System.currentTimeMillis()).coerceAtLeast(0))
+                updateAppWidgetState(context, id) { if (it[RESET_ARMED_AT] == armedAt) it.remove(RESET_ARMED_AT) }
+                update(context, id)
+            }
             GlanceTheme {
                 val rows = goals
                 if (rows == null) {
@@ -89,8 +102,19 @@ class GoalWidget : GlanceAppWidget() {
                     val content = WidgetContent.resolve(goalId, today) { wanted -> rows.firstOrNull { it.id == wanted }?.toGoal() }
                     val row = rows.firstOrNull { it.id == goalId }
                     when {
-                        content is WidgetContent.Showing && row != null ->
-                            ChartWidgetContent(row.toGoal(), row.style(), today, config, openGoal(context, content.goalId))
+                        content is WidgetContent.Showing && row != null -> {
+                            val streak = if (row.isStreak) {
+                                val summary = Streaks.summary(row.toGoal(), row.history(), today)
+                                WidgetStreak(
+                                    goalId = row.id,
+                                    armed = WidgetResetTap.isArmed(armedAt, System.currentTimeMillis()),
+                                    recordDays = summary.bestDays.takeIf { summary.resetCount > 0 },
+                                )
+                            } else {
+                                null
+                            }
+                            ChartWidgetContent(row.toGoal(), row.style(), today, config, openGoal(context, content.goalId), streak)
+                        }
                         else -> Background(GlanceModifier.clickable(chooseGoal(context, appWidgetId))) {
                             Message(
                                 context.getString(
@@ -117,7 +141,15 @@ private fun fitSp(text: String, widthDp: Float, maxSp: Float): Float =
  * l'aperçu de la configuration ([click] = null).
  */
 @Composable
-fun ChartWidgetContent(goal: Goal, style: GoalStyle, today: LocalDate, config: WidgetChartConfig, click: Action?) {
+fun ChartWidgetContent(
+    goal: Goal,
+    style: GoalStyle,
+    today: LocalDate,
+    config: WidgetChartConfig,
+    click: Action?,
+    /** Compteur « série » : bouton ↺ et record (`null` sinon, et dans l'aperçu de la configuration). */
+    streak: WidgetStreak? = null,
+) {
     val context = LocalContext.current
     val size = LocalSize.current
     val w = size.width.value
@@ -130,6 +162,7 @@ fun ChartWidgetContent(goal: Goal, style: GoalStyle, today: LocalDate, config: W
         caption = GoalLabels.caption(resources, state),
         shortCaption = GoalLabels.shortCaption(resources, state),
         status = GoalLabels.status(resources, state),
+        record = streak?.recordDays?.let { resources.getString(R.string.widget_record, it) },
     )
     var modifier = GlanceModifier
         .fillMaxSize()
@@ -143,15 +176,33 @@ fun ChartWidgetContent(goal: Goal, style: GoalStyle, today: LocalDate, config: W
     val draw = ChartDrawer(goal, today, unit, context.resources.displayMetrics.density)
     Box(modifier) {
         when (WidgetSize.of(w, h)) {
-            WidgetSize.COMPACT -> Compact(content, config, draw, w, h)
+            WidgetSize.COMPACT -> Compact(content, config, draw, w, h, hasButton = streak != null)
             WidgetSize.SMALL -> Small(content, config, draw, w, h)
             WidgetSize.MEDIUM -> Medium(content, config, draw, w, h)
             WidgetSize.LARGE -> Large(content, config, draw, goal, today, w, h)
         }
+        if (streak != null) {
+            val compact = WidgetSize.of(w, h) == WidgetSize.COMPACT
+            Box(
+                GlanceModifier.fillMaxSize().padding(8.dp),
+                contentAlignment = if (compact) Alignment.CenterEnd else Alignment.TopEnd,
+            ) { ResetButton(streak) }
+        }
     }
 }
 
-private class WidgetTexts(val title: String, val number: String, val caption: String, val shortCaption: String, val status: String)
+private class WidgetTexts(
+    val title: String,
+    val number: String,
+    val caption: String,
+    val shortCaption: String,
+    val status: String,
+    /** « Record 47 j » d'un compteur « série » déjà remis à zéro, sinon `null`. */
+    val record: String? = null,
+) {
+    /** Légende longue suivie du record éventuel. */
+    val captionWithRecord: String get() = listOfNotNull(caption, record).joinToString(" · ")
+}
 
 /** Bitmaps des graphiques pour un objectif et une densité donnés. */
 private class ChartDrawer(private val goal: Goal, private val today: LocalDate, private val unit: ChartUnit, private val density: Float) {
@@ -179,7 +230,7 @@ private fun Title(text: String, sizeSp: Float) {
 
 /** Une rangée (2×1, 4×1, dont les widgets posés avant les graphiques) : texte à gauche, petit anneau à droite. */
 @Composable
-private fun Compact(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, w: Float, h: Float) {
+private fun Compact(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, w: Float, h: Float, hasButton: Boolean) {
     val pad = 10f
     val side = h - 2 * pad
     Row(GlanceModifier.fillMaxSize().padding(horizontal = 14.dp, vertical = pad.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -196,7 +247,10 @@ private fun Compact(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer
                 }
             }
         }
-        if (config.shows(WidgetPart.CHART) && w >= 160f && side >= 24f) {
+        if (hasButton) {
+            // Place du bouton ↺ (posé par-dessus, centré à droite) à la place de l'anneau.
+            Spacer(GlanceModifier.width(44.dp))
+        } else if (config.shows(WidgetPart.CHART) && w >= 160f && side >= 24f) {
             Spacer(GlanceModifier.width(8.dp))
             ChartImage(draw.chart(ChartKind.RING, side, side), t.status, GlanceModifier.size(side.dp))
         }
@@ -222,6 +276,7 @@ private fun Small(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, 
                 if (config.shows(WidgetPart.CAPTION)) {
                     Text(t.shortCaption, style = TextStyle(color = whiteAlpha(0.8f), fontSize = 10.sp), maxLines = 1)
                 }
+                t.record?.let { Text(it, style = TextStyle(color = whiteAlpha(0.8f), fontSize = 9.sp, fontWeight = FontWeight.Bold), maxLines = 1) }
             }
         }
     }
@@ -245,7 +300,7 @@ private fun Medium(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer,
                     Text(t.number, style = TextStyle(color = white, fontSize = fitSp(t.number, textW, (contentH * 0.5f).coerceIn(20f, 52f)).sp, fontWeight = FontWeight.Bold), maxLines = 1)
                 }
                 if (config.shows(WidgetPart.CAPTION)) {
-                    Text(t.caption, style = TextStyle(color = whiteAlpha(0.82f), fontSize = 13.sp), maxLines = 1)
+                    Text(t.captionWithRecord, style = TextStyle(color = whiteAlpha(0.82f), fontSize = 13.sp), maxLines = 1)
                 }
             }
             if (showChart) {
@@ -281,7 +336,7 @@ private fun Large(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, 
                     Text(t.number, style = TextStyle(color = white, fontSize = fitSp(t.number, chartW * 0.55f, 56f).sp, fontWeight = FontWeight.Bold), maxLines = 1)
                     Spacer(GlanceModifier.width(8.dp))
                 }
-                if (showCaption) Text(t.caption, style = TextStyle(color = whiteAlpha(0.82f), fontSize = 13.sp), maxLines = 1)
+                if (showCaption) Text(t.captionWithRecord, style = TextStyle(color = whiteAlpha(0.82f), fontSize = 13.sp), maxLines = 1)
             }
         }
         Spacer(GlanceModifier.height(10.dp))

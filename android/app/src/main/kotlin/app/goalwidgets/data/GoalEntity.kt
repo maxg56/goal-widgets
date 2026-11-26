@@ -10,6 +10,8 @@ import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalColor
 import app.goalwidgets.core.GoalKind
 import app.goalwidgets.core.GoalStyle
+import app.goalwidgets.core.PastStreak
+import app.goalwidgets.core.Streaks
 import java.time.Instant
 import java.time.LocalDate
 import java.util.UUID
@@ -44,6 +46,13 @@ data class GoalEntity(
     @ColumnInfo(defaultValue = "0") val notificationsEnabled: Boolean = false,
     /** Valeur `ChartUnit.wire`, ou `null` = comme le réglage général (v4). Non exportée. */
     val chartUnit: String? = null,
+    /**
+     * Compteur « depuis » marqué « série » : bouton de remise à zéro, record et historique (v5).
+     * Ignoré pour un compte à rebours.
+     */
+    @ColumnInfo(defaultValue = "0") val streak: Boolean = false,
+    /** Séries terminées, ordre chronologique (`Streaks.encode`, v5). Conservé si [streak] est désactivé. */
+    @ColumnInfo(defaultValue = "") val streakHistory: String = "",
 ) {
     fun toGoal(): Goal = Goal(
         kind = GoalKind.fromWire(kind),
@@ -53,6 +62,11 @@ data class GoalEntity(
     )
 
     fun style(): GoalStyle = GoalStyle(GoalColor.fromWire(color), emoji, ChartUnit.fromWire(chartUnit))
+
+    /** Remise à zéro proposée : compteur « depuis » marqué « série ». */
+    val isStreak: Boolean get() = streak && kind == GoalKind.SINCE.wire
+
+    fun history(): List<PastStreak> = Streaks.decode(streakHistory)
 
     fun toExported(): ExportedGoal = ExportedGoal(
         id = uid,
@@ -70,6 +84,7 @@ data class GoalEntity(
             style: GoalStyle = GoalStyle.NONE,
             id: Long = 0,
             notificationsEnabled: Boolean = false,
+            streak: Boolean = false,
         ) = GoalEntity(
             id = id,
             title = goal.title,
@@ -81,6 +96,7 @@ data class GoalEntity(
             emoji = style.emoji,
             notificationsEnabled = notificationsEnabled,
             chartUnit = style.chartUnit?.wire,
+            streak = streak,
         )
 
         /**

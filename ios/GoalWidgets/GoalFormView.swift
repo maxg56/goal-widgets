@@ -25,6 +25,8 @@ struct GoalFormView: View {
     @State private var emoji: String
     /// Désactivées par défaut, y compris pour un nouvel objectif (spec 44 : autorisation demandée à l'activation).
     @State private var notify: Bool
+    /// Option « série » (remise à zéro) : proposée et appliquée seulement à un compteur « depuis ».
+    @State private var streak: Bool
     @State private var notificationsDenied = false
     @State private var attempted = false
     @State private var sheet: DateField?
@@ -63,6 +65,7 @@ struct GoalFormView: View {
         _color = State(initialValue: record?.style.color)
         _emoji = State(initialValue: record?.style.emoji ?? "")
         _notify = State(initialValue: record?.notificationsEnabled ?? false)
+        _streak = State(initialValue: record?.streak ?? false)
     }
 
     private var style: GoalStyle { GoalStyle(color: color, emoji: emoji) }
@@ -130,6 +133,10 @@ struct GoalFormView: View {
                             EmojiChoices(selection: $emoji, base: base)
                         }
                         .id("emoji")
+                        if kind == .since {
+                            StreakCard(enabled: $streak, base: base)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
                         NotificationCard(enabled: $notify, denied: notificationsDenied, base: base)
                         if record != nil {
                             ManageCard(
@@ -338,15 +345,18 @@ struct GoalFormView: View {
             record.update(title: cleanTitle, goal: goal)
             record.notificationsEnabled = notify
             record.style = style
+            record.streak = streak
         } else {
-            modelContext.insert(GoalRecord(
+            let created = GoalRecord(
                 title: cleanTitle,
                 kind: goal.kind,
                 startDate: goal.startDate,
                 targetDate: goal.targetDate,
                 notificationsEnabled: notify,
                 style: style
-            ))
+            )
+            created.streak = goal.kind == .since && streak
+            modelContext.insert(created)
         }
         // La sauvegarde recharge les widgets et reprogramme les notifications (GoalWidgetsApp, ModelContext.didSave).
         try? modelContext.save()
@@ -928,6 +938,35 @@ private struct NotificationCard: View {
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color(.secondarySystemGroupedBackground)))
+    }
+}
+
+/// Carte « Série » : remise à zéro possible, record et historique (compteur « depuis » seulement).
+private struct StreakCard: View {
+    @Binding var enabled: Bool
+    let base: Color
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: "arrow.counterclockwise")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(enabled ? base : Color.secondary)
+                .frame(width: 48, height: 48)
+                .background(Circle().fill((enabled ? base : Color.secondary).opacity(0.15)))
+            VStack(alignment: .leading, spacing: 2) {
+                Text("goal_form_streak")
+                    .font(.system(size: 16, weight: .bold))
+                Text("goal_form_streak_footer")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+            }
+            Toggle("goal_form_streak", isOn: $enabled.animation(Motion.soft))
+                .labelsHidden()
+                .tint(base)
         }
         .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)

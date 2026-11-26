@@ -163,3 +163,17 @@
 "form_delete_hint" = "Définitif, widgets compris";
 /* %@ = titre de l'objectif. */
 "form_delete_confirm_message" = "« %@ » disparaîtra de l'app et de ses widgets. Cette action est définitive.";
+
+/* Compteurs « série » : remise à zéro, record et historique (mêmes textes qu'Android). */
+"goal_form_streak" = "Série (remise à zéro)";
+"goal_form_streak_footer" = "Ajoute un bouton pour remettre le compteur à zéro (rechute, nouvel essai), avec le record et l'historique des séries.";
+"streak_reset_action" = "Remettre à zéro";
+"streak_reset_confirm_title" = "Remettre à zéro ?";
+/* %1$@ = « 25 jours » (streak_days), %2$@ = titre de l'objectif. */
+"streak_reset_confirm_message" = "La série de %1$@ de « %2$@ » sera gardée dans l'historique.";
+"streak_reset_date" = "Le compteur repart le";
+"streak_record" = "Record";
+"streak_new_record" = "Record en cours !";
+"streak_history_title" = "Séries passées";
+/* %1$@, %2$@ = dates de début et de fin. */
+"streak_history_row" = "Du %1$@ au %2$@";

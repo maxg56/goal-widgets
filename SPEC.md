@@ -110,6 +110,14 @@ Un widget de bureau (ordinateur) est un bonus facultatif, hors périmètre de ce
 - **Stockage** : `streak` (booléen) et l'historique en texte `AAAA-MM-JJ/AAAA-MM-JJ;…` (ordre chronologique, entrées illisibles ignorées). Room v5 (`MIGRATION_4_5`, deux `ALTER TABLE`) ; SwiftData : deux propriétés avec valeur par défaut (migration légère). Non inclus dans l'export pour l'instant.
 - **Logique pure** : `Streaks` / `WidgetResetTap` dans `:core` et `GoalCore`, figés par `shared-cases/streaks.json`.
 
+### Chaque année, archives, raccourcis, partage en image (Android)
+
+- **Chaque année** : interrupteur du formulaire, compte à rebours seulement (colonne `repeatYearly`, schéma v6). Le jour J s'affiche normalement ; dès le lendemain, la cible devient l'occurrence suivante et le départ l'occurrence passée (`YearlyRepeat.roll` dans `:core`, testé ; 29 février → 28 février les années communes). Les dates stockées sont réécrites au démarrage, au changement de date dans l'app, à minuit (alarme des widgets) et par la tâche quotidienne : moteur, graphiques, widgets et notifications n'ont rien de spécial à savoir. Non exporté pour l'instant.
+- **Archiver** : dans la gestion d'un objectif (colonne `archived`, v6). Un objectif archivé quitte la liste principale pour la section repliable « Archivés » en bas de l'accueil, n'envoie plus de notification, sort des raccourcis et de la frise ; ses widgets continuent de l'afficher.
+- **Dupliquer** : copie avec les mêmes dates et options, titre « … (copie) ».
+- **Raccourcis de l'icône** (dynamiques, `ShortcutManagerCompat`) : « Nouvel objectif » (formulaire de création) et les 3 objectifs non archivés les plus proches.
+- **Partager en image** : carte PNG 1080 × 1350 dans la couleur de l'objectif ; le partage du fichier à importer reste proposé.
+
 ### Mises à jour automatiques (Android)
 
 - **Publication** : chaque push sur `main` touchant `android/`, `shared-cases/` ou le workflow lance `.github/workflows/android-release.yml` (aussi déclenchable à la main) : `./gradlew test assembleRelease`, APK signé avec la clé de debug de l'appareil (secrets `SIGNING_*`), GitHub Release `build-<versionCode>` « Goal Widgets <versionName> » marquée *latest* (corps = message du commit, 10 dernières gardées). `versionCode` = 1000 + numéro d'exécution (toujours au-dessus du build de debug local, `versionCode` 1), `versionName` = `1.<run> (<sha court>)`.

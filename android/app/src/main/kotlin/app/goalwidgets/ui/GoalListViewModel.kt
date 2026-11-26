@@ -40,7 +40,12 @@ data class StoredGoal(
     val streak: Boolean = false,
     /** Séries terminées, ordre chronologique. */
     val history: List<PastStreak> = emptyList(),
+    /** Compte à rebours « chaque année ». */
+    val repeatYearly: Boolean = false,
 ) {
+    /** Options du formulaire telles qu'enregistrées. */
+    val options: GoalOptions get() = GoalOptions(notificationsEnabled, streak, repeatYearly)
+
     /** Remise à zéro proposée : compteur « depuis » marqué « série ». */
     val isStreak: Boolean get() = streak && goal.kind == GoalKind.SINCE
 
@@ -58,9 +63,20 @@ data class StoredGoal(
             notificationsEnabled = entity.notificationsEnabled,
             streak = entity.streak,
             history = entity.history(),
+            repeatYearly = entity.repeatYearly,
         )
     }
 }
+
+/**
+ * Options d'un objectif réglées dans le formulaire : notifications de jalons, compteur « série »
+ * (remise à zéro, compteur « depuis »), répétition « chaque année » (compte à rebours).
+ */
+data class GoalOptions(
+    val notificationsEnabled: Boolean = false,
+    val streak: Boolean = false,
+    val repeatYearly: Boolean = false,
+)
 
 /** Issue d'un import : objectifs ajoutés / ignorés, ou fichier refusé (rien n'est écrit). */
 sealed interface ImportOutcome {
@@ -95,27 +111,40 @@ class GoalListViewModel(
         onOrderChanged(order)
     }
 
-    fun add(goal: Goal, style: GoalStyle = GoalStyle.NONE, notificationsEnabled: Boolean = false, streak: Boolean = false) {
+    fun add(goal: Goal, style: GoalStyle = GoalStyle.NONE, options: GoalOptions = GoalOptions()) {
         viewModelScope.launch {
             dao.insert(
                 GoalEntity.from(
                     goal,
                     createdAtMillis = clockMillis(),
                     style = style,
-                    notificationsEnabled = notificationsEnabled,
-                    streak = streak,
+                    notificationsEnabled = options.notificationsEnabled,
+                    streak = options.streak,
+                    repeatYearly = options.repeatYearly,
                 ),
             )
+            // « Chaque année » avec une date déjà passée : directement l'occurrence suivante.
+            dao.rollYearly(LocalDate.now())
             onGoalsChanged()
+        }
+    }
+
+    /** Copie de [stored] (« Dupliquer ») : même contenu et mêmes options, titre suffixé, nouvel uid. */
+    fun duplicate(stored: StoredGoal, title: String) =
+        add(stored.goal.copy(title = title), stored.style, stored.options)
+
+    /** Comptes à rebours « chaque année » passés : avancés à l'occurrence suivante. */
+    fun rollYearly(today: LocalDate) {
+        viewModelScope.launch {
+            if (dao.rollYearly(today) > 0) onGoalsChanged()
         }
     }
 
     /**
      * Modifie l'objectif [id] (même id, même uid, date de création conservée).
-     * [notificationsEnabled] / [streak] : nouvel état de l'interrupteur de notifications / de l'option
-     * « série », `null` = inchangé.
+     * [options] : nouvelles options du formulaire, `null` = inchangées.
      */
-    fun update(id: Long, goal: Goal, style: GoalStyle, notificationsEnabled: Boolean? = null, streak: Boolean? = null) {
+    fun update(id: Long, goal: Goal, style: GoalStyle, options: GoalOptions? = null) {
         viewModelScope.launch {
             // Une seule transaction : contenu + interrupteur de notifications.
             dao.updateGoal(
@@ -127,9 +156,11 @@ class GoalListViewModel(
                 color = style.color?.wire,
                 emoji = style.emoji,
                 chartUnit = style.chartUnit?.wire,
-                notificationsEnabled = notificationsEnabled,
-                streak = streak,
+                notificationsEnabled = options?.notificationsEnabled,
+                streak = options?.streak,
+                repeatYearly = options?.let { it.repeatYearly && goal.kind == GoalKind.COUNTDOWN },
             )
+            dao.rollYearly(LocalDate.now())
             onGoalsChanged()
         }
     }
@@ -145,7 +176,8 @@ class GoalListViewModel(
     }
 
     /** « Continuer en compteur depuis » : l'objectif garde son id, devient « depuis » sa cible. */
-    fun continueAsSince(stored: StoredGoal) = update(stored.id, stored.goal.continueAsSince(), stored.style)
+    fun continueAsSince(stored: StoredGoal) =
+        update(stored.id, stored.goal.continueAsSince(), stored.style, stored.options.copy(repeatYearly = false))
 
     fun delete(id: Long) {
         viewModelScope.launch {

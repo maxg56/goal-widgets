@@ -8,6 +8,7 @@ import app.goalwidgets.core.ExportedGoal
 import app.goalwidgets.core.GoalImport
 import app.goalwidgets.core.ImportPlan
 import app.goalwidgets.core.Streaks
+import app.goalwidgets.core.YearlyRepeat
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
@@ -34,6 +35,26 @@ interface GoalDao {
     /** Option « série » d'un objectif ; renvoie le nombre de lignes modifiées. */
     @Query("UPDATE goals SET streak = :enabled WHERE id = :id")
     suspend fun setStreak(id: Long, enabled: Boolean): Int
+
+    /** Option « chaque année » ; renvoie le nombre de lignes modifiées. */
+    @Query("UPDATE goals SET repeatYearly = :enabled WHERE id = :id")
+    suspend fun setRepeatYearly(id: Long, enabled: Boolean): Int
+
+    @Query("SELECT * FROM goals WHERE repeatYearly = 1 AND kind = 'countdown'")
+    suspend fun yearlyCountdowns(): List<GoalEntity>
+
+    @Query("UPDATE goals SET startEpochDay = :startEpochDay, targetEpochDay = :targetEpochDay WHERE id = :id")
+    suspend fun updateDates(id: Long, startEpochDay: Long, targetEpochDay: Long?): Int
+
+    /**
+     * Fait avancer les comptes à rebours « chaque année » dont la cible est passée ([YearlyRepeat.roll]).
+     * Renvoie le nombre d'objectifs modifiés (0 = rien à rafraîchir).
+     */
+    @Transaction
+    suspend fun rollYearly(today: LocalDate): Int = yearlyCountdowns().count { entity ->
+        val rolled = YearlyRepeat.roll(entity.toGoal(), today) ?: return@count false
+        updateDates(entity.id, rolled.startDate.toEpochDay(), rolled.targetDate?.toEpochDay()) > 0
+    }
 
     @Query("UPDATE goals SET startEpochDay = :startEpochDay, streakHistory = :history WHERE id = :id")
     suspend fun updateStreak(id: Long, startEpochDay: Long, history: String): Int
@@ -100,7 +121,7 @@ interface GoalDao {
 
     /**
      * Modification d'un objectif depuis l'app : contenu ([updateContent]) et, s'ils ne sont pas `null`,
-     * interrupteur de notifications et option « série », en une seule
+     * interrupteur de notifications, option « série » et option « chaque année », en une seule
      * transaction (aucun lecteur — widget, reprogrammation — ne voit un état à moitié écrit).
      * Renvoie le nombre de lignes modifiées par [updateContent] (0 si l'objectif n'existe plus).
      */
@@ -116,10 +137,12 @@ interface GoalDao {
         chartUnit: String?,
         notificationsEnabled: Boolean?,
         streak: Boolean?,
+        repeatYearly: Boolean? = null,
     ): Int {
         val updated = updateContent(id, title, kind, startEpochDay, targetEpochDay, color, emoji, chartUnit)
         if (notificationsEnabled != null) setNotificationsEnabled(id, notificationsEnabled)
         if (streak != null) setStreak(id, streak)
+        if (repeatYearly != null) setRepeatYearly(id, repeatYearly)
         return updated
     }
 

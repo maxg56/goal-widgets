@@ -80,6 +80,8 @@ class MainActivity : ComponentActivity() {
                 }
                 // Date du jour locale : relue au retour au premier plan, à minuit et au changement d'heure.
                 val today by rememberLocalToday()
+                // Comptes à rebours « chaque année » passés : avancés dès que la date du jour change.
+                LaunchedEffect(today) { vm.rollYearly(today) }
                 var sendTime by remember { mutableStateOf(NotificationSettings.sendTime(this)) }
                 // Confirmation d'installation demandée par le système : lancée seulement app visible.
                 val updater = (application as GoalWidgetsApplication).updater
@@ -100,7 +102,8 @@ class MainActivity : ComponentActivity() {
                         onOpenRequestHandled = { openRequest = null },
                         actions = AppActions(
                             add = vm::add,
-                            update = { id, goal, style, notify, streak -> vm.update(id, goal, style, notify, streak) },
+                            update = vm::update,
+                            duplicate = vm::duplicate,
                             resetStreak = { id, on -> vm.resetStreak(id, on, today) },
                             delete = vm::delete,
                             continueAsSince = vm::continueAsSince,
@@ -148,6 +151,10 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun requestOpen(intent: Intent) {
+        if (intent.action == ACTION_NEW_GOAL) {
+            openRequest = OpenGoalRequest(null, ++openRequestCount)
+            return
+        }
         val goalId = intent.getLongExtra(EXTRA_GOAL_ID, -1L).takeIf { it >= 0 } ?: return
         openRequest = OpenGoalRequest(goalId, ++openRequestCount)
     }
@@ -197,6 +204,9 @@ class MainActivity : ComponentActivity() {
 
         /** Id (Long) de l'objectif dont le détail s'ouvre (appui sur un widget, une notification…). */
         const val EXTRA_GOAL_ID = "app.goalwidgets.extra.GOAL_ID"
+
+        /** Raccourci « Nouvel objectif » : ouvre directement le formulaire de création. */
+        const val ACTION_NEW_GOAL = "app.goalwidgets.action.NEW_GOAL"
 
         private val factory = viewModelFactory {
             initializer {

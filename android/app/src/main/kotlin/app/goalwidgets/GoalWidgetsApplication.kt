@@ -5,6 +5,7 @@ import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.data.GoalDatabase
 import app.goalwidgets.notifications.DailyRescheduleWorker
 import app.goalwidgets.notifications.MilestoneNotifications
+import app.goalwidgets.shortcuts.AppShortcuts
 import app.goalwidgets.ui.ChartSettings
 import app.goalwidgets.update.AppUpdater
 import app.goalwidgets.widget.GoalWidgets
@@ -12,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class GoalWidgetsApplication : Application() {
     val database: GoalDatabase by lazy { GoalDatabase.create(this) }
@@ -38,6 +40,10 @@ class GoalWidgetsApplication : Application() {
         DailyRescheduleWorker.enqueue(this)
         rescheduleNotifications()
         scope.launch(Dispatchers.IO) { AppUpdater.purgeStaleDownloads(this@GoalWidgetsApplication) }
+        scope.launch {
+            rollYearly()
+            AppShortcuts.update(this@GoalWidgetsApplication)
+        }
     }
 
     /**
@@ -46,7 +52,16 @@ class GoalWidgetsApplication : Application() {
      */
     suspend fun onGoalsChanged() {
         GoalWidgets.refreshAll(this)
+        AppShortcuts.update(this)
         rescheduleNotifications()
+    }
+
+    /**
+     * Comptes à rebours « chaque année » dont la cible est passée : avancés à l'occurrence suivante
+     * (démarrage, minuit, tâche quotidienne), puis widgets et notifications mis à jour.
+     */
+    suspend fun rollYearly(today: LocalDate = LocalDate.now()) {
+        if (database.goalDao().rollYearly(today) > 0) onGoalsChanged()
     }
 
     /** À appeler après toute modification d'objectif ou de l'heure d'envoi. */

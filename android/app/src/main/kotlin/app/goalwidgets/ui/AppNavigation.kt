@@ -85,14 +85,18 @@ private val StackSaver = Saver<List<Screen>, ArrayList<String>>(
     restore = { saved -> saved.mapNotNull(Screen::decode).ifEmpty { listOf(Screen.Home) } },
 )
 
-/** Demande d'ouverture d'un objectif (widget, notification, objectif partagé reçu) ; [serial] distingue deux appuis. */
-data class OpenGoalRequest(val goalId: Long, val serial: Int)
+/**
+ * Demande d'ouverture d'un objectif (widget, notification, objectif partagé reçu, raccourci) ou du
+ * formulaire de création ([goalId] = null, raccourci « Nouvel objectif ») ; [serial] distingue deux appuis.
+ */
+data class OpenGoalRequest(val goalId: Long?, val serial: Int)
 
 /** Écritures et actions système, fournies par l'activité. */
 class AppActions(
-    /** Objectif, style, notifications, option « série ». */
-    val add: (Goal, GoalStyle, Boolean, Boolean) -> Unit,
-    val update: (Long, Goal, GoalStyle, Boolean, Boolean) -> Unit,
+    val add: (Goal, GoalStyle, GoalOptions) -> Unit,
+    val update: (Long, Goal, GoalStyle, GoalOptions) -> Unit,
+    /** « Dupliquer » : copie de l'objectif avec le titre donné. */
+    val duplicate: (StoredGoal, String) -> Unit,
     /** Remise à zéro d'un compteur « série » à la date donnée (aujourd'hui par défaut). */
     val resetStreak: (Long, LocalDate) -> Unit,
     val delete: (Long) -> Unit,
@@ -169,9 +173,12 @@ fun GoalWidgetsApp(
     LaunchedEffect(openRequest, screen is Screen.Form) {
         val request = openRequest ?: return@LaunchedEffect
         if (screen is Screen.Form) return@LaunchedEffect // repris à la fermeture du formulaire
-        if (exists(request.goalId)) {
-            focusedGoalId = request.goalId
-            stack = listOf(Screen.Home, Screen.Detail(request.goalId))
+        val id = request.goalId
+        if (id == null) {
+            stack = listOf(Screen.Home, Screen.Form(null))
+        } else if (exists(id)) {
+            focusedGoalId = id
+            stack = listOf(Screen.Home, Screen.Detail(id))
         }
         onOpenRequestHandled()
     }
@@ -251,9 +258,16 @@ fun GoalWidgetsApp(
                     GoalFormScreen(
                         existing = existing,
                         today = today,
-                        onSave = { goal, style, notify, streak ->
-                            if (existing == null) actions.add(goal, style, notify, streak) else actions.update(existing.id, goal, style, notify, streak)
+                        onSave = { goal, style, options ->
+                            if (existing == null) actions.add(goal, style, options) else actions.update(existing.id, goal, style, options)
                             pop()
+                        },
+                        onDuplicate = existing?.let { e ->
+                            { title: String ->
+                                actions.duplicate(e, title)
+                                // Retour à l'accueil : la copie y apparaît.
+                                stack = listOf(Screen.Home)
+                            }
                         },
                         onCancel = ::pop,
                         onDelete = {

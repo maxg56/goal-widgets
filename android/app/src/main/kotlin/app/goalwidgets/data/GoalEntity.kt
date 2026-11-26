@@ -53,6 +53,8 @@ data class GoalEntity(
     @ColumnInfo(defaultValue = "0") val streak: Boolean = false,
     /** Séries terminées, ordre chronologique (`Streaks.encode`, v5). Conservé si [streak] est désactivé. */
     @ColumnInfo(defaultValue = "") val streakHistory: String = "",
+    /** Compte à rebours « chaque année » : repart vers l'occurrence suivante une fois la cible passée (v6). */
+    @ColumnInfo(defaultValue = "0") val repeatYearly: Boolean = false,
 ) {
     fun toGoal(): Goal = Goal(
         kind = GoalKind.fromWire(kind),
@@ -88,6 +90,7 @@ data class GoalEntity(
             id: Long = 0,
             notificationsEnabled: Boolean = false,
             streak: Boolean = false,
+            repeatYearly: Boolean = false,
         ) = GoalEntity(
             id = id,
             title = goal.title,
@@ -100,6 +103,7 @@ data class GoalEntity(
             notificationsEnabled = notificationsEnabled,
             chartUnit = style.chartUnit?.wire,
             streak = streak,
+            repeatYearly = repeatYearly && goal.kind == GoalKind.COUNTDOWN,
         )
 
         /**

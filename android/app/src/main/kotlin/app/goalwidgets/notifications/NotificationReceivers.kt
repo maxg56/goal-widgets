@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.work.CoroutineWorker
+import app.goalwidgets.GoalWidgetsApplication
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
@@ -43,6 +44,7 @@ private fun BroadcastReceiver.runAsync(block: suspend () -> Unit) {
 /** Tâche quotidienne : fait glisser l'horizon même si l'app n'est jamais ouverte (spec 41). */
 class DailyRescheduleWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
+        (applicationContext as GoalWidgetsApplication).rollYearly()
         MilestoneNotifications.reschedule(applicationContext)
         return Result.success()
     }

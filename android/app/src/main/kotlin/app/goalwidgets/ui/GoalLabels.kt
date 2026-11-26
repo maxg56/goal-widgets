@@ -4,6 +4,7 @@ import android.content.res.Resources
 import app.goalwidgets.R
 import app.goalwidgets.core.Breakdown
 import app.goalwidgets.core.ChartKind
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.MilestoneUnit
 import app.goalwidgets.core.RingMilestone
 import app.goalwidgets.core.DisplayState
@@ -11,6 +12,16 @@ import app.goalwidgets.core.Phase
 
 /** Libellés construits par la couche app à partir de l'état structuré du moteur. */
 object GoalLabels {
+    /** Nom d'une unité de graphique (menu ⋮, formulaire). */
+    fun chartUnit(resources: Resources, unit: ChartUnit): String = resources.getString(
+        when (unit) {
+            ChartUnit.AUTO -> R.string.chart_unit_auto
+            ChartUnit.DAY -> R.string.chart_unit_day
+            ChartUnit.WEEK -> R.string.chart_unit_week
+            ChartUnit.MONTH -> R.string.chart_unit_month
+        },
+    )
+
     fun status(resources: Resources, state: DisplayState): String = when (state.phase) {
         Phase.UPCOMING -> resources.getQuantityString(R.plurals.countdown_in_days, state.days, state.days)
         Phase.TODAY -> resources.getString(R.string.countdown_today)

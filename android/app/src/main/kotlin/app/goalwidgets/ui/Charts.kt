@@ -277,7 +277,8 @@ fun RingChartView(ring: RingChart, accent: Color, active: Boolean, modifier: Mod
 private fun arcLabel(arcs: ArcsChart, index: Int): String {
     val segment = arcs.segments[index]
     return when (arcs.unit) {
-        SegmentUnit.WEEK, SegmentUnit.DAY -> stringResource(R.string.arcs_week_label, segment.start.format(DateFormats.dayMonth))
+        SegmentUnit.DAY -> segment.start.format(DateFormats.dayMonth)
+        SegmentUnit.WEEK -> stringResource(R.string.arcs_week_label, segment.start.format(DateFormats.dayMonth))
         SegmentUnit.MONTH -> segment.start.format(DateFormats.monthYear)
         SegmentUnit.YEAR -> if (arcs.step == 1) "${segment.start.year}" else "${segment.start.year}–${segment.end.year}"
     }
@@ -321,7 +322,8 @@ fun ArcsChartView(arcs: ArcsChart, accent: Color, active: Boolean, modifier: Mod
         }
         Text(
             when (arcs.unit) {
-                SegmentUnit.DAY, SegmentUnit.WEEK -> stringResource(R.string.arcs_unit_week)
+                SegmentUnit.DAY -> stringResource(R.string.arcs_unit_day)
+                SegmentUnit.WEEK -> stringResource(R.string.arcs_unit_week)
                 SegmentUnit.MONTH -> stringResource(R.string.arcs_unit_month)
                 SegmentUnit.YEAR -> resources.getQuantityString(R.plurals.arcs_unit_years, arcs.step, arcs.step)
             },

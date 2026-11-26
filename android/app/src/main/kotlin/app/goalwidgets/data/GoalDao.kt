@@ -46,7 +46,7 @@ interface GoalDao {
      */
     @Transaction
     suspend fun resetStreak(id: Long, on: LocalDate, today: LocalDate): Boolean {
-        val entity = getById(id)?.takeIf { it.isStreak } ?: return false
+        val entity = getById(id)?.takeIf { it.offersStreakReset } ?: return false
         val goal = entity.toGoal()
         if (Streaks.validate(goal, on, today) != null) return false
         val reset = Streaks.reset(goal, entity.history(), on, today)

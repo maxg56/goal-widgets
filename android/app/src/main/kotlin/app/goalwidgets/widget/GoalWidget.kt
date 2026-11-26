@@ -103,7 +103,7 @@ class GoalWidget : GlanceAppWidget() {
                     val row = rows.firstOrNull { it.id == goalId }
                     when {
                         content is WidgetContent.Showing && row != null -> {
-                            val streak = if (row.isStreak) {
+                            val streak = if (row.offersStreakReset) {
                                 val summary = Streaks.summary(row.toGoal(), row.history(), today)
                                 WidgetStreak(
                                     goalId = row.id,

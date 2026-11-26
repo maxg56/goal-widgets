@@ -63,8 +63,11 @@ data class GoalEntity(
 
     fun style(): GoalStyle = GoalStyle(GoalColor.fromWire(color), emoji, ChartUnit.fromWire(chartUnit))
 
-    /** Remise à zéro proposée : compteur « depuis » marqué « série ». */
-    val isStreak: Boolean get() = streak && kind == GoalKind.SINCE.wire
+    /**
+     * Remise à zéro proposée : compteur « depuis » marqué « série ». Pas de nom en `isStreak` : Room
+     * y verrait un second getter de la colonne `streak` (« Ambiguous getter », échec de KSP).
+     */
+    val offersStreakReset: Boolean get() = streak && kind == GoalKind.SINCE.wire
 
     fun history(): List<PastStreak> = Streaks.decode(streakHistory)
 

@@ -396,5 +396,41 @@
 			<string>durée %ld j</string>
 		</dict>
 	</dict>
+	<key>streak_days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>%ld jour</string>
+			<key>many</key>
+			<string>%ld jours</string>
+			<key>other</key>
+			<string>%ld jours</string>
+		</dict>
+	</dict>
+	<key>streak_reset_count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>%ld remise à zéro</string>
+			<key>many</key>
+			<string>%ld remises à zéro</string>
+			<key>other</key>
+			<string>%ld remises à zéro</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

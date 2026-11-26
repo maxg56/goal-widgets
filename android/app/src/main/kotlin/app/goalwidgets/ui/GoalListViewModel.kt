@@ -5,11 +5,15 @@ import androidx.lifecycle.viewModelScope
 import app.goalwidgets.core.ExportedGoal
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalExport
+import app.goalwidgets.core.GoalKind
 import app.goalwidgets.core.GoalOrder
 import app.goalwidgets.core.GoalStyle
 import app.goalwidgets.core.ImportError
 import app.goalwidgets.core.ImportPlan
+import app.goalwidgets.core.PastStreak
 import app.goalwidgets.core.SortKey
+import app.goalwidgets.core.StreakSummary
+import app.goalwidgets.core.Streaks
 import app.goalwidgets.data.GoalDao
 import app.goalwidgets.data.GoalEntity
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,6 +24,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.Instant
+import java.time.LocalDate
 
 /** Objectif stocké, prêt pour l'affichage (le calcul se fait avec la date du jour, côté écran). */
 data class StoredGoal(
@@ -31,7 +36,16 @@ data class StoredGoal(
     val createdAtMillis: Long = 0,
     /** Interrupteur de notifications de jalons (t08). */
     val notificationsEnabled: Boolean = false,
+    /** Option « série » (remise à zéro), quel que soit le type ; voir [isStreak]. */
+    val streak: Boolean = false,
+    /** Séries terminées, ordre chronologique. */
+    val history: List<PastStreak> = emptyList(),
 ) {
+    /** Remise à zéro proposée : compteur « depuis » marqué « série ». */
+    val isStreak: Boolean get() = streak && goal.kind == GoalKind.SINCE
+
+    fun streakSummary(today: LocalDate): StreakSummary = Streaks.summary(goal, history, today)
+
     val sortKey: SortKey get() = SortKey(uid, goal, Instant.ofEpochMilli(createdAtMillis))
 
     companion object {
@@ -42,6 +56,8 @@ data class StoredGoal(
             uid = entity.uid,
             createdAtMillis = entity.createdAtMillis,
             notificationsEnabled = entity.notificationsEnabled,
+            streak = entity.streak,
+            history = entity.history(),
         )
     }
 }
@@ -79,7 +95,7 @@ class GoalListViewModel(
         onOrderChanged(order)
     }
 
-    fun add(goal: Goal, style: GoalStyle = GoalStyle.NONE, notificationsEnabled: Boolean = false) {
+    fun add(goal: Goal, style: GoalStyle = GoalStyle.NONE, notificationsEnabled: Boolean = false, streak: Boolean = false) {
         viewModelScope.launch {
             dao.insert(
                 GoalEntity.from(
@@ -87,6 +103,7 @@ class GoalListViewModel(
                     createdAtMillis = clockMillis(),
                     style = style,
                     notificationsEnabled = notificationsEnabled,
+                    streak = streak,
                 ),
             )
             onGoalsChanged()
@@ -95,9 +112,10 @@ class GoalListViewModel(
 
     /**
      * Modifie l'objectif [id] (même id, même uid, date de création conservée).
-     * [notificationsEnabled] : nouvel état de l'interrupteur de notifications, `null` = inchangé.
+     * [notificationsEnabled] / [streak] : nouvel état de l'interrupteur de notifications / de l'option
+     * « série », `null` = inchangé.
      */
-    fun update(id: Long, goal: Goal, style: GoalStyle, notificationsEnabled: Boolean? = null) {
+    fun update(id: Long, goal: Goal, style: GoalStyle, notificationsEnabled: Boolean? = null, streak: Boolean? = null) {
         viewModelScope.launch {
             // Une seule transaction : contenu + interrupteur de notifications.
             dao.updateGoal(
@@ -109,8 +127,19 @@ class GoalListViewModel(
                 color = style.color?.wire,
                 emoji = style.emoji,
                 notificationsEnabled = notificationsEnabled,
+                streak = streak,
             )
             onGoalsChanged()
+        }
+    }
+
+    /**
+     * Remise à zéro du compteur « série » [id] le jour [on] (choisi dans la confirmation) : la série en
+     * cours est archivée, le compteur repart de [on]. Sans effet si la date est refusée.
+     */
+    fun resetStreak(id: Long, on: LocalDate, today: LocalDate) {
+        viewModelScope.launch {
+            if (dao.resetStreak(id, on, today)) onGoalsChanged()
         }
     }
 

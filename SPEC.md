@@ -99,6 +99,16 @@ Un widget de bureau (ordinateur) est un bonus facultatif, hors périmètre de ce
 - **Localisation** : chaînes externalisées dès le départ, français par défaut.
 - **Cohérence entre les deux plateformes** : le moteur et le planificateur sont écrits deux fois (Kotlin et Swift). Leur comportement est figé par un **jeu de cas partagé** (fichier de données : objectif + date du jour → sortie attendue) que les deux suites de tests exécutent.
 
+### Compteurs « série » (remise à zéro)
+
+- **Besoin** : un compteur « depuis » qui mesure une abstinence ou une habitude (« sans fumer », « sans écran le soir ») doit pouvoir repartir de zéro en un geste après une rechute, sans perdre les séries précédentes.
+- **Option par objectif** : interrupteur « Série (remise à zéro) » dans le formulaire, proposé uniquement pour un compteur « depuis », désactivé par défaut (et pour les objectifs existants). Seuls ces compteurs ont le bouton, le record et l'historique.
+- **Remise à zéro** : la série en cours (départ → jour de la remise) rejoint l'historique et le compteur repart de ce jour. Dans l'app : bouton « Remettre à zéro » du détail et bouton ↺ de la carte d'accueil, toujours confirmés ; la date proposée est aujourd'hui, une date passée peut être choisie (entre le départ de la série en cours et aujourd'hui). Widget « Objectif » : bouton ↺, premier appui → « Confirmer ? » pendant 5 s, second appui → remise à zéro à aujourd'hui, sans ouvrir l'app.
+- **Affichage** : détail = record (« Record en cours ! » quand la série en cours l'égale ou le bat), nombre de remises à zéro, liste des séries passées (la plus récente d'abord, 🏆 sur la plus longue) ; widget = « Record N j » une fois au moins une remise à zéro faite.
+- **Notifications** : les jalons repartent de la nouvelle date (le planificateur ne change pas). Sur iOS, une remise à zéro depuis le widget retire les jalons en attente de l'objectif ; ceux de la nouvelle série sont programmés à la prochaine ouverture de l'app (ou tâche de fond).
+- **Stockage** : `streak` (booléen) et l'historique en texte `AAAA-MM-JJ/AAAA-MM-JJ;…` (ordre chronologique, entrées illisibles ignorées). Room v4 (`MIGRATION_3_4`, deux `ALTER TABLE`) ; SwiftData : deux propriétés avec valeur par défaut (migration légère). Non inclus dans l'export pour l'instant.
+- **Logique pure** : `Streaks` / `WidgetResetTap` dans `:core` et `GoalCore`, figés par `shared-cases/streaks.json`.
+
 ### Mises à jour automatiques (Android)
 
 - **Publication** : chaque push sur `main` touchant `android/`, `shared-cases/` ou le workflow lance `.github/workflows/android-release.yml` (aussi déclenchable à la main) : `./gradlew test assembleRelease`, APK signé avec la clé de debug de l'appareil (secrets `SIGNING_*`), GitHub Release `build-<versionCode>` « Goal Widgets <versionName> » marquée *latest* (corps = message du commit, 10 dernières gardées). `versionCode` = 1000 + numéro d'exécution (toujours au-dessus du build de debug local, `versionCode` 1), `versionName` = `1.<run> (<sha court>)`.

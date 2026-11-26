@@ -135,6 +135,8 @@ fun GoalDetailScreen(
     onBack: () -> Unit,
     onEdit: (StoredGoal) -> Unit,
     onShare: (StoredGoal) -> Unit,
+    /** Remise à zéro d'un compteur « série », après confirmation. */
+    onResetStreak: (Long, LocalDate) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     val resources = context.resources
@@ -142,6 +144,16 @@ fun GoalDetailScreen(
     val layout = settings.layout
     val chart = layout.chartToShow(settings.chart)
     var editing by rememberSaveable { mutableStateOf(false) }
+    // Objectif dont la remise à zéro attend confirmation.
+    var resetting by rememberSaveable { mutableStateOf<Long?>(null) }
+    goals.firstOrNull { it.id == resetting && it.isStreak }?.let { stored ->
+        ResetStreakDialog(
+            stored = stored,
+            today = today,
+            onConfirm = { on -> onResetStreak(stored.id, on); resetting = null },
+            onDismiss = { resetting = null },
+        )
+    }
     BackHandler { if (editing) editing = false else onBack() }
 
     val initial = goals.indexOfFirst { it.id == initialGoalId }.coerceAtLeast(0)
@@ -255,6 +267,7 @@ fun GoalDetailScreen(
                     layout = layout,
                     editing = editing,
                     settings = settings,
+                    onReset = { resetting = goals[page].id },
                     modifier = Modifier.graphicsLayer {
                         alpha = 1f - distance * 0.6f
                         val s = 1f - distance * 0.12f
@@ -322,6 +335,7 @@ private fun DetailPage(
     layout: DetailLayout,
     editing: Boolean,
     settings: DetailSettings,
+    onReset: () -> Unit,
     modifier: Modifier,
 ) {
     val resources = LocalContext.current.resources
@@ -376,6 +390,9 @@ private fun DetailPage(
                     }
                 }
             }
+        }
+        AnimatedVisibility(stored.isStreak && !editing) {
+            StreakBar(stored, today, onReset, Modifier.padding(top = 14.dp))
         }
         AnimatedVisibility(layout.shows(DetailPart.CHART)) {
             EditableBlock(
@@ -441,6 +458,7 @@ private fun DetailPage(
                 }
             }
         }
+        if (stored.isStreak) StreakHistoryCard(stored, card, Modifier.padding(top = 16.dp))
         Spacer(Modifier.navigationBarsPadding().height(32.dp))
     }
 }

@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "comment": "Compteurs « depuis » marqués « série » : remise à zéro et historique. Une série passée va du départ (start) au jour de la remise (end) ; sa durée est end - start en jours. resetOn absent : seul le résumé est vérifié (avant toute remise). resetOn présent : remise à zéro ce jour-là, puis résumé au jour today ; error = date refusée (rien n'est modifié). isRecord : au moins une remise, série en cours ≥ 1 jour et ≥ toute série passée. encoded : historique stocké après l'opération.",
+  "cases": [
+    {
+      "name": "jamais remis à zéro",
+      "startDate": "2026-11-01",
+      "history": [],
+      "today": "2026-11-26",
+      "expected": { "startDate": "2026-11-01", "currentDays": 25, "bestDays": 25, "resetCount": 0, "isRecord": false, "encoded": "" }
+    },
+    {
+      "name": "départ dans le futur : 0 jour",
+      "startDate": "2026-12-01",
+      "history": [],
+      "today": "2026-11-26",
+      "expected": { "currentDays": 0, "bestDays": 0, "resetCount": 0, "isRecord": false }
+    },
+    {
+      "name": "remise à zéro aujourd'hui",
+      "startDate": "2026-11-01",
+      "history": [],
+      "today": "2026-11-26",
+      "resetOn": "2026-11-26",
+      "expected": {
+        "startDate": "2026-11-26",
+        "history": [["2026-11-01", "2026-11-26", 25]],
+        "currentDays": 0, "bestDays": 25, "resetCount": 1, "isRecord": false,
+        "encoded": "2026-11-01/2026-11-26"
+      }
+    },
+    {
+      "name": "remise à zéro à une date passée (c'était hier)",
+      "startDate": "2026-11-01",
+      "history": [],
+      "today": "2026-11-26",
+      "resetOn": "2026-11-25",
+      "expected": {
+        "startDate": "2026-11-25",
+        "history": [["2026-11-01", "2026-11-25", 24]],
+        "currentDays": 1, "bestDays": 24, "resetCount": 1, "isRecord": false
+      }
+    },
+    {
+      "name": "remise à zéro le jour du départ : série de 0 jour",
+      "startDate": "2026-11-26",
+      "history": [["2026-10-01", "2026-11-26"]],
+      "today": "2026-11-26",
+      "resetOn": "2026-11-26",
+      "expected": {
+        "startDate": "2026-11-26",
+        "history": [["2026-10-01", "2026-11-26", 56], ["2026-11-26", "2026-11-26", 0]],
+        "currentDays": 0, "bestDays": 56, "resetCount": 2, "isRecord": false,
+        "encoded": "2026-10-01/2026-11-26;2026-11-26/2026-11-26"
+      }
+    },
+    {
+      "name": "série en cours sous le record",
+      "startDate": "2026-09-01",
+      "history": [["2026-01-01", "2026-02-15"], ["2026-02-15", "2026-09-01"]],
+      "today": "2026-11-26",
+      "expected": { "currentDays": 86, "bestDays": 198, "resetCount": 2, "isRecord": false }
+    },
+    {
+      "name": "record égalé : c'est le record",
+      "startDate": "2026-10-22",
+      "history": [["2026-01-01", "2026-02-05"]],
+      "today": "2026-11-26",
+      "expected": { "currentDays": 35, "bestDays": 35, "resetCount": 1, "isRecord": true }
+    },
+    {
+      "name": "record battu",
+      "startDate": "2026-06-01",
+      "history": [["2026-01-01", "2026-02-05"], ["2026-02-05", "2026-06-01"]],
+      "today": "2026-11-26",
+      "expected": { "currentDays": 178, "bestDays": 178, "resetCount": 2, "isRecord": true, "encoded": "2026-01-01/2026-02-05;2026-02-05/2026-06-01" }
+    },
+    {
+      "name": "année bissextile",
+      "startDate": "2028-02-01",
+      "history": [],
+      "today": "2028-03-01",
+      "resetOn": "2028-03-01",
+      "expected": { "history": [["2028-02-01", "2028-03-01", 29]], "bestDays": 29 }
+    },
+    {
+      "name": "date de remise dans le futur : refusée",
+      "startDate": "2026-11-01",
+      "history": [],
+      "today": "2026-11-26",
+      "resetOn": "2026-11-27",
+      "expected": { "error": "inFuture", "startDate": "2026-11-01", "resetCount": 0 }
+    },
+    {
+      "name": "date de remise avant le départ : refusée",
+      "startDate": "2026-11-01",
+      "history": [],
+      "today": "2026-11-26",
+      "resetOn": "2026-10-31",
+      "expected": { "error": "beforeStart", "startDate": "2026-11-01", "resetCount": 0 }
+    }
+  ],
+  "decoding": [
+    { "name": "vide", "raw": "", "expected": [] },
+    { "name": "deux séries", "raw": "2026-01-01/2026-02-05;2026-02-05/2026-06-01", "expected": [["2026-01-01", "2026-02-05"], ["2026-02-05", "2026-06-01"]] },
+    { "name": "entrées illisibles ignorées", "raw": "2026-01-01/2026-02-05;n'importe quoi;2026-02-30/2026-03-01;2026-05-01/2026-04-01;;2026-06-01/2026-06-03", "expected": [["2026-01-01", "2026-02-05"], ["2026-06-01", "2026-06-03"]] }
+  ]
+}

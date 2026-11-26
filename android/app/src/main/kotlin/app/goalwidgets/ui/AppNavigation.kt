@@ -90,8 +90,11 @@ data class OpenGoalRequest(val goalId: Long, val serial: Int)
 
 /** Écritures et actions système, fournies par l'activité. */
 class AppActions(
-    val add: (Goal, GoalStyle, Boolean) -> Unit,
-    val update: (Long, Goal, GoalStyle, Boolean) -> Unit,
+    /** Objectif, style, notifications, option « série ». */
+    val add: (Goal, GoalStyle, Boolean, Boolean) -> Unit,
+    val update: (Long, Goal, GoalStyle, Boolean, Boolean) -> Unit,
+    /** Remise à zéro d'un compteur « série » à la date donnée (aujourd'hui par défaut). */
+    val resetStreak: (Long, LocalDate) -> Unit,
     val delete: (Long) -> Unit,
     val continueAsSince: (StoredGoal) -> Unit,
     val setOrder: (GoalOrder) -> Unit,
@@ -224,6 +227,7 @@ fun GoalWidgetsApp(
                             onOpenTimeline = { push(Screen.Timeline) },
                             onOpenNotifications = { push(Screen.NotificationSettings) },
                             onOrderChange = actions.setOrder,
+                            onResetStreak = actions.resetStreak,
                             onExport = actions.export,
                             onImport = actions.import,
                         ),
@@ -240,14 +244,15 @@ fun GoalWidgetsApp(
                     onBack = ::pop,
                     onEdit = { push(Screen.Form(it.id)) },
                     onShare = { actions.share(it.id) },
+                    onResetStreak = actions.resetStreak,
                 )
                 is Screen.Form -> {
                     val existing = s.goalId?.let { id -> sorted.firstOrNull { it.id == id } }
                     GoalFormScreen(
                         existing = existing,
                         today = today,
-                        onSave = { goal, style, notify ->
-                            if (existing == null) actions.add(goal, style, notify) else actions.update(existing.id, goal, style, notify)
+                        onSave = { goal, style, notify, streak ->
+                            if (existing == null) actions.add(goal, style, notify, streak) else actions.update(existing.id, goal, style, notify, streak)
                             pop()
                         },
                         onCancel = ::pop,

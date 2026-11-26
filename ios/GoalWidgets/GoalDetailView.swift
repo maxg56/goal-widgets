@@ -19,6 +19,8 @@ struct GoalDetailView: View {
     @AppStorage("detail_chart") private var chartRaw = ""
     @State private var shownID: UUID?
     @State private var editing = false
+    /// Compteur « série » dont la remise à zéro attend confirmation.
+    @State private var resetting: GoalRecord?
 
     init(records: [GoalRecord], initialID: UUID, today: LocalDate, focusedID: Binding<UUID?>, onEdit: @escaping (GoalRecord) -> Void) {
         self.records = records
@@ -77,6 +79,9 @@ struct GoalDetailView: View {
         }
         .onChange(of: records.isEmpty) { _, empty in
             if empty { dismiss() }
+        }
+        .sheet(item: $resetting) { record in
+            ResetStreakSheet(record: record, today: today)
         }
     }
 
@@ -161,7 +166,8 @@ struct GoalDetailView: View {
                         onLayoutChange: { layoutRaw = $0.encode() },
                         onSelectChart: { kind in
                             withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) { chartRaw = kind.rawValue }
-                        }
+                        },
+                        onReset: { resetting = record }
                     )
                     .containerRelativeFrame(.horizontal)
                     .scrollTransition(axis: .horizontal) { content, phase in
@@ -225,6 +231,7 @@ private struct DetailPage: View {
     let editing: Bool
     let onLayoutChange: (DetailLayout) -> Void
     let onSelectChart: (ChartKind) -> Void
+    let onReset: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
 
@@ -248,12 +255,21 @@ private struct DetailPage: View {
                     if layout.shows(.caption) {
                         captionBlock(state)
                     }
+                    if record.isStreak && !editing {
+                        StreakBar(record: record, today: today, onReset: onReset)
+                            .padding(.top, 14)
+                            .transition(.opacity)
+                    }
                     if layout.shows(.chart) {
                         chartBlock(goal: goal, accent: accent)
                             .padding(.top, 22)
                     }
                     if layout.shows(.timeline) {
                         timelineBlock(goal: goal, accent: accent)
+                            .padding(.top, 16)
+                    }
+                    if record.isStreak {
+                        StreakHistoryCard(record: record, card: card)
                             .padding(.top, 16)
                     }
                     Spacer(minLength: 32)

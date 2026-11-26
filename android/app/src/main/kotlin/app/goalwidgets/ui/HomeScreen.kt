@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -83,6 +84,8 @@ class HomeActions(
     val onOrderChange: (GoalOrder) -> Unit,
     val onExport: () -> Unit,
     val onImport: () -> Unit,
+    /** Remise à zéro d'un compteur « série » (bouton ↺ de la carte, après confirmation). */
+    val onResetStreak: (Long, LocalDate) -> Unit = { _, _ -> },
 )
 
 /**
@@ -102,6 +105,16 @@ fun HomeScreen(
     snackbarHostState: SnackbarHostState,
     actions: HomeActions,
 ) {
+    // Carte dont la remise à zéro attend confirmation.
+    var resetting by rememberSaveable { mutableStateOf<Long?>(null) }
+    goals.firstOrNull { it.id == resetting && it.isStreak }?.let { stored ->
+        ResetStreakDialog(
+            stored = stored,
+            today = today,
+            onConfirm = { on -> actions.onResetStreak(stored.id, on); resetting = null },
+            onDismiss = { resetting = null },
+        )
+    }
     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Column(Modifier.fillMaxSize().statusBarsPadding()) {
             Row(
@@ -156,6 +169,7 @@ fun HomeScreen(
                             today = today,
                             enterIndex = index.takeIf { animateEntrance },
                             onClick = { actions.onOpen(stored) },
+                            onReset = { resetting = stored.id },
                             modifier = Modifier.animateItem().then(sharedCard(stored.id)),
                         )
                     }
@@ -205,7 +219,7 @@ private fun HomeMenu(order: GoalOrder, actions: HomeActions) {
 }
 
 @Composable
-private fun HeroCard(stored: StoredGoal, today: LocalDate, enterIndex: Int?, onClick: () -> Unit, modifier: Modifier) {
+private fun HeroCard(stored: StoredGoal, today: LocalDate, enterIndex: Int?, onClick: () -> Unit, onReset: () -> Unit, modifier: Modifier) {
     val resources = LocalContext.current.resources
     val goal = stored.goal
     val state = CountdownEngine.compute(goal, today)
@@ -295,6 +309,20 @@ private fun HeroCard(stored: StoredGoal, today: LocalDate, enterIndex: Int?, onC
             state.progress?.let { progress ->
                 Spacer(Modifier.width(12.dp))
                 CardRing(progress = if (ringShown) progress.toFloat() else 0f, percent = state.percent ?: 0)
+            }
+            // Compteur « série » (pas d'anneau) : remise à zéro directe depuis la carte.
+            if (stored.isStreak) {
+                Spacer(Modifier.width(12.dp))
+                Box(
+                    Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.2f))
+                        .clickable(onClickLabel = stringResource(R.string.streak_reset_action), onClick = onReset),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Filled.Refresh, contentDescription = stringResource(R.string.streak_reset_action), tint = Color.White)
+                }
             }
         }
     }

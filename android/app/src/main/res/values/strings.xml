@@ -336,4 +336,33 @@
     <string name="update_failed_signature">Mise à jour impossible (signature différente)</string>
     <string name="update_failed_blocked">Mise à jour bloquée par le système (Bloqueur automatique ?)</string>
     <string name="update_failed">Mise à jour impossible</string>
+
+    <!-- Compteurs « série » : remise à zéro, record et historique. -->
+    <string name="goal_form_streak">Série (remise à zéro)</string>
+    <string name="goal_form_streak_footer">Ajoute un bouton pour remettre le compteur à zéro (rechute, nouvel essai), avec le record et l\'historique des séries.</string>
+    <string name="streak_reset_action">Remettre à zéro</string>
+    <string name="streak_reset_confirm_title">Remettre à zéro ?</string>
+    <plurals name="streak_reset_confirm_message">
+        <item quantity="one">La série de %1$d jour de « %2$s » sera gardée dans l\'historique.</item>
+        <item quantity="many">La série de %1$d jours de « %2$s » sera gardée dans l\'historique.</item>
+        <item quantity="other">La série de %1$d jours de « %2$s » sera gardée dans l\'historique.</item>
+    </plurals>
+    <string name="streak_reset_from">Le compteur repart le %1$s</string>
+    <string name="streak_reset_change_date">Changer la date</string>
+    <string name="streak_record">Record</string>
+    <string name="streak_new_record">Record en cours !</string>
+    <plurals name="streak_days">
+        <item quantity="one">%d jour</item>
+        <item quantity="many">%d jours</item>
+        <item quantity="other">%d jours</item>
+    </plurals>
+    <plurals name="streak_reset_count">
+        <item quantity="one">%d remise à zéro</item>
+        <item quantity="many">%d remises à zéro</item>
+        <item quantity="other">%d remises à zéro</item>
+    </plurals>
+    <string name="streak_history_title">Séries passées</string>
+    <string name="streak_history_row">Du %1$s au %2$s</string>
+    <string name="widget_reset_confirm">Confirmer ?</string>
+    <string name="widget_record">Record %1$d j</string>
 </resources>

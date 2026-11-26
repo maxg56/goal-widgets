@@ -28,6 +28,8 @@ struct HomeView: View {
     @State private var exportCount = 0
     @State private var isImporting = false
     @State private var transferMessage: String?
+    /// Compteur « série » dont la remise à zéro attend confirmation (bouton ↺ de la carte).
+    @State private var resetting: GoalRecord?
 
     var body: some View {
         ScrollView {
@@ -41,7 +43,8 @@ struct HomeView: View {
                             record: record,
                             today: today,
                             enterIndex: animateEntrance ? index : nil,
-                            onTap: { onOpen(record) }
+                            onTap: { onOpen(record) },
+                            onReset: { resetting = record }
                         )
                         .zoomSource(id: record.id, in: zoom)
                     }
@@ -71,6 +74,9 @@ struct HomeView: View {
         }
         .alert(transferMessage ?? "", isPresented: isShowingTransferMessage) {
             Button("action_ok", role: .cancel) {}
+        }
+        .sheet(item: $resetting) { record in
+            ResetStreakSheet(record: record, today: today)
         }
     }
 
@@ -225,6 +231,8 @@ struct HeroCard: View {
     let today: LocalDate
     let enterIndex: Int?
     let onTap: () -> Void
+    /// Bouton ↺ des compteurs « série » ; nil = pas de bouton.
+    var onReset: (() -> Void)? = nil
 
     @State private var ringShown = false
 
@@ -250,6 +258,21 @@ struct HeroCard: View {
                 .contentShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
             }
             .buttonStyle(PressableStyle())
+            // Hors du libellé du bouton principal : un appui sur ↺ n'ouvre pas le détail.
+            .overlay(alignment: .bottomTrailing) {
+                if record.isStreak, let onReset {
+                    Button(action: onReset) {
+                        Image(systemName: "arrow.counterclockwise")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 52, height: 52)
+                            .background(Circle().fill(.white.opacity(0.2)))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("streak_reset_action"))
+                    .padding(24)
+                }
+            }
             .staggeredEnter(enterIndex)
             .task {
                 try? await Task.sleep(nanoseconds: UInt64(150 + 70 * min(enterIndex ?? 0, 8)) * 1_000_000)

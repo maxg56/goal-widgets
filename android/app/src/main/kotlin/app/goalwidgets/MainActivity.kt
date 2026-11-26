@@ -100,7 +100,8 @@ class MainActivity : ComponentActivity() {
                         onOpenRequestHandled = { openRequest = null },
                         actions = AppActions(
                             add = vm::add,
-                            update = { id, goal, style, notify -> vm.update(id, goal, style, notify) },
+                            update = { id, goal, style, notify, streak -> vm.update(id, goal, style, notify, streak) },
+                            resetStreak = { id, on -> vm.resetStreak(id, on, today) },
                             delete = vm::delete,
                             continueAsSince = vm::continueAsSince,
                             setOrder = vm::setOrder,

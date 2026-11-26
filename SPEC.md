@@ -110,6 +110,14 @@ Un widget de bureau (ordinateur) est un bonus facultatif, hors périmètre de ce
 - **Stockage** : `streak` (booléen) et l'historique en texte `AAAA-MM-JJ/AAAA-MM-JJ;…` (ordre chronologique, entrées illisibles ignorées). Room v5 (`MIGRATION_4_5`, deux `ALTER TABLE`) ; SwiftData : deux propriétés avec valeur par défaut (migration légère). Non inclus dans l'export pour l'instant.
 - **Logique pure** : `Streaks` / `WidgetResetTap` dans `:core` et `GoalCore`, figés par `shared-cases/streaks.json`.
 
+### Habillages et widget « Liste » (Android)
+
+- **Habillages** (par instance, choisis dans la configuration avec aperçu en direct ; clé `theme` de l'état Glance, `WidgetTheme` dans `:core`) : **Vif** (dégradé « mesh » de la couleur de l'objectif, texte blanc — défaut du widget « Objectif » et des widgets déjà posés), **Doux** (surface du thème système : suit clair/sombre et Material You, accents de la couleur — défaut de la « Grille », son apparence d'origine), **Nuit** (fond OLED, graphiques lumineux de la couleur).
+- **Détails** : anneau et arc en cours avec halo flou et auréole à l'extrémité ; grands nombres en police condensée grasse ; emoji en pastille ; pourcentage (format moyen : dans la légende, grand : pastille).
+- **Widget « Liste »** : tous les objectifs, défilables, dans l'ordre choisi dans l'app (préférence partagée `GoalListOrder`), barre de progression des comptes à rebours, appui → détail. Pas de configuration.
+- **Sélecteur de widgets** (Android 12+) : aperçus `previewLayout` réalistes des trois widgets.
+- **Captures** : `WidgetScreenshots` (Robolectric, rendu natif) produit les PNG de tous les formats et habillages avec `-Pscreenshots` ; la CI preview les joint à la pré-release (`widget-screenshots.zip`).
+
 ### Mises à jour automatiques (Android)
 
 - **Publication** : chaque push sur `main` touchant `android/`, `shared-cases/` ou le workflow lance `.github/workflows/android-release.yml` (aussi déclenchable à la main) : `./gradlew test assembleRelease`, APK signé avec la clé de debug de l'appareil (secrets `SIGNING_*`), GitHub Release `build-<versionCode>` « Goal Widgets <versionName> » marquée *latest* (corps = message du commit, 10 dernières gardées). `versionCode` = 1000 + numéro d'exécution (toujours au-dessus du build de debug local, `versionCode` 1), `versionName` = `1.<run> (<sha court>)`.

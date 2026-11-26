@@ -171,8 +171,7 @@ fun ChartWidgetContent(
     var modifier = palette.background(GlanceModifier.fillMaxSize().appWidgetBackground().systemCorners(), style, w, h)
     if (click != null) modifier = modifier.clickable(click)
     // Unité des graphiques : celle de l'objectif, sinon le réglage général (suivi en direct).
-    val globalUnit by (context.applicationContext as GoalWidgetsApplication).chartSettings.global.collectAsState()
-    val unit = ChartUnit.resolve(style.chartUnit, globalUnit)
+    val unit = ChartUnit.resolve(style.chartUnit, globalChartUnit(context))
     val draw = ChartDrawer(goal, today, unit, context.resources.displayMetrics.density, palette)
     val layout = WidgetSize.of(w, h)
     Box(modifier) {
@@ -207,6 +206,14 @@ private class WidgetTexts(
 
     /** Légende longue suivie du record éventuel. */
     val captionWithRecord: String get() = listOfNotNull(caption, record).joinToString(" · ")
+}
+
+/** Réglage général de l'unité des graphiques, suivi en direct (AUTO hors de l'app, ex. captures en test). */
+@Composable
+private fun globalChartUnit(context: Context): ChartUnit {
+    val settings = (context.applicationContext as? GoalWidgetsApplication)?.chartSettings ?: return ChartUnit.AUTO
+    val unit by settings.global.collectAsState()
+    return unit
 }
 
 /** Bitmaps des graphiques pour un objectif et une densité donnés, teintés selon la palette. */

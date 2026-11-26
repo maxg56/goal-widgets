@@ -72,6 +72,19 @@ jobs:
           -PversionCode=${{ steps.version.outputs.code }}
           "-PversionName=${{ steps.version.outputs.name }}"
 
+      # Captures PNG des widgets (Robolectric) pour relecture du design : artefact « widget-screenshots ».
+      - name: Captures des widgets
+        continue-on-error: true
+        run: ./gradlew :app:testDebugUnitTest --tests '*WidgetScreenshots*' -Pscreenshots
+
+      - uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: widget-screenshots
+          path: android/app/build/widget-screenshots
+          retention-days: 7
+          if-no-files-found: ignore
+
       - name: APK
         id: apk
         run: |

@@ -13,6 +13,8 @@ glance = "1.1.1"
 # Déjà tirée par Glance (dépendance transitive) : aucune nouvelle version à télécharger.
 work = "2.7.1"
 sqliteJdbc = "3.41.2.2"
+robolectric = "4.14.1"
+junit4 = "4.13.2"
 
 [libraries]
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
@@ -34,6 +36,9 @@ androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", versi
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqliteJdbc" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+junit4 = { module = "junit:junit", version.ref = "junit4" }
+junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

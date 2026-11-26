@@ -87,6 +87,8 @@ android {
     }
     testOptions {
         unitTests.all { it.useJUnitPlatform() }
+        // Captures des widgets (WidgetScreenshots, Robolectric) : ressources Android des bibliothèques.
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -119,9 +121,21 @@ dependencies {
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.sqlite.jdbc)
     testImplementation(libs.kotlinx.serialization.json)
+    // Captures des widgets en JVM (Robolectric, rendu natif) : JUnit 4 via le moteur « vintage ».
+    testImplementation(libs.robolectric)
+    testImplementation(libs.junit4)
+    testRuntimeOnly(libs.junit.vintage.engine)
 }
 
 tasks.withType<Test>().configureEach {
+    // -Pscreenshots : WidgetScreenshots écrit les PNG dans build/widget-screenshots (sinon ignoré).
+    systemProperty("widgetScreenshotsDir", layout.buildDirectory.dir("widget-screenshots").get().asFile.absolutePath)
+    if (providers.gradleProperty("screenshots").isPresent) {
+        systemProperty("widgetScreenshots", "true")
+    } else {
+        // Robolectric démarre un bac à sable lourd : hors -Pscreenshots, la classe n'est pas lancée.
+        filter.excludeTestsMatching("*WidgetScreenshots")
+    }
     // Schémas Room exportés (app/schemas) lus par Migration1To2Test.
     val schemas = layout.projectDirectory.dir("schemas")
     inputs.dir(schemas).withPropertyName("roomSchemas")

@@ -31,10 +31,11 @@ import kotlin.math.sqrt
  * Taille des bitmaps du widget. Ils transitent par RemoteViews (mémoire bornée par le système et
  * transaction Binder d'environ 1 Mo, une vue par taille en mode Exact) : on dessine à la densité de
  * l'écran tant que la zone tient dans [MAX_PIXELS], au-delà on réduit la résolution.
- * Avec des masques ALPHA_8 (1 octet par pixel), un graphique du grand widget fait au plus ~260 Ko.
+ * Avec des masques ALPHA_8 (1 octet par pixel), un graphique du grand widget fait au plus ~200 Ko : avec `SizeMode.Exact`, Glance envoie un
+ * rendu par taille (portrait + paysage) dans le même RemoteViews, à garder loin de la limite Binder (1 Mo).
  */
 object WidgetBitmapBudget {
-    const val MAX_PIXELS = 260_000
+    const val MAX_PIXELS = 200_000
     const val MAX_PX_PER_DP = 3f
 
     fun pxPerDp(widthDp: Float, heightDp: Float, screenDensity: Float): Float {

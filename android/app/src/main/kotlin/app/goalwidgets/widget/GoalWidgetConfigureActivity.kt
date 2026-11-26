@@ -346,15 +346,18 @@ private fun PreviewStage(goal: StoredGoal, today: LocalDate, config: WidgetChart
 private fun WidgetRemoteView(goal: StoredGoal, today: LocalDate, config: WidgetChartConfig, size: WidgetSize, modifier: Modifier) {
     val context = LocalContext.current
     val views by produceState<RemoteViews?>(null, goal, today, config, size) {
-        value = GlanceRemoteViews().compose(context, DpSize(size.previewWidthDp.dp, size.previewHeightDp.dp)) {
-            GlanceTheme { ChartWidgetContent(goal.goal, goal.style, today, config, click = null) }
-        }.remoteViews
+        // API expérimentale : en cas d'échec, pas d'aperçu plutôt qu'un plantage de la configuration.
+        value = runCatching {
+            GlanceRemoteViews().compose(context, DpSize(size.previewWidthDp.dp, size.previewHeightDp.dp)) {
+                GlanceTheme { ChartWidgetContent(goal.goal, goal.style, today, config, click = null) }
+            }.remoteViews
+        }.getOrNull()
     }
     AndroidView(
         factory = { FrameLayout(it) },
         update = { frame ->
             frame.removeAllViews()
-            views?.let { frame.addView(it.apply(frame.context, frame)) }
+            views?.let { v -> runCatching { v.apply(frame.context, frame) }.getOrNull()?.let(frame::addView) }
         },
         modifier = modifier,
     )

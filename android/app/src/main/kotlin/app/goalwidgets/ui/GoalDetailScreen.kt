@@ -148,6 +148,14 @@ fun GoalDetailScreen(
     val pager = rememberPagerState(initialPage = initial) { goals.size }
     val scope = rememberCoroutineScope()
     LaunchedEffect(pager.settledPage) { goals.getOrNull(pager.settledPage)?.let { onFocusChange(it.id) } }
+    // Liste réordonnée pendant que le détail est ouvert (import, objectif reçu, tri à minuit) :
+    // le pager suit l'objectif affiché au lieu de garder son index.
+    var shownId by remember { mutableStateOf(goals.getOrNull(initial)?.id) }
+    LaunchedEffect(pager.settledPage) { goals.getOrNull(pager.settledPage)?.let { shownId = it.id } }
+    LaunchedEffect(goals) {
+        val index = goals.indexOfFirst { it.id == shownId }
+        if (index >= 0 && index != pager.currentPage) pager.scrollToPage(index)
+    }
     val current = goals.getOrNull(pager.currentPage) ?: goals[initial]
     val focused = goals.getOrNull(pager.settledPage) ?: current
 

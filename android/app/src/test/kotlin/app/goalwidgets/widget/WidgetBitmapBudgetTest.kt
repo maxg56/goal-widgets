@@ -17,7 +17,7 @@ class WidgetBitmapBudgetTest {
         val scale = WidgetBitmapBudget.pxPerDp(widthDp = 320f, heightDp = 240f, screenDensity = 3.5f)
         val pixels = (320f * scale).toInt() * (240f * scale).toInt()
         assertTrue(pixels <= WidgetBitmapBudget.MAX_PIXELS, "$pixels px")
-        assertTrue(scale >= 1.8f, "encore net : $scale px/dp")
+        assertTrue(scale >= 1.6f, "encore net : $scale px/dp")
     }
 
     @Test

@@ -1,6 +1,6 @@
 /* Table « Widget » : chaînes de l'extension widget et du lien profond (partagée app + extension). */
 "widget_name" = "Objectif";
-"widget_description" = "Affiche un objectif et son compte à rebours.";
+"widget_description" = "Un objectif, son nombre de jours et le graphique de votre choix.";
 "widget_intent_title" = "Choisir un objectif";
 "widget_intent_description" = "Objectif affiché par ce widget.";
 "widget_intent_goal" = "Objectif";
@@ -21,5 +21,11 @@
 "grid_period_month" = "Mois en cours";
 "grid_period_week" = "Semaine en cours";
 
-"deeplink_close" = "Fermer";
-"deeplink_goal_not_found" = "Cet objectif n'existe plus";
+/* Widget à graphique (modern-ui) : paramètres de configuration. */
+"widget_intent_chart" = "Graphique";
+"widget_intent_hidden" = "Éléments masqués";
+"widget_part_title" = "Titre";
+"widget_part_number" = "Nombre";
+"widget_part_caption" = "Légende";
+"widget_part_chart" = "Graphique";
+"widget_part_timeline" = "Mini frise";

@@ -31,6 +31,11 @@ enum GoalAppearance {
         LocalizedStringKey("goal_color_\(color.rawValue)")
     }
 
+    /// Teinte foncée (variante « clair ») d'une couleur : fonds en dégradé sous du texte blanc.
+    static func deep(_ color: GoalColor) -> Color {
+        Color(uiColor(hex(color).0))
+    }
+
     private static func hex(_ color: GoalColor) -> (UInt32, UInt32) {
         switch color {
         case .red: return (0xC62828, 0xEF9A9A)
@@ -46,12 +51,58 @@ enum GoalAppearance {
         }
     }
 
-    private static func uiColor(_ rgb: UInt32) -> UIColor {
+    static func uiColor(_ rgb: UInt32) -> UIColor {
         UIColor(
             red: CGFloat((rgb >> 16) & 0xFF) / 255,
             green: CGFloat((rgb >> 8) & 0xFF) / 255,
             blue: CGFloat(rgb & 0xFF) / 255,
             alpha: 1
         )
+    }
+}
+
+/// Couleurs de la nouvelle interface (même règle qu'Android `GoalTint`). `deepColor` = teinte saturée des
+/// fonds (cartes, détail, formulaire, widget), lisible sous du texte blanc dans les deux thèmes ; sans
+/// couleur choisie, un gris-bleu neutre (indigo mêlé à 60 % de 0x37474F = 0x384874).
+enum GoalTint {
+    static let neutral = Color(GoalAppearance.uiColor(0x384874))
+
+    static func deepColor(_ style: GoalStyle) -> Color {
+        style.color.map(GoalAppearance.deep) ?? neutral
+    }
+
+    /// Accent sur une surface claire/sombre (graphiques, frise) : couleur adaptative de l'objectif,
+    /// sinon le gris-bleu (clair : la teinte foncée ; sombre : 0xB0BEC5).
+    static func accent(_ style: GoalStyle) -> Color {
+        if let color = style.color { return GoalAppearance.color(color) }
+        return Color(UIColor { traits in
+            traits.userInterfaceStyle == .dark ? GoalAppearance.uiColor(0xB0BEC5) : GoalAppearance.uiColor(0x384874)
+        })
+    }
+
+    /// Voile posé sur la teinte de base : léger éclat en haut, plus sombre en bas (équivaut au dégradé
+    /// `GoalTint.gradient` d'Android). Séparé de la base pour que le changement de couleur s'anime.
+    static func sheen(darken: Double = 0.45) -> LinearGradient {
+        LinearGradient(
+            colors: [Color.white.opacity(0.12), Color.clear, Color.black.opacity(darken)],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    /// Fond complet : teinte + voile (cartes, widget).
+    static func background(_ base: Color, darken: Double = 0.45, diagonal: Bool = false) -> some View {
+        ZStack {
+            base
+            if diagonal {
+                LinearGradient(
+                    colors: [Color.white.opacity(0.12), Color.clear, Color.black.opacity(darken)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            } else {
+                sheen(darken: darken)
+            }
+        }
     }
 }

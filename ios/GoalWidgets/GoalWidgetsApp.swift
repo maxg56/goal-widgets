@@ -10,10 +10,6 @@ struct GoalWidgetsApp: App {
     /// Pose le délégué des notifications au lancement (appui sur une notification → objectif).
     @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @Environment(\.scenePhase) private var scenePhase
-    /// Objectif ouvert par un lien profond `goalwidgets://goal/<id>` (appui sur un widget).
-    @State private var deepLinkedGoal: DeepLinkedGoal?
-    /// Fichier d'objectif(s) reçu et ouvert avec l'app (t13).
-    @State private var receivedShare: ReceivedShare?
 
     /// Statique : utilisé aussi par la tâche de fond de reprogrammation des notifications.
     private static let sharedContainer: ModelContainer = {
@@ -28,26 +24,9 @@ struct GoalWidgetsApp: App {
 
     var body: some Scene {
         WindowGroup {
-            GoalListView()
-                .onOpenURL { url in
-                    if url.isFileURL {
-                        // Fichier reçu (t13) : « Ouvrir avec Goal Widgets » → aperçu → Ajouter / Annuler.
-                        receivedShare = ReceivedShare.read(url)
-                    } else if let id = GoalDeepLink.goalID(from: url) {
-                        deepLinkedGoal = DeepLinkedGoal(id: id)
-                    }
-                }
-                .sheet(item: $deepLinkedGoal) { link in
-                    GoalDeepLinkView(goalID: link.id)
-                }
-                .sheet(item: $receivedShare) { share in
-                    SharedGoalPreviewView(share: share)
-                }
-                // Appui sur une notification de jalon : même feuille que le lien profond du widget.
-                .onReceive(NotificationRouter.shared.$openedGoalID.compactMap { $0 }) { id in
-                    deepLinkedGoal = DeepLinkedGoal(id: id)
-                    NotificationRouter.shared.openedGoalID = nil
-                }
+            // Accueil en cartes, détail, frise, formulaire ; liens profonds (widget, notification) et
+            // fichiers reçus gérés par `RootView` (AppNavigation.swift).
+            RootView()
                 // Toute sauvegarde (création, modification, suppression) recharge les widgets
                 // et reprogramme les notifications.
                 .onReceive(NotificationCenter.default.publisher(for: ModelContext.didSave)) { _ in
@@ -85,8 +64,4 @@ struct GoalWidgetsApp: App {
             await NotificationScheduler.reschedule(container: Self.sharedContainer)
         }
     }
-}
-
-struct DeepLinkedGoal: Identifiable {
-    let id: UUID
 }

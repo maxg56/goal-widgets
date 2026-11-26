@@ -179,5 +179,222 @@
 			<string>%ld déjà présents</string>
 		</dict>
 	</dict>
+	<!-- Nouvelle interface (modern-ui). Les variantes sans %ld (légendes) consomment quand même le nombre. -->
+	<key>home_goal_count</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>%ld objectif</string>
+			<key>many</key>
+			<string>%ld objectifs</string>
+			<key>other</key>
+			<string>%ld objectifs</string>
+		</dict>
+	</dict>
+	<key>caption_days_left</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>jour restant</string>
+			<key>many</key>
+			<string>jours restants</string>
+			<key>other</key>
+			<string>jours restants</string>
+		</dict>
+	</dict>
+	<key>caption_days_after_target</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>jour depuis l'échéance</string>
+			<key>many</key>
+			<string>jours depuis l'échéance</string>
+			<key>other</key>
+			<string>jours depuis l'échéance</string>
+		</dict>
+	</dict>
+	<key>caption_days_since</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>jour depuis</string>
+			<key>many</key>
+			<string>jours depuis</string>
+			<key>other</key>
+			<string>jours depuis</string>
+		</dict>
+	</dict>
+	<key>caption_short_days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>jour</string>
+			<key>many</key>
+			<string>jours</string>
+			<key>other</key>
+			<string>jours</string>
+		</dict>
+	</dict>
+	<key>caption_short_after</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>jour après</string>
+			<key>many</key>
+			<string>jours après</string>
+			<key>other</key>
+			<string>jours après</string>
+		</dict>
+	</dict>
+	<key>days_short</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>%ld j</string>
+			<key>many</key>
+			<string>%ld j</string>
+			<key>other</key>
+			<string>%ld j</string>
+		</dict>
+	</dict>
+	<key>relative_in_days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>dans %ld j</string>
+			<key>many</key>
+			<string>dans %ld j</string>
+			<key>other</key>
+			<string>dans %ld j</string>
+		</dict>
+	</dict>
+	<key>relative_days_ago</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>il y a %ld j</string>
+			<key>many</key>
+			<string>il y a %ld j</string>
+			<key>other</key>
+			<string>il y a %ld j</string>
+		</dict>
+	</dict>
+	<key>arcs_unit_years</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>1 arc = %ld an</string>
+			<key>many</key>
+			<string>1 arc = %ld ans</string>
+			<key>other</key>
+			<string>1 arc = %ld ans</string>
+		</dict>
+	</dict>
+	<key>form_duration</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>→ %ld jour</string>
+			<key>many</key>
+			<string>→ %ld jours</string>
+			<key>other</key>
+			<string>→ %ld jours</string>
+		</dict>
+	</dict>
+	<key>form_sheet_duration</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@value@</string>
+		<key>value</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>ld</string>
+			<key>one</key>
+			<string>durée %ld j</string>
+			<key>many</key>
+			<string>durée %ld j</string>
+			<key>other</key>
+			<string>durée %ld j</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

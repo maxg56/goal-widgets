@@ -70,6 +70,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
@@ -168,6 +169,8 @@ fun GoalFormScreen(
     onDelete: () -> Unit = {},
     /** « Dupliquer » (objectif enregistré seulement) : copie sous le titre donné. */
     onDuplicate: ((String) -> Unit)? = null,
+    /** « Archiver » / « Sortir de l'archive » (objectif enregistré seulement). */
+    onArchive: (() -> Unit)? = null,
     onContinueAsSince: () -> Unit = {},
     /** « Partager » (objectif enregistré seulement). */
     onShare: (() -> Unit)? = null,
@@ -249,6 +252,8 @@ fun GoalFormScreen(
                         canContinueAsSince = canContinueAsSince && !repeatYearly,
                         onContinue = { confirm = Confirm.SINCE },
                         onDuplicate = onDuplicate?.let { dup -> { dup(copyTitle) } },
+                        archived = existing.archived,
+                        onArchive = onArchive,
                         onDelete = { confirm = Confirm.DELETE },
                     )
                 }
@@ -1007,7 +1012,14 @@ private fun OptionCard(icon: ImageVector, @StringRes title: Int, @StringRes foot
 
 /** Modification : « Continuer en compteur depuis » (cible dépassée) et « Supprimer », tous deux confirmés. */
 @Composable
-private fun ManageCard(canContinueAsSince: Boolean, onContinue: () -> Unit, onDuplicate: (() -> Unit)?, onDelete: () -> Unit) {
+private fun ManageCard(
+    canContinueAsSince: Boolean,
+    onContinue: () -> Unit,
+    onDuplicate: (() -> Unit)?,
+    archived: Boolean,
+    onArchive: (() -> Unit)?,
+    onDelete: () -> Unit,
+) {
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(vertical = 6.dp)) {
         if (canContinueAsSince) {
             ManageRow(
@@ -1025,6 +1037,15 @@ private fun ManageCard(canContinueAsSince: Boolean, onContinue: () -> Unit, onDu
                 stringResource(R.string.form_duplicate_hint),
                 MaterialTheme.colorScheme.primary,
                 onDuplicate,
+            )
+        }
+        if (onArchive != null) {
+            ManageRow(
+                Icons.Filled.Done,
+                stringResource(if (archived) R.string.form_unarchive else R.string.form_archive),
+                stringResource(if (archived) R.string.form_unarchive_hint else R.string.form_archive_hint),
+                MaterialTheme.colorScheme.primary,
+                onArchive,
             )
         }
         ManageRow(Icons.Filled.Delete, stringResource(R.string.form_delete), stringResource(R.string.form_delete_hint), MaterialTheme.colorScheme.error, onDelete)

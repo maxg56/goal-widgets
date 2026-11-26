@@ -55,6 +55,8 @@ data class GoalEntity(
     @ColumnInfo(defaultValue = "") val streakHistory: String = "",
     /** Compte à rebours « chaque année » : repart vers l'occurrence suivante une fois la cible passée (v6). */
     @ColumnInfo(defaultValue = "0") val repeatYearly: Boolean = false,
+    /** Archivé : hors de l'accueil (section « Archivés »), sans notification ; widgets inchangés (v6). */
+    @ColumnInfo(defaultValue = "0") val archived: Boolean = false,
 ) {
     fun toGoal(): Goal = Goal(
         kind = GoalKind.fromWire(kind),

@@ -6,7 +6,7 @@
     "entities": [
       {
         "tableName": "goals",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `kind` TEXT NOT NULL, `startEpochDay` INTEGER NOT NULL, `targetEpochDay` INTEGER, `createdAtMillis` INTEGER NOT NULL, `uid` TEXT NOT NULL DEFAULT '', `color` TEXT, `emoji` TEXT, `notificationsEnabled` INTEGER NOT NULL DEFAULT 0, `chartUnit` TEXT, `streak` INTEGER NOT NULL DEFAULT 0, `streakHistory` TEXT NOT NULL DEFAULT '', `repeatYearly` INTEGER NOT NULL DEFAULT 0)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `kind` TEXT NOT NULL, `startEpochDay` INTEGER NOT NULL, `targetEpochDay` INTEGER, `createdAtMillis` INTEGER NOT NULL, `uid` TEXT NOT NULL DEFAULT '', `color` TEXT, `emoji` TEXT, `notificationsEnabled` INTEGER NOT NULL DEFAULT 0, `chartUnit` TEXT, `streak` INTEGER NOT NULL DEFAULT 0, `streakHistory` TEXT NOT NULL DEFAULT '', `repeatYearly` INTEGER NOT NULL DEFAULT 0, `archived` INTEGER NOT NULL DEFAULT 0)",
         "fields": [
           {
             "fieldPath": "id",
@@ -93,6 +93,13 @@
           {
             "fieldPath": "repeatYearly",
             "columnName": "repeatYearly",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "archived",
+            "columnName": "archived",
             "affinity": "INTEGER",
             "notNull": true,
             "defaultValue": "0"

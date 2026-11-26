@@ -36,7 +36,7 @@ object AppShortcuts {
             val app = context.applicationContext as GoalWidgetsApplication
             val today = LocalDate.now()
             val goals = GoalOrder.CLOSEST_DATE
-                .sort(app.database.goalDao().getAll(), today) { SortKey(it.uid, it.toGoal(), Instant.ofEpochMilli(it.createdAtMillis)) }
+                .sort(app.database.goalDao().getAll().filterNot { it.archived }, today) { SortKey(it.uid, it.toGoal(), Instant.ofEpochMilli(it.createdAtMillis)) }
                 .take(MAX_GOALS)
             val newGoal = ShortcutInfoCompat.Builder(context, NEW_GOAL_ID)
                 .setShortLabel(context.getString(R.string.shortcut_new_goal))

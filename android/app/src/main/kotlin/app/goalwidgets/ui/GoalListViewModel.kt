@@ -42,6 +42,8 @@ data class StoredGoal(
     val history: List<PastStreak> = emptyList(),
     /** Compte à rebours « chaque année ». */
     val repeatYearly: Boolean = false,
+    /** Archivé : section « Archivés » de l'accueil, sans notification. */
+    val archived: Boolean = false,
 ) {
     /** Options du formulaire telles qu'enregistrées. */
     val options: GoalOptions get() = GoalOptions(notificationsEnabled, streak, repeatYearly)
@@ -64,6 +66,7 @@ data class StoredGoal(
             streak = entity.streak,
             history = entity.history(),
             repeatYearly = entity.repeatYearly,
+            archived = entity.archived,
         )
     }
 }
@@ -132,6 +135,14 @@ class GoalListViewModel(
     /** Copie de [stored] (« Dupliquer ») : même contenu et mêmes options, titre suffixé, nouvel uid. */
     fun duplicate(stored: StoredGoal, title: String) =
         add(stored.goal.copy(title = title), stored.style, stored.options)
+
+    /** Archive l'objectif [id] (ou le sort de l'archive). */
+    fun setArchived(id: Long, archived: Boolean) {
+        viewModelScope.launch {
+            dao.setArchived(id, archived)
+            onGoalsChanged()
+        }
+    }
 
     /** Comptes à rebours « chaque année » passés : avancés à l'occurrence suivante. */
     fun rollYearly(today: LocalDate) {

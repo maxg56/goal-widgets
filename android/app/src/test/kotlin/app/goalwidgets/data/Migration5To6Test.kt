@@ -60,7 +60,7 @@ class Migration5To6Test {
     private val v5Columns = "id, title, kind, startEpochDay, targetEpochDay, createdAtMillis, uid, color, emoji, notificationsEnabled, chartUnit, streak, streakHistory"
 
     @Test
-    fun `aucune donnée perdue, pas de répétition pour les objectifs existants`() {
+    fun `aucune donnée perdue, pas de répétition ni d'archive pour les objectifs existants`() {
         val db = memoryDb()
         db.createFromSchema(5)
         db.exec(
@@ -73,7 +73,7 @@ class Migration5To6Test {
         db.migrate()
 
         assertEquals(before, db.rows("SELECT $v5Columns FROM goals ORDER BY id"))
-        assertEquals(listOf(listOf<Any?>(0), listOf<Any?>(0)), db.rows("SELECT repeatYearly FROM goals ORDER BY id"))
+        assertEquals(listOf(listOf<Any?>(0, 0), listOf<Any?>(0, 0)), db.rows("SELECT repeatYearly, archived FROM goals ORDER BY id"))
     }
 
     @Test

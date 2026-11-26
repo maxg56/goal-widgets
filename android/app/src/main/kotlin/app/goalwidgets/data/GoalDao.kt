@@ -36,6 +36,10 @@ interface GoalDao {
     @Query("UPDATE goals SET streak = :enabled WHERE id = :id")
     suspend fun setStreak(id: Long, enabled: Boolean): Int
 
+    /** Archive (ou sort de l'archive) un objectif ; renvoie le nombre de lignes modifiées. */
+    @Query("UPDATE goals SET archived = :archived WHERE id = :id")
+    suspend fun setArchived(id: Long, archived: Boolean): Int
+
     /** Option « chaque année » ; renvoie le nombre de lignes modifiées. */
     @Query("UPDATE goals SET repeatYearly = :enabled WHERE id = :id")
     suspend fun setRepeatYearly(id: Long, enabled: Boolean): Int

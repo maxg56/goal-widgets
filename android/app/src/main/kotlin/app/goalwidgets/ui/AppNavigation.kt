@@ -97,6 +97,8 @@ class AppActions(
     val update: (Long, Goal, GoalStyle, GoalOptions) -> Unit,
     /** « Dupliquer » : copie de l'objectif avec le titre donné. */
     val duplicate: (StoredGoal, String) -> Unit,
+    /** Archive un objectif (ou le sort de l'archive). */
+    val setArchived: (Long, Boolean) -> Unit,
     /** Remise à zéro d'un compteur « série » à la date donnée (aujourd'hui par défaut). */
     val resetStreak: (Long, LocalDate) -> Unit,
     val delete: (Long) -> Unit,
@@ -136,7 +138,9 @@ fun GoalWidgetsApp(
     var focusedGoalId by rememberSaveable { mutableStateOf<Long?>(null) }
     var homeAnimated by rememberSaveable { mutableStateOf(false) }
     val homeListState = rememberLazyListState()
-    val sorted = remember(goals, order, today) { goals?.let { order.sort(it, today) { g -> g.sortKey } } }
+    // Objectifs archivés à la fin (même ordre entre eux) : section repliable de l'accueil.
+    val sorted = remember(goals, order, today) { goals?.let { order.sort(it, today) { g -> g.sortKey }.sortedBy(StoredGoal::archived) } }
+    var showArchived by rememberSaveable { mutableStateOf(false) }
 
     if (sorted == null) {
         // Base pas encore lue (quelques ms) : fond seul.
@@ -163,7 +167,9 @@ fun GoalWidgetsApp(
         val next = valid.dropLast(1).ifEmpty { listOf(Screen.Home) }
         if (leaving is Screen.Detail && next.last() == Screen.Home) {
             // La carte de l'objectif affiché doit être visible pour que la transition la retrouve.
-            val index = sorted.indexOfFirst { it.id == focusedGoalId }
+            // Index dans la liste de l'accueil : actifs, en-tête « Archivés », archivés.
+            val position = sorted.indexOfFirst { it.id == focusedGoalId }
+            val index = if (position >= 0 && sorted[position].archived) position + 1 else position
             val visible = homeListState.layoutInfo.visibleItemsInfo.map { it.index }
             if (index >= 0 && index !in visible) homeListState.requestScrollToItem(index)
         }
@@ -226,6 +232,8 @@ fun GoalWidgetsApp(
                         order = order,
                         listState = homeListState,
                         animateEntrance = animate,
+                        showArchived = showArchived,
+                        onShowArchivedChange = { showArchived = it },
                         sharedCard = shared,
                         snackbarHostState = snackbarHostState,
                         actions = HomeActions(
@@ -240,7 +248,7 @@ fun GoalWidgetsApp(
                         ),
                     )
                 }
-                Screen.Timeline -> GoalTimelineScreen(sorted, today, onOpen = { push(Screen.Detail(it.id)) }, onBack = ::pop)
+                Screen.Timeline -> GoalTimelineScreen(sorted.filterNot(StoredGoal::archived), today, onOpen = { push(Screen.Detail(it.id)) }, onBack = ::pop)
                 Screen.NotificationSettings -> NotificationSettingsScreen(sendTime, actions.setSendTime, onBack = ::pop)
                 is Screen.Detail -> GoalDetailScreen(
                     goals = sorted,
@@ -261,6 +269,18 @@ fun GoalWidgetsApp(
                         onSave = { goal, style, options ->
                             if (existing == null) actions.add(goal, style, options) else actions.update(existing.id, goal, style, options)
                             pop()
+                        },
+                        onArchive = existing?.let { e ->
+                            {
+                                actions.setArchived(e.id, !e.archived)
+                                if (!e.archived) {
+                                    // Archivé : retour à l'accueil, section « Archivés » ouverte.
+                                    showArchived = true
+                                    stack = listOf(Screen.Home)
+                                } else {
+                                    pop()
+                                }
+                            }
                         },
                         onDuplicate = existing?.let { e ->
                             { title: String ->

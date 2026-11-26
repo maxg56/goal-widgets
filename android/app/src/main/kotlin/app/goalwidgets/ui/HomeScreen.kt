@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
@@ -103,6 +104,9 @@ fun HomeScreen(
     listState: LazyListState,
     /** Entrée décalée des cartes (premier affichage seulement). */
     animateEntrance: Boolean,
+    /** Section « Archivés » dépliée (état gardé par la navigation : retour du détail d'un archivé). */
+    showArchived: Boolean = false,
+    onShowArchivedChange: (Boolean) -> Unit = {},
     sharedCard: @Composable (goalId: Long) -> Modifier,
     snackbarHostState: SnackbarHostState,
     actions: HomeActions,
@@ -131,8 +135,9 @@ fun HomeScreen(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    val activeCount = goals.count { !it.archived }
                     Text(
-                        pluralStringResource(R.plurals.home_goal_count, goals.size, goals.size),
+                        pluralStringResource(R.plurals.home_goal_count, activeCount, activeCount),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -165,7 +170,8 @@ fun HomeScreen(
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    itemsIndexed(goals, key = { _, g -> g.id }) { index, stored ->
+                    val (archived, active) = goals.partition(StoredGoal::archived)
+                    itemsIndexed(active, key = { _, g -> g.id }) { index, stored ->
                         HeroCard(
                             stored = stored,
                             today = today,
@@ -174,6 +180,23 @@ fun HomeScreen(
                             onReset = { resetting = stored.id },
                             modifier = Modifier.animateItem().then(sharedCard(stored.id)),
                         )
+                    }
+                    if (archived.isNotEmpty()) {
+                        item(key = "archived-header") {
+                            ArchivedHeader(archived.size, showArchived, Modifier.animateItem()) { onShowArchivedChange(!showArchived) }
+                        }
+                        if (showArchived) {
+                            itemsIndexed(archived, key = { _, g -> g.id }) { _, stored ->
+                                HeroCard(
+                                    stored = stored,
+                                    today = today,
+                                    enterIndex = null,
+                                    onClick = { actions.onOpen(stored) },
+                                    onReset = { resetting = stored.id },
+                                    modifier = Modifier.animateItem().graphicsLayer { alpha = 0.6f }.then(sharedCard(stored.id)),
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -185,6 +208,35 @@ fun HomeScreen(
             modifier = Modifier.align(Alignment.BottomEnd).navigationBarsPadding().padding(16.dp),
         )
         SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter).navigationBarsPadding().padding(bottom = 80.dp))
+    }
+}
+
+/** En-tête repliable de la section « Archivés » (en bas de l'accueil). */
+@Composable
+private fun ArchivedHeader(count: Int, expanded: Boolean, modifier: Modifier, onToggle: () -> Unit) {
+    val rotation by animateFloatAsState(if (expanded) 180f else 0f, spring(dampingRatio = 0.7f, stiffness = Spring.StiffnessMediumLow), label = "archived")
+    Row(
+        modifier
+            .fillMaxWidth()
+            .padding(top = 12.dp)
+            .clip(RoundedCornerShape(50))
+            .clickable(onClick = onToggle)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            pluralStringResource(R.plurals.home_archived_count, count, count),
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(
+            Icons.Filled.KeyboardArrowDown,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.graphicsLayer { rotationZ = rotation },
+        )
     }
 }
 

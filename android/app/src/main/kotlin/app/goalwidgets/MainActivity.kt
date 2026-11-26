@@ -104,6 +104,7 @@ class MainActivity : ComponentActivity() {
                             add = vm::add,
                             update = vm::update,
                             duplicate = vm::duplicate,
+                            setArchived = vm::setArchived,
                             resetStreak = { id, on -> vm.resetStreak(id, on, today) },
                             delete = vm::delete,
                             continueAsSince = vm::continueAsSince,

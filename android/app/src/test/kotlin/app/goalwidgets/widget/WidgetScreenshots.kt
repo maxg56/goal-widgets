@@ -88,7 +88,7 @@ class WidgetScreenshots {
             GoalEntity.from(goal, createdAtMillis = i.toLong(), style = style, id = i + 1L)
         }
         for (night in listOf(false, true)) {
-            render(night, 320f, 230f, File(out, "${if (night) "night" else "day"}-list.png")) { ListBody(rows, GoalOrder.CLOSEST_DATE, today) }
+            render(night, 320f, 230f, File(out, "${if (night) "night" else "day"}-list.png")) { ListBody(rows, GoalOrder.CLOSEST_DATE, today, scrollable = false) }
         }
     }
 

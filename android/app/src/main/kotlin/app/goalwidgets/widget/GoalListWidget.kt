@@ -87,7 +87,13 @@ object GoalListOrder {
 }
 
 @Composable
-internal fun ListBody(goals: List<GoalEntity>?, order: GoalOrder, today: LocalDate = LocalDate.now()) {
+internal fun ListBody(
+    goals: List<GoalEntity>?,
+    order: GoalOrder,
+    today: LocalDate = LocalDate.now(),
+    /** `false` : simple colonne (captures en test : Robolectric ne rend pas les collections). */
+    scrollable: Boolean = true,
+) {
     val context = LocalContext.current
     val openApp = actionStartActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     Column(
@@ -130,8 +136,12 @@ internal fun ListBody(goals: List<GoalEntity>?, order: GoalOrder, today: LocalDa
             }
             else -> {
                 val sorted = order.sort(goals, today) { SortKey(it.uid, it.toGoal(), Instant.ofEpochMilli(it.createdAtMillis)) }
-                LazyColumn(GlanceModifier.fillMaxSize()) {
-                    items(sorted, itemId = { it.id }) { row -> GoalRow(row, today) }
+                if (scrollable) {
+                    LazyColumn(GlanceModifier.fillMaxSize()) {
+                        items(sorted, itemId = { it.id }) { row -> GoalRow(row, today) }
+                    }
+                } else {
+                    Column(GlanceModifier.fillMaxSize()) { sorted.forEach { GoalRow(it, today) } }
                 }
             }
         }

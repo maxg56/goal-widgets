@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Mode sombre : fond de fenêtre sombre (évite un flash blanc au démarrage). -->
+    <style name="Theme.GoalWidgets" parent="android:Theme.Material.NoActionBar" />
+</resources>

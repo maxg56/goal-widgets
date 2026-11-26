@@ -71,7 +71,7 @@
     </plurals>
 
     <!-- Widget d'écran d'accueil (t06). -->
-    <string name="widget_description">Un objectif : jours restants et progression</string>
+    <string name="widget_description">Un objectif avec graphique : anneau, arcs, barres ou points</string>
     <string name="widget_not_configured">Touchez pour choisir un objectif</string>
     <string name="widget_goal_deleted">Objectif supprimé — touchez pour en choisir un</string>
     <string name="widget_config_title">Choisir un objectif</string>
@@ -171,4 +171,162 @@
         <item quantity="many">Plus que %d jours</item>
         <item quantity="other">Plus que %d jours</item>
     </plurals>
+
+    <!-- Nouvelle interface (modern-ui) : accueil en cartes, détail, frise, formulaire, widget à graphique. -->
+    <plurals name="home_goal_count">
+        <item quantity="one">%d objectif</item>
+        <item quantity="many">%d objectifs</item>
+        <item quantity="other">%d objectifs</item>
+    </plurals>
+    <string name="home_empty_hint">Touchez « Nouvel objectif » pour commencer.</string>
+    <string name="timeline_open">Frise de tous les objectifs</string>
+    <string name="timeline_title">Frise des objectifs</string>
+    <string name="timeline_today">Aujourd\'hui · %1$s</string>
+    <string name="goal_date_countdown">le %1$s</string>
+    <string name="goal_date_since">depuis le %1$s</string>
+    <!-- Grand nombre du jour J et légendes sous le grand nombre (le nombre est affiché à part). -->
+    <string name="big_number_today">J</string>
+    <string name="caption_today">C\'est aujourd\'hui</string>
+    <plurals name="caption_days_left">
+        <item quantity="one">jour restant</item>
+        <item quantity="many">jours restants</item>
+        <item quantity="other">jours restants</item>
+    </plurals>
+    <plurals name="caption_days_after_target">
+        <item quantity="one">jour depuis l\'échéance</item>
+        <item quantity="many">jours depuis l\'échéance</item>
+        <item quantity="other">jours depuis l\'échéance</item>
+    </plurals>
+    <plurals name="caption_days_since">
+        <item quantity="one">jour depuis</item>
+        <item quantity="many">jours depuis</item>
+        <item quantity="other">jours depuis</item>
+    </plurals>
+    <string name="caption_short_today">aujourd\'hui</string>
+    <plurals name="caption_short_days">
+        <item quantity="one">jour</item>
+        <item quantity="many">jours</item>
+        <item quantity="other">jours</item>
+    </plurals>
+    <plurals name="caption_short_after">
+        <item quantity="one">jour après</item>
+        <item quantity="many">jours après</item>
+        <item quantity="other">jours après</item>
+    </plurals>
+    <plurals name="days_short">
+        <item quantity="one">%d j</item>
+        <item quantity="many">%d j</item>
+        <item quantity="other">%d j</item>
+    </plurals>
+    <plurals name="relative_in_days">
+        <item quantity="one">dans %d j</item>
+        <item quantity="many">dans %d j</item>
+        <item quantity="other">dans %d j</item>
+    </plurals>
+    <plurals name="relative_days_ago">
+        <item quantity="one">il y a %d j</item>
+        <item quantity="many">il y a %d j</item>
+        <item quantity="other">il y a %d j</item>
+    </plurals>
+    <string name="relative_today">aujourd\'hui</string>
+    <string name="joined_dot">%1$s · %2$s</string>
+
+    <!-- Détail d'un objectif. -->
+    <string name="action_back">Retour</string>
+    <string name="action_edit">Modifier</string>
+    <string name="action_continue">Continuer</string>
+    <string name="detail_position">%1$d / %2$d</string>
+    <string name="detail_customize">Personnaliser</string>
+    <string name="detail_done">Terminé</string>
+    <string name="detail_customize_hint">Touchez × pour masquer ce que vous n\'utilisez pas</string>
+    <string name="detail_hidden_title">Masqués</string>
+    <string name="detail_part_number">Nombre</string>
+    <string name="detail_part_caption">Légende</string>
+    <string name="detail_part_chart">Graphique</string>
+    <string name="detail_part_timeline">Frise</string>
+    <string name="detail_hidden_chart">Graphique %1$s</string>
+    <string name="action_hide">Masquer %1$s</string>
+    <string name="action_restore">Remettre %1$s</string>
+    <string name="detail_percent_of_path">%1$s du chemin</string>
+    <string name="chart_dots">Points</string>
+    <string name="chart_ring">Anneau</string>
+    <string name="chart_arcs">Arcs</string>
+    <string name="chart_bars">Barres</string>
+    <string name="dots_unit_day">1 point = 1 jour</string>
+    <string name="dots_unit_week">1 point = 1 semaine</string>
+    <string name="dots_unit_month">1 point = 1 mois</string>
+    <string name="ring_caption_countdown">du chemin</string>
+    <string name="ring_caption_since">vers %1$s</string>
+    <string name="ring_arrival">Arrivée le %1$s</string>
+    <string name="ring_reached">Objectif atteint</string>
+    <string name="ring_milestone_footnote">%1$s le %2$s · encore %3$s</string>
+    <string name="arcs_week_label">sem. du %1$s</string>
+    <string name="arcs_unit_week">1 arc = 1 semaine</string>
+    <string name="arcs_unit_month">1 arc = 1 mois</string>
+    <plurals name="arcs_unit_years">
+        <item quantity="one">1 arc = %d an</item>
+        <item quantity="many">1 arc = %d ans</item>
+        <item quantity="other">1 arc = %d ans</item>
+    </plurals>
+    <string name="bars_unit_day">1 barre = 1 jour · hauteur = chemin parcouru</string>
+    <string name="bars_unit_week">1 barre = 1 semaine · hauteur = chemin parcouru</string>
+    <string name="bars_unit_month">1 barre = 1 mois · hauteur = chemin parcouru</string>
+    <string name="strip_title_countdown">Frise · départ → cible</string>
+    <string name="strip_title_since">Frise · depuis le départ</string>
+    <string name="strip_start">Départ · %1$s</string>
+    <string name="strip_target">🎯 %1$s</string>
+    <string name="strip_today">Aujourd\'hui</string>
+
+    <!-- Formulaire. -->
+    <string name="form_title_placeholder_countdown">Vacances, examen…</string>
+    <string name="form_title_placeholder_since">Sans fumer, sport…</string>
+    <string name="form_choose_emoji">Choisir un emoji</string>
+    <string name="form_date_start">Départ</string>
+    <string name="form_date_target">Cible</string>
+    <plurals name="form_duration">
+        <item quantity="one">→ %d jour</item>
+        <item quantity="many">→ %d jours</item>
+        <item quantity="other">→ %d jours</item>
+    </plurals>
+    <string name="form_duration_until_today">%1$s jusqu\'à aujourd\'hui</string>
+    <string name="form_sheet_since">Depuis quand ?</string>
+    <plurals name="form_sheet_duration">
+        <item quantity="one">durée %d j</item>
+        <item quantity="many">durée %d j</item>
+        <item quantity="other">durée %d j</item>
+    </plurals>
+    <string name="form_suggest_in_week">Dans 1 semaine</string>
+    <string name="form_suggest_month">1 mois</string>
+    <string name="form_suggest_3_months">3 mois</string>
+    <string name="form_suggest_year">1 an</string>
+    <string name="form_suggest_new_year">Nouvel an</string>
+    <string name="form_suggest_week_ago">Il y a 1 semaine</string>
+    <string name="form_suggest_jan_first">1er janvier</string>
+    <string name="action_validate">Valider</string>
+    <string name="form_create">Créer l\'objectif</string>
+    <string name="form_continue_hint">La cible est passée : compter depuis cette date</string>
+    <string name="form_continue_confirm_title">Continuer en compteur « depuis » ?</string>
+    <string name="form_continue_confirm_message">Le compte à rebours devient un compteur « depuis » sa date cible. Le titre, la couleur et l\'emoji sont gardés.</string>
+    <string name="form_delete">Supprimer l\'objectif</string>
+    <string name="form_delete_hint">Définitif, widgets compris</string>
+    <string name="form_delete_confirm_message">« %1$s » disparaîtra de l\'app et de ses widgets. Cette action est définitive.</string>
+
+    <!-- Widget à graphique et sa configuration. -->
+    <string name="widget_config_header">Widget</string>
+    <string name="widget_config_goal">Objectif</string>
+    <string name="widget_config_chart">Graphique</string>
+    <string name="widget_config_chart_small">Graphique (le petit format garde l\'anneau)</string>
+    <string name="widget_config_parts">Éléments</string>
+    <string name="widget_part_title">Titre</string>
+    <string name="widget_part_number">Nombre</string>
+    <string name="widget_part_caption">Légende</string>
+    <string name="widget_part_chart">Graphique</string>
+    <string name="widget_part_timeline">Mini frise</string>
+    <string name="widget_size_small">Petit</string>
+    <string name="widget_size_medium">Moyen</string>
+    <string name="widget_size_large">Grand</string>
+    <string name="widget_size_hint">Sur l\'écran d\'accueil, la présentation suit la taille du widget : redimensionnez-le.</string>
+    <string name="widget_config_add">Ajouter le widget</string>
+    <string name="widget_config_update">Mettre à jour le widget</string>
+    <string name="widget_preview_a11y">Aperçu du widget</string>
 </resources>

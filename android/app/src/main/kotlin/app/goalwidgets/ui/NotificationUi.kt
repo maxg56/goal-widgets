@@ -1,15 +1,11 @@
 package app.goalwidgets.ui
 
-import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,7 +25,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
@@ -54,48 +49,6 @@ import app.goalwidgets.notifications.MilestoneNotifications
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
-
-/**
- * Interrupteur « Notifications de jalons » du formulaire. L'autorisation (Android 13+) est
- * demandée au moment où l'utilisateur l'active (spec 44) ; si elle est refusée, l'interrupteur
- * reste actif (préférence de l'objectif) et un message mène aux paramètres du téléphone.
- */
-@Composable
-fun NotificationToggle(enabled: Boolean, onChange: (Boolean) -> Unit) {
-    val context = LocalContext.current
-    var canPost by remember { mutableStateOf(MilestoneNotifications.canPost(context)) }
-    LifecycleResumeEffect(Unit) {
-        canPost = MilestoneNotifications.canPost(context)
-        onPauseOrDispose { }
-    }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
-        canPost = MilestoneNotifications.canPost(context)
-    }
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween,
-        ) {
-            Text(stringResource(R.string.goal_form_notifications), modifier = Modifier.weight(1f))
-            Switch(
-                checked = enabled,
-                onCheckedChange = { on ->
-                    onChange(on)
-                    if (on && !canPost && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                        permission.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    }
-                },
-            )
-        }
-        Text(
-            stringResource(R.string.goal_form_notifications_footer),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        if (enabled && !canPost) DeniedHint(context)
-    }
-}
 
 /** Réglages globaux des notifications : heure d'envoi, autorisation, aide batterie. */
 @OptIn(ExperimentalMaterial3Api::class)

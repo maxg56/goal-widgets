@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.ExportedGoal
+import app.goalwidgets.core.ExportedOptions
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalColor
 import app.goalwidgets.core.GoalKind
@@ -82,6 +83,13 @@ data class GoalEntity(
         emoji = emoji,
         notificationsEnabled = notificationsEnabled,
         createdAt = Instant.ofEpochMilli(createdAtMillis),
+        options = ExportedOptions(
+            chartUnit = ChartUnit.fromWire(chartUnit),
+            streak = streak,
+            streakHistory = history(),
+            repeatYearly = repeatYearly,
+            archived = archived,
+        ),
     )
 
     companion object {
@@ -115,8 +123,10 @@ data class GoalEntity(
         fun fromExported(e: ExportedGoal) = from(
             goal = e.goal,
             createdAtMillis = e.createdAt.toEpochMilli(),
-            style = GoalStyle(e.color, e.emoji),
+            style = GoalStyle(e.color, e.emoji, e.options.chartUnit),
             notificationsEnabled = e.notificationsEnabled ?: false,
-        ).copy(uid = e.id)
+            streak = e.options.streak,
+            repeatYearly = e.options.repeatYearly,
+        ).copy(uid = e.id, streakHistory = Streaks.encode(e.options.streakHistory), archived = e.options.archived)
     }
 }

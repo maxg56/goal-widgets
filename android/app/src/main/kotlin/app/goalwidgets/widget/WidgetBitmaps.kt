@@ -158,7 +158,8 @@ object WidgetBitmaps {
             c.drawCircle(tx, y, thick * 0.9f, fill(0.35f))
             c.drawCircle(tx, y, thick * 0.9f, stroke(1f, 2f * scale, round = false))
         }
-        c.drawCircle(todayX, y, thick * 1.5f, fill(0.3f))
+        // Halo du jour : contenu dans la hauteur du bitmap (sinon rogné en carré).
+        c.drawCircle(todayX, y, min(thick * 1.5f, bmp.height / 2f), fill(0.3f))
         c.drawCircle(todayX, y, thick * 0.8f, fill(1f))
         return bmp
     }

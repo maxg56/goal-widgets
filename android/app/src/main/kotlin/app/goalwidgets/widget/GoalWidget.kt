@@ -344,11 +344,14 @@ private fun Medium(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer,
     val showChart = config.shows(WidgetPart.CHART)
     val side = minOf(contentH, (w - 2 * pad) * 0.46f).coerceAtLeast(1f)
     val textW = w - 2 * pad - if (showChart) side + 12f else 0f
+    // Hauteur laissée au nombre une fois le titre (pastille emoji) et la légende placés ; une ligne de
+    // texte occupe ≈ 1,2 × sa taille.
+    val numberRoom = contentH - (if (config.shows(WidgetPart.TITLE)) 30f else 0f) - (if (config.shows(WidgetPart.CAPTION)) 18f else 0f)
     Column(GlanceModifier.fillMaxSize().padding(pad.dp)) {
         Row(GlanceModifier.defaultWeight().fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(GlanceModifier.defaultWeight()) {
                 if (config.shows(WidgetPart.TITLE)) TitleRow(t, 14f, p)
-                if (config.shows(WidgetPart.NUMBER)) BigNumber(t.number, fitSp(t.number, textW, (contentH * 0.52f).coerceIn(20f, 58f)), p)
+                if (config.shows(WidgetPart.NUMBER)) BigNumber(t.number, fitSp(t.number, textW, (numberRoom / 1.2f).coerceIn(18f, 58f)), p)
                 if (config.shows(WidgetPart.CAPTION)) Caption(listOfNotNull(t.captionWithRecord, t.percent).joinToString(" · "), 13f, p)
             }
             if (showChart) {
@@ -375,7 +378,7 @@ private fun Large(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, 
     val showLine = config.shows(WidgetPart.TIMELINE)
     val lineH = 16f
     val chartW = w - 2 * pad
-    val chartH = h - 2 * pad - (if (showTitle) 28f else 0f) - (if (showNumber) 64f else if (showCaption) 20f else 0f) - 10f -
+    val chartH = h - 2 * pad - (if (showTitle) 30f else 0f) - (if (showNumber) 74f else if (showCaption) 20f else 0f) - 10f -
         (if (showLine) lineH + 28f else 0f)
     Column(GlanceModifier.fillMaxSize().padding(pad.dp)) {
         if (showTitle) TitleRow(t, 16f, p, trailing = t.percent)

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Premier plan : anneau de progression (≈ 70 %) avec son extrémité, et point « aujourd'hui » au centre.
+     Tout tient dans la zone sûre des icônes adaptatives (cercle de 66 dp au centre). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:pathData="M54,32 a22,22 0 1,1 0,44 a22,22 0 1,1 0,-44"
+        android:strokeColor="#40FFFFFF" android:strokeWidth="7" />
+    <path android:pathData="M54,32 a22,22 0 1,1 0,44 a22,22 0 1,1 0,-44"
+        android:strokeColor="#FFFFFFFF" android:strokeWidth="7" android:strokeLineCap="round" android:trimPathEnd="0.7" />
+    <path android:pathData="M48.5,54 a5.5,5.5 0 1,0 11,0 a5.5,5.5 0 1,0 -11,0" android:fillColor="#FFFFD54F" />
+</vector>

@@ -113,6 +113,11 @@ jobs:
             --title "Preview $GITHUB_REF_NAME — ${{ steps.version.outputs.name }}" \
             --notes-file "$RUNNER_TEMP/notes.md" \
             --prerelease --latest=false
+          # Captures des widgets jointes à la pré-release (consultables sans compte Actions).
+          if [ -d app/build/widget-screenshots ] && [ -n "$(ls -A app/build/widget-screenshots)" ]; then
+            (cd app/build/widget-screenshots && zip -q -r "$RUNNER_TEMP/widget-screenshots.zip" .)
+            gh release upload "${{ steps.version.outputs.tag }}" "$RUNNER_TEMP/widget-screenshots.zip" --clobber
+          fi
 
       - name: Suppression du keystore
         if: always()

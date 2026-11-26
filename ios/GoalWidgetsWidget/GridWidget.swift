@@ -186,16 +186,18 @@ struct DotGridView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let layout = DotGridLayout.fit(count: grid.cells.count, in: proxy.size)
+            // `GoalCore.DotGridLayout` (commun au détail et au widget à graphique), points plafonnés à 30 pt.
+            let layout = DotGridLayout.fit(count: grid.cells.count, width: proxy.size.width, height: proxy.size.height)
+            let pitch = CGFloat(min(layout.pitch, 30))
             Canvas { context, _ in
                 let tint = GoalAppearance.tint(color)
-                let diameter = layout.pitch * 0.72
+                let diameter = pitch * 0.72
                 for (index, cell) in grid.cells.enumerated() {
                     let row = index / layout.columns
                     let column = index % layout.columns
                     let center = CGPoint(
-                        x: (CGFloat(column) + 0.5) * layout.pitch,
-                        y: (CGFloat(row) + 0.5) * layout.pitch
+                        x: (CGFloat(column) + 0.5) * pitch,
+                        y: (CGFloat(row) + 0.5) * pitch
                     )
                     let rect = CGRect(x: center.x - diameter / 2, y: center.y - diameter / 2, width: diameter, height: diameter)
                     let dot = Path(ellipseIn: rect)
@@ -204,11 +206,11 @@ struct DotGridView: View {
                         context.fill(dot, with: .color(tint))
                     case .today:
                         context.fill(dot, with: .color(tint))
-                        let ringInset = -layout.pitch * 0.12
+                        let ringInset = -pitch * 0.12
                         context.stroke(
                             Path(ellipseIn: rect.insetBy(dx: ringInset, dy: ringInset)),
                             with: .color(.primary),
-                            lineWidth: max(1, layout.pitch * 0.08)
+                            lineWidth: max(1, pitch * 0.08)
                         )
                     case .remaining:
                         context.fill(dot, with: .color(tint.opacity(0.25)))
@@ -219,27 +221,5 @@ struct DotGridView: View {
                 }
             }
         }
-    }
-}
-
-/// Grille régulière : nombre de colonnes qui donne les plus gros points dans le rectangle.
-struct DotGridLayout {
-    let columns: Int
-    let pitch: CGFloat
-
-    /// Taille maximale d'un point (périodes courtes : semaine = 7 points).
-    static let maxPitch: CGFloat = 30
-
-    static func fit(count: Int, in size: CGSize) -> DotGridLayout {
-        guard count > 0, size.width > 0, size.height > 0 else { return DotGridLayout(columns: 1, pitch: 0) }
-        var best = DotGridLayout(columns: count, pitch: 0)
-        for columns in 1...count {
-            let rows = (count + columns - 1) / columns
-            let pitch = min(size.width / CGFloat(columns), size.height / CGFloat(rows))
-            if pitch > best.pitch {
-                best = DotGridLayout(columns: columns, pitch: pitch)
-            }
-        }
-        return DotGridLayout(columns: best.columns, pitch: min(best.pitch, maxPitch))
     }
 }

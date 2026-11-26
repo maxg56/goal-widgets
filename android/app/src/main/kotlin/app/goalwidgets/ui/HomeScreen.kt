@@ -68,7 +68,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import app.goalwidgets.GoalWidgetsApplication
 import app.goalwidgets.R
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.CountdownEngine
 import app.goalwidgets.core.GoalKind
 import app.goalwidgets.core.GoalOrder
@@ -209,6 +211,24 @@ private fun HomeMenu(order: GoalOrder, actions: HomeActions) {
                     text = { Text(stringResource(label)) },
                     onClick = { open = false; actions.onOrderChange(value) },
                     leadingIcon = { if (order == value) Icon(Icons.Filled.Check, contentDescription = null) },
+                )
+            }
+            HorizontalDivider()
+            // Réglage général de l'unité des graphiques ; chaque objectif peut le remplacer.
+            val app = LocalContext.current.applicationContext as GoalWidgetsApplication
+            val resources = LocalContext.current.resources
+            val chartUnit = globalChartUnit()
+            Text(
+                text = stringResource(R.string.chart_unit_menu_title),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            )
+            ChartUnit.entries.forEach { unit ->
+                DropdownMenuItem(
+                    text = { Text(GoalLabels.chartUnit(resources, unit)) },
+                    onClick = { open = false; app.setGlobalChartUnit(unit) },
+                    leadingIcon = { if (chartUnit == unit) Icon(Icons.Filled.Check, contentDescription = null) },
                 )
             }
             HorizontalDivider()

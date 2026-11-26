@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 4,
-    "identityHash": "00000000000000000000000000000004",
+    "identityHash": "828c650b77333f6a9c21444fe70917a2",
     "entities": [
       {
         "tableName": "goals",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `kind` TEXT NOT NULL, `startEpochDay` INTEGER NOT NULL, `targetEpochDay` INTEGER, `createdAtMillis` INTEGER NOT NULL, `uid` TEXT NOT NULL DEFAULT '', `color` TEXT, `emoji` TEXT, `notificationsEnabled` INTEGER NOT NULL DEFAULT 0, `streak` INTEGER NOT NULL DEFAULT 0, `streakHistory` TEXT NOT NULL DEFAULT '')",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, `kind` TEXT NOT NULL, `startEpochDay` INTEGER NOT NULL, `targetEpochDay` INTEGER, `createdAtMillis` INTEGER NOT NULL, `uid` TEXT NOT NULL DEFAULT '', `color` TEXT, `emoji` TEXT, `notificationsEnabled` INTEGER NOT NULL DEFAULT 0, `chartUnit` TEXT)",
         "fields": [
           {
             "fieldPath": "id",
@@ -71,18 +71,10 @@
             "defaultValue": "0"
           },
           {
-            "fieldPath": "streak",
-            "columnName": "streak",
-            "affinity": "INTEGER",
-            "notNull": true,
-            "defaultValue": "0"
-          },
-          {
-            "fieldPath": "streakHistory",
-            "columnName": "streakHistory",
+            "fieldPath": "chartUnit",
+            "columnName": "chartUnit",
             "affinity": "TEXT",
-            "notNull": true,
-            "defaultValue": "''"
+            "notNull": false
           }
         ],
         "primaryKey": {
@@ -108,7 +100,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '00000000000000000000000000000004')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '828c650b77333f6a9c21444fe70917a2')"
     ]
   }
 }

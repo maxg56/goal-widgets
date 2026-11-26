@@ -13,10 +13,9 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 /**
- * Migration Room 3 → 4 (compteurs « série ») rejouée sur un vrai SQLite (JDBC, en JVM), sur le
- * modèle de [Migration2To3Test] : aucune donnée perdue, remise à zéro désactivée et historique vide
- * pour les objectifs existants, table identique à une installation neuve en v4. Vérifie aussi la
- * chaîne complète 1 → 2 → 3 → 4.
+ * Migration Room 3 → 4 (`chartUnit`) rejouée sur un vrai SQLite (JDBC, en JVM), sur le modèle de
+ * [Migration2To3Test] : aucune donnée perdue, unité `NULL` (héritée du réglage général) pour les
+ * objectifs existants, et table identique à une installation neuve en v4 (`schemas/.../4.json`).
  */
 class Migration3To4Test {
 
@@ -61,7 +60,7 @@ class Migration3To4Test {
     private val v3Columns = "id, title, kind, startEpochDay, targetEpochDay, createdAtMillis, uid, color, emoji, notificationsEnabled"
 
     @Test
-    fun `aucune donnée perdue, pas de série pour les objectifs existants`() {
+    fun `aucune donnée perdue et unité des graphiques héritée pour les objectifs existants`() {
         val db = memoryDb()
         db.createFromSchema(3)
         db.exec(
@@ -74,7 +73,7 @@ class Migration3To4Test {
         db.migrate()
 
         assertEquals(before, db.rows("SELECT $v3Columns FROM goals ORDER BY id"))
-        assertEquals(listOf(listOf<Any?>(0, ""), listOf<Any?>(0, "")), db.rows("SELECT streak, streakHistory FROM goals ORDER BY id"))
+        assertEquals(listOf(listOf<Any?>(null), listOf<Any?>(null)), db.rows("SELECT chartUnit FROM goals ORDER BY id"))
     }
 
     @Test

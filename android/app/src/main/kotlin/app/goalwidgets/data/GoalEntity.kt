@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.ExportedGoal
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalColor
@@ -43,12 +44,14 @@ data class GoalEntity(
      * pour les nouveaux objectifs : l'autorisation est demandée quand l'utilisateur les active.
      */
     @ColumnInfo(defaultValue = "0") val notificationsEnabled: Boolean = false,
+    /** Valeur `ChartUnit.wire`, ou `null` = comme le réglage général (v4). Non exportée. */
+    val chartUnit: String? = null,
     /**
-     * Compteur « depuis » marqué « série » : bouton de remise à zéro, record et historique (v4).
+     * Compteur « depuis » marqué « série » : bouton de remise à zéro, record et historique (v5).
      * Ignoré pour un compte à rebours.
      */
     @ColumnInfo(defaultValue = "0") val streak: Boolean = false,
-    /** Séries terminées, ordre chronologique (`Streaks.encode`, v4). Conservé si [streak] est désactivé. */
+    /** Séries terminées, ordre chronologique (`Streaks.encode`, v5). Conservé si [streak] est désactivé. */
     @ColumnInfo(defaultValue = "") val streakHistory: String = "",
 ) {
     fun toGoal(): Goal = Goal(
@@ -58,7 +61,7 @@ data class GoalEntity(
         title = title,
     )
 
-    fun style(): GoalStyle = GoalStyle(GoalColor.fromWire(color), emoji)
+    fun style(): GoalStyle = GoalStyle(GoalColor.fromWire(color), emoji, ChartUnit.fromWire(chartUnit))
 
     /** Remise à zéro proposée : compteur « depuis » marqué « série ». */
     val isStreak: Boolean get() = streak && kind == GoalKind.SINCE.wire
@@ -92,6 +95,7 @@ data class GoalEntity(
             color = style.color?.wire,
             emoji = style.emoji,
             notificationsEnabled = notificationsEnabled,
+            chartUnit = style.chartUnit?.wire,
             streak = streak,
         )
 

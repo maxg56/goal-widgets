@@ -79,13 +79,13 @@ interface GoalDao {
     }
 
     /**
-     * Remplace le contenu modifiable d'un objectif (titre, type, dates, couleur, emoji) en conservant
+     * Remplace le contenu modifiable d'un objectif (titre, type, dates, couleur, emoji, unité des graphiques) en conservant
      * son `id` (les widgets qui y sont liés restent valides), son `uid` et son `createdAtMillis`.
      * Renvoie le nombre de lignes modifiées (0 si l'objectif n'existe plus).
      */
     @Query(
         "UPDATE goals SET title = :title, kind = :kind, startEpochDay = :startEpochDay, " +
-            "targetEpochDay = :targetEpochDay, color = :color, emoji = :emoji WHERE id = :id",
+            "targetEpochDay = :targetEpochDay, color = :color, emoji = :emoji, chartUnit = :chartUnit WHERE id = :id",
     )
     suspend fun updateContent(
         id: Long,
@@ -95,6 +95,7 @@ interface GoalDao {
         targetEpochDay: Long?,
         color: String?,
         emoji: String?,
+        chartUnit: String?,
     ): Int
 
     /**
@@ -112,10 +113,11 @@ interface GoalDao {
         targetEpochDay: Long?,
         color: String?,
         emoji: String?,
+        chartUnit: String?,
         notificationsEnabled: Boolean?,
         streak: Boolean?,
     ): Int {
-        val updated = updateContent(id, title, kind, startEpochDay, targetEpochDay, color, emoji)
+        val updated = updateContent(id, title, kind, startEpochDay, targetEpochDay, color, emoji, chartUnit)
         if (notificationsEnabled != null) setNotificationsEnabled(id, notificationsEnabled)
         if (streak != null) setStreak(id, streak)
         return updated

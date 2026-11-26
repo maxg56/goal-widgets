@@ -37,6 +37,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import app.goalwidgets.GoalWidgetsApplication
 import app.goalwidgets.R
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.DotGrid
 import app.goalwidgets.core.DotGridLayout
 import app.goalwidgets.core.DotPeriod
@@ -72,6 +73,7 @@ class DotGridWidget : GlanceAppWidget() {
             val goals by dao.observeAll().collectAsState(initial = null)
             val goalId = currentState(GoalWidgets.GOAL_ID)
             val period = DotPeriod.fromWire(currentState(GoalWidgets.PERIOD)) ?: DotPeriod.WHOLE
+            val globalUnit by (context.applicationContext as GoalWidgetsApplication).chartSettings.global.collectAsState()
             GlanceTheme {
                 val rows = goals
                 if (rows == null) {
@@ -85,7 +87,7 @@ class DotGridWidget : GlanceAppWidget() {
                     val style = row?.style() ?: GoalStyle.NONE
                     when (content) {
                         is WidgetContent.Showing -> Background(GlanceModifier.clickable(openGoal(context, content.goalId))) {
-                            GridBody(content, style, DotGrid.compute(row!!.toGoal(), today, period), period)
+                            GridBody(content, style, DotGrid.compute(row!!.toGoal(), today, period, ChartUnit.resolve(style.chartUnit, globalUnit)), period)
                         }
                         is WidgetContent.GoalDeleted -> Background(GlanceModifier.clickable(chooseGoal(context, appWidgetId))) {
                             Message(context.getString(R.string.widget_goal_deleted))

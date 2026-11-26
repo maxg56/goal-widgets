@@ -78,6 +78,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -126,6 +128,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import app.goalwidgets.R
 import app.goalwidgets.core.Breakdown
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.CountdownEngine
 import app.goalwidgets.core.DraftError
 import app.goalwidgets.core.Goal
@@ -172,6 +175,8 @@ fun GoalFormScreen(
     var targetDate by rememberSaveable { mutableStateOf(initial?.targetDate) }
     var color by rememberSaveable { mutableStateOf(existing?.style?.color) }
     var emoji by rememberSaveable { mutableStateOf(existing?.style?.emoji) }
+    // `null` = comme le réglage général.
+    var chartUnit by rememberSaveable { mutableStateOf(existing?.style?.chartUnit) }
     // Désactivées par défaut, y compris pour un nouvel objectif (même règle qu'iOS).
     var notify by rememberSaveable { mutableStateOf(existing?.notificationsEnabled ?: false) }
     // Option « série » : n'a d'effet (et n'est proposée) que pour un compteur « depuis ».
@@ -184,7 +189,7 @@ fun GoalFormScreen(
     val errors = if (attempted) draft.errors() else emptySet()
     val canContinueAsSince = initial != null && initial.kind == GoalKind.COUNTDOWN &&
         CountdownEngine.compute(initial, today).phase == Phase.REACHED
-    val style = GoalStyle(color, emoji?.trim()?.takeIf { it.isNotEmpty() })
+    val style = GoalStyle(color, emoji?.trim()?.takeIf { it.isNotEmpty() }, chartUnit)
     val base by animateColorAsState(GoalTint.deepColor(style), spring(stiffness = Spring.StiffnessLow), label = "base")
 
     val scope = rememberCoroutineScope()
@@ -224,6 +229,7 @@ fun GoalFormScreen(
                 Section(stringResource(R.string.goal_form_emoji), Modifier.bringIntoViewRequester(emojiSection)) {
                     EmojiPicker(style.emoji, emoji, base) { emoji = it }
                 }
+                Section(stringResource(R.string.goal_form_chart_unit)) { ChartUnitPicker(chartUnit, base) { chartUnit = it } }
                 AnimatedVisibility(kind == GoalKind.SINCE, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
                     StreakCard(streak, base) { streak = it }
                 }
@@ -802,6 +808,39 @@ private fun Swatch(fill: Color, label: String, selected: Boolean, onClick: () ->
         AnimatedVisibility(selected, enter = scaleIn(spring(dampingRatio = 0.45f)) + fadeIn(), exit = scaleOut() + fadeOut()) {
             Icon(Icons.Filled.Check, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
         }
+    }
+}
+
+/** Unité des graphiques de cet objectif : « Général (…) » (hérite du menu ⋮) ou une unité propre. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ChartUnitPicker(selected: ChartUnit?, base: Color, onSelect: (ChartUnit?) -> Unit) {
+    val resources = LocalContext.current.resources
+    val global = globalChartUnit()
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            val options = listOf<ChartUnit?>(null) + ChartUnit.entries
+            options.forEach { unit ->
+                val label = if (unit == null) {
+                    stringResource(R.string.chart_unit_inherit, GoalLabels.chartUnit(resources, global))
+                } else {
+                    GoalLabels.chartUnit(resources, unit)
+                }
+                FilterChip(
+                    selected = selected == unit,
+                    onClick = { onSelect(unit) },
+                    label = { Text(label) },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = base.copy(alpha = 0.22f),
+                    ),
+                )
+            }
+        }
+        Text(
+            stringResource(R.string.goal_form_chart_unit_hint),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 

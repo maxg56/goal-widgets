@@ -12,6 +12,15 @@ import androidx.glance.GlanceTheme
 import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
 import androidx.glance.appwidget.GlanceRemoteViews
 import app.goalwidgets.core.ChartKind
+import app.goalwidgets.core.ChartUnit
+import app.goalwidgets.core.CountdownEngine
+import app.goalwidgets.core.DotGrid
+import app.goalwidgets.core.DotPeriod
+import app.goalwidgets.core.WidgetContent
+import androidx.glance.GlanceModifier
+import androidx.glance.layout.Box
+import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.padding
 import app.goalwidgets.core.GoalOrder
 import app.goalwidgets.data.GoalEntity
 import app.goalwidgets.core.Goal
@@ -80,6 +89,27 @@ class WidgetScreenshots {
         }
         for (night in listOf(false, true)) {
             render(night, 320f, 230f, File(out, "${if (night) "night" else "day"}-list.png")) { ListBody(rows, GoalOrder.CLOSEST_DATE, today) }
+        }
+    }
+
+    @Test
+    fun renderGrid() {
+        assumeTrue(System.getProperty("widgetScreenshots") == "true")
+        val out = File(System.getProperty("widgetScreenshotsDir")!!).apply { mkdirs() }
+        val (goal, style, _) = goals[0]
+        val content = WidgetContent.Showing(1, goal.title, CountdownEngine.compute(goal, today))
+        for (night in listOf(false, true)) {
+            for (theme in WidgetTheme.entries) {
+                for (period in DotPeriod.entries) {
+                    val file = File(out, "${if (night) "night" else "day"}-${theme.wire}-grid-${period.wire}.png")
+                    render(night, 320f, 160f, file) {
+                        val palette = WidgetPalette.of(theme, style)
+                        Box(palette.background(GlanceModifier.fillMaxSize(), style, 320f, 160f).padding(12.dp)) {
+                            GridBody(content, style, DotGrid.compute(goal, today, period, ChartUnit.AUTO), period, palette)
+                        }
+                    }
+                }
+            }
         }
     }
 

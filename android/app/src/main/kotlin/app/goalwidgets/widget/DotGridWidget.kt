@@ -44,6 +44,9 @@ import app.goalwidgets.core.DotPeriod
 import app.goalwidgets.core.DotState
 import app.goalwidgets.core.GoalStyle
 import app.goalwidgets.core.WidgetContent
+import app.goalwidgets.core.WidgetTheme
+import androidx.glance.appwidget.appWidgetBackground
+import androidx.glance.layout.padding
 import app.goalwidgets.ui.GoalColors
 import app.goalwidgets.ui.GoalLabels
 import app.goalwidgets.ui.titleWithEmoji
@@ -73,6 +76,8 @@ class DotGridWidget : GlanceAppWidget() {
             val goals by dao.observeAll().collectAsState(initial = null)
             val goalId = currentState(GoalWidgets.GOAL_ID)
             val period = DotPeriod.fromWire(currentState(GoalWidgets.PERIOD)) ?: DotPeriod.WHOLE
+            // Grille posée avant les habillages : « Doux » (son apparence d'origine).
+            val theme = currentState(GoalWidgets.THEME)?.let(WidgetTheme::fromWire) ?: WidgetTheme.SOFT
             val globalUnit by (context.applicationContext as GoalWidgetsApplication).chartSettings.global.collectAsState()
             GlanceTheme {
                 val rows = goals
@@ -86,8 +91,16 @@ class DotGridWidget : GlanceAppWidget() {
                     val row = rows.firstOrNull { it.id == goalId }
                     val style = row?.style() ?: GoalStyle.NONE
                     when (content) {
-                        is WidgetContent.Showing -> Background(GlanceModifier.clickable(openGoal(context, content.goalId))) {
-                            GridBody(content, style, DotGrid.compute(row!!.toGoal(), today, period, ChartUnit.resolve(style.chartUnit, globalUnit)), period)
+                        is WidgetContent.Showing -> {
+                            val palette = WidgetPalette.of(theme, style)
+                            val size = LocalSize.current
+                            Box(
+                                palette.background(GlanceModifier.fillMaxSize().appWidgetBackground().systemCorners(), style, size.width.value, size.height.value)
+                                    .clickable(openGoal(context, content.goalId))
+                                    .padding(12.dp),
+                            ) {
+                                GridBody(content, style, DotGrid.compute(row!!.toGoal(), today, period, ChartUnit.resolve(style.chartUnit, globalUnit)), period, palette)
+                            }
                         }
                         is WidgetContent.GoalDeleted -> Background(GlanceModifier.clickable(chooseGoal(context, appWidgetId))) {
                             Message(context.getString(R.string.widget_goal_deleted))
@@ -103,20 +116,17 @@ class DotGridWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun GridBody(content: WidgetContent.Showing, style: GoalStyle, grid: DotGrid, period: DotPeriod) {
+internal fun GridBody(content: WidgetContent.Showing, style: GoalStyle, grid: DotGrid, period: DotPeriod, palette: WidgetPalette) {
     val context = LocalContext.current
-    val accent: ColorProvider = style.color
-        ?.let { ColorProvider(day = GoalColors.light(it), night = GoalColors.dark(it)) }
-        ?: GlanceTheme.colors.primary
     Column(modifier = GlanceModifier.fillMaxSize()) {
         Text(
             text = GoalLabels.status(context.resources, content.state),
-            style = TextStyle(color = accent, fontSize = 20.sp, fontWeight = FontWeight.Bold),
+            style = TextStyle(color = palette.number, fontSize = 20.sp, fontWeight = FontWeight.Bold),
             maxLines = 1,
         )
         Text(
             text = titleWithEmoji(content.title, style.emoji),
-            style = TextStyle(color = GlanceTheme.colors.onSurface, fontSize = 14.sp),
+            style = TextStyle(color = palette.primary, fontSize = 14.sp),
             maxLines = 1,
         )
         Spacer(GlanceModifier.height(8.dp))
@@ -129,9 +139,9 @@ private fun GridBody(content: WidgetContent.Showing, style: GoalStyle, grid: Dot
         val layers = DotGridBitmaps.draw(grid, period, widthPx, heightPx)
         val description = context.getString(R.string.widget_grid_description_a11y)
         Box(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
-            Layer(layers.accent, accent, description)
-            Layer(layers.todayRing, GlanceTheme.colors.onSurface, null)
-            Layer(layers.outside, GlanceTheme.colors.outline, null)
+            Layer(layers.accent, palette.accent, description)
+            Layer(layers.todayRing, palette.primary, null)
+            Layer(layers.outside, palette.secondary, null)
         }
     }
 }

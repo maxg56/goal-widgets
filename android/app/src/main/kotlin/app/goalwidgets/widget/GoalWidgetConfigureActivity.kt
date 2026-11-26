@@ -159,7 +159,7 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
                     isUpdate = goalId != null
                     period = DotPeriod.fromWire(state?.get(GoalWidgets.PERIOD)) ?: DotPeriod.WHOLE
                     chart = WidgetChartConfig.decode(state?.get(GoalWidgets.CHART), state?.get(GoalWidgets.HIDDEN))
-                    theme = WidgetTheme.fromWire(state?.get(GoalWidgets.THEME))
+                    theme = state?.get(GoalWidgets.THEME)?.let(WidgetTheme::fromWire) ?: if (isGrid) WidgetTheme.SOFT else WidgetTheme.DEFAULT
                 }
                 val list = goals
                 WidgetConfigScreen(
@@ -183,7 +183,7 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
                     onConfirm = { id ->
                         lifecycleScope.launch {
                             val context = this@GoalWidgetConfigureActivity
-                            GoalWidgets.assign(context, appWidgetId, id, period.takeIf { isGrid }, chart.takeUnless { isGrid }, theme.takeUnless { isGrid })
+                            GoalWidgets.assign(context, appWidgetId, id, period.takeIf { isGrid }, chart.takeUnless { isGrid }, theme)
                             MidnightRefresh.schedule(context)
                             setResult(RESULT_OK, result)
                             finish()
@@ -253,6 +253,10 @@ private fun WidgetConfigScreen(
                     }
                     Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                         if (isGrid) {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                SectionTitle(stringResource(R.string.widget_config_theme))
+                                ThemeChoices(selected, theme, onTheme)
+                            }
                             PeriodChoice(period, base, onPeriod)
                         } else {
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {

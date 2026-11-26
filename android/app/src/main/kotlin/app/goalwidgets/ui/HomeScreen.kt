@@ -86,7 +86,7 @@ class HomeActions(
 )
 
 /**
- * Accueil « Mes objectifs » : grandes cartes en dégradé de la couleur de l'objectif, chiffre géant,
+ * Accueil « Mes objectifs » : cartes compactes en dégradé de la couleur de l'objectif, grand chiffre,
  * anneau de progression ; appui → détail (transition partagée [sharedCard]). En-tête : frise de tous
  * les objectifs, réglages des notifications, menu ⋮ (tri, export, import).
  */
@@ -148,7 +148,7 @@ fun HomeScreen(
                 LazyColumn(
                     state = listState,
                     contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
                     itemsIndexed(goals, key = { _, g -> g.id }) { index, stored ->
                         HeroCard(
@@ -223,62 +223,78 @@ private fun HeroCard(stored: StoredGoal, today: LocalDate, enterIndex: Int?, onC
             .fillMaxWidth()
             .staggeredEnter(enterIndex)
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .clip(RoundedCornerShape(32.dp))
-            .background(Brush.linearGradient(GoalTint.gradient(base), start = Offset.Zero, end = Offset(900f, 1100f)))
+            .clip(RoundedCornerShape(24.dp))
+            .background(Brush.linearGradient(GoalTint.gradient(base), start = Offset.Zero, end = Offset(900f, 600f)))
             .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = onClick),
     ) {
-        // Emoji géant en filigrane, débordant du coin.
+        // Emoji en filigrane, débordant du coin.
         emoji?.let {
             Text(
                 text = it,
-                fontSize = 150.sp,
-                modifier = Modifier.align(Alignment.TopEnd).offset(x = 36.dp, y = (-40).dp).graphicsLayer { alpha = 0.16f },
+                fontSize = 84.sp,
+                modifier = Modifier.align(Alignment.TopEnd).offset(x = 20.dp, y = (-24).dp).graphicsLayer { alpha = 0.14f },
             )
         }
-        Column(Modifier.padding(24.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                emoji?.let {
-                    Box(
-                        Modifier.size(44.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.18f)),
-                        contentAlignment = Alignment.Center,
-                    ) { Text(it, fontSize = 22.sp) }
-                    Spacer(Modifier.width(12.dp))
-                }
+        // Carte compacte : emoji, titre + chiffre + légende, anneau à droite.
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            emoji?.let {
+                Box(
+                    Modifier.size(40.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.18f)),
+                    contentAlignment = Alignment.Center,
+                ) { Text(it, fontSize = 20.sp) }
+                Spacer(Modifier.width(12.dp))
+            }
+            Column(Modifier.weight(1f)) {
                 Text(
                     text = goal.title,
                     color = Color.White,
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
-            }
-            Spacer(Modifier.height(20.dp))
-            Row(verticalAlignment = Alignment.Bottom) {
-                Column(Modifier.weight(1f)) {
-                    val number = GoalLabels.bigNumber(resources, state)
+                val number = GoalLabels.bigNumber(resources, state)
+                Row {
                     Text(
                         text = number,
                         color = Color.White,
-                        fontSize = bigNumberSize(number, 84),
-                        lineHeight = bigNumberSize(number, 84),
+                        fontSize = bigNumberSize(number, 40),
+                        lineHeight = bigNumberSize(number, 40),
                         fontWeight = FontWeight.Black,
-                        letterSpacing = (-3).sp,
+                        letterSpacing = (-1).sp,
+                        modifier = Modifier.alignByBaseline(),
                     )
-                    Text(GoalLabels.caption(resources, state), color = Color.White.copy(alpha = 0.85f), style = MaterialTheme.typography.titleSmall)
-                    val detail = GoalLabels.breakdown(resources, state.breakdown)
-                        ?: when (goal.kind) {
-                            GoalKind.COUNTDOWN -> goal.targetDate?.let { stringResource(R.string.goal_date_countdown, it.format(DateFormats.long)) }
-                            GoalKind.SINCE -> stringResource(R.string.goal_date_since, goal.startDate.format(DateFormats.long))
-                        }
-                    detail?.let {
-                        Spacer(Modifier.height(6.dp))
-                        Text(it, color = Color.White.copy(alpha = 0.65f), style = MaterialTheme.typography.bodySmall)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        GoalLabels.caption(resources, state),
+                        color = Color.White.copy(alpha = 0.85f),
+                        style = MaterialTheme.typography.titleSmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.alignByBaseline(),
+                    )
+                }
+                val detail = GoalLabels.breakdown(resources, state.breakdown)
+                    ?: when (goal.kind) {
+                        GoalKind.COUNTDOWN -> goal.targetDate?.let { stringResource(R.string.goal_date_countdown, it.format(DateFormats.long)) }
+                        GoalKind.SINCE -> stringResource(R.string.goal_date_since, goal.startDate.format(DateFormats.long))
                     }
+                detail?.let {
+                    Text(
+                        it,
+                        color = Color.White.copy(alpha = 0.65f),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
-                state.progress?.let { progress ->
-                    CardRing(progress = if (ringShown) progress.toFloat() else 0f, percent = state.percent ?: 0)
-                }
+            }
+            state.progress?.let { progress ->
+                Spacer(Modifier.width(12.dp))
+                CardRing(progress = if (ringShown) progress.toFloat() else 0f, percent = state.percent ?: 0)
             }
         }
     }
@@ -294,12 +310,12 @@ private fun CardRing(progress: Float, percent: Int) {
         label = "ring",
     )
     val settled = progress > 0f && kotlin.math.abs(animated - progress) < 0.005f
-    Box(Modifier.size(104.dp), contentAlignment = Alignment.Center) {
-        MiniRing(animated.coerceAtLeast(0f), Modifier.fillMaxSize())
+    Box(Modifier.size(60.dp), contentAlignment = Alignment.Center) {
+        MiniRing(animated.coerceAtLeast(0f), Modifier.fillMaxSize(), stroke = 6.dp)
         Text(
             text = GoalLabels.percent(resources, if (settled) percent else (animated * 100).toInt().coerceIn(0, percent)),
             color = Color.White,
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
         )
     }

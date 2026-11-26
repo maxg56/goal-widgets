@@ -1,0 +1,613 @@
+{
+  "version": 1,
+  "comment": "Graphiques du détail et du widget (modern-ui). Champ chart = arcs | bars | ring | strip. Seuls les champs présents dans expected sont vérifiés ; les nombres à virgule à 1e-6 près. Voir le Journal [modern-ui] pour la définition de chaque champ.",
+  "cases": [
+    {
+      "name": "arcs : compte à rebours de 21 jours, un arc par semaine (lundi → dimanche)",
+      "chart": "arcs",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-11-20",
+        "targetDate": "2026-12-10"
+      },
+      "today": "2026-11-25",
+      "expected": {
+        "unit": "week",
+        "step": 1,
+        "count": 4,
+        "states": "etrr",
+        "elapsed": [
+          3,
+          3,
+          0,
+          0
+        ],
+        "current": 1,
+        "first": {
+          "start": "2026-11-20",
+          "end": "2026-11-22"
+        },
+        "last": {
+          "start": "2026-12-07",
+          "end": "2026-12-10"
+        }
+      }
+    },
+    {
+      "name": "arcs : 62 jours, encore par semaine",
+      "chart": "arcs",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-03-03"
+      },
+      "today": "2026-01-10",
+      "expected": {
+        "unit": "week"
+      }
+    },
+    {
+      "name": "arcs : 63 jours, par mois",
+      "chart": "arcs",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-03-04"
+      },
+      "today": "2026-01-10",
+      "expected": {
+        "unit": "month",
+        "count": 3
+      }
+    },
+    {
+      "name": "arcs : neuf mois, un arc par mois calendaire rogné au départ et à la cible",
+      "chart": "arcs",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-15",
+        "targetDate": "2026-09-30"
+      },
+      "today": "2026-03-10",
+      "expected": {
+        "unit": "month",
+        "step": 1,
+        "count": 9,
+        "states": "eetrrrrrr",
+        "elapsed": [
+          17,
+          28,
+          10,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "current": 2,
+        "first": {
+          "start": "2026-01-15",
+          "end": "2026-01-31"
+        },
+        "last": {
+          "start": "2026-09-01",
+          "end": "2026-09-30"
+        }
+      }
+    },
+    {
+      "name": "arcs : douze mois calendaires, encore par mois",
+      "chart": "arcs",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-15",
+        "targetDate": "2026-12-31"
+      },
+      "today": "2026-03-01",
+      "expected": {
+        "unit": "month",
+        "count": 12
+      }
+    },
+    {
+      "name": "arcs : treize mois calendaires, un arc par an",
+      "chart": "arcs",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-15",
+        "targetDate": "2027-01-01"
+      },
+      "today": "2026-03-01",
+      "expected": {
+        "unit": "year",
+        "step": 1,
+        "count": 2,
+        "states": "tr",
+        "elapsed": [
+          46,
+          0
+        ],
+        "current": 0,
+        "first": {
+          "start": "2026-01-15",
+          "end": "2026-12-31"
+        },
+        "last": {
+          "start": "2027-01-01",
+          "end": "2027-01-01"
+        }
+      }
+    },
+    {
+      "name": "arcs : depuis 17 années civiles, un arc pour 2 ans (au plus 12 arcs), fin à aujourd'hui",
+      "chart": "arcs",
+      "goal": {
+        "kind": "since",
+        "startDate": "2010-06-15"
+      },
+      "today": "2026-11-26",
+      "expected": {
+        "unit": "year",
+        "step": 2,
+        "count": 9,
+        "states": "eeeeeeeet",
+        "current": 8,
+        "first": {
+          "start": "2010-06-15",
+          "end": "2011-12-31"
+        },
+        "last": {
+          "start": "2026-01-01",
+          "end": "2026-11-26"
+        }
+      }
+    },
+    {
+      "name": "arcs : depuis aujourd'hui, un seul arc entamé",
+      "chart": "arcs",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-11-26"
+      },
+      "today": "2026-11-26",
+      "expected": {
+        "unit": "week",
+        "count": 1,
+        "states": "t",
+        "elapsed": [
+          1
+        ],
+        "current": 0
+      }
+    },
+    {
+      "name": "arcs : depuis une date future (tolérée), ramené à aujourd'hui",
+      "chart": "arcs",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-12-01"
+      },
+      "today": "2026-11-26",
+      "expected": {
+        "unit": "week",
+        "count": 1,
+        "states": "t",
+        "first": {
+          "start": "2026-11-26",
+          "end": "2026-11-26"
+        }
+      }
+    },
+    {
+      "name": "arcs : compte à rebours pas encore commencé, aucun arc en cours",
+      "chart": "arcs",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-12-01",
+        "targetDate": "2026-12-20"
+      },
+      "today": "2026-11-26",
+      "expected": {
+        "unit": "week",
+        "states": "rrr",
+        "elapsed": [
+          0,
+          0,
+          0
+        ],
+        "current": null
+      }
+    },
+    {
+      "name": "barres : moins de 3 semaines, une barre par jour, hauteur = chemin cumulé",
+      "chart": "bars",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-11-20",
+        "targetDate": "2026-11-30"
+      },
+      "today": "2026-11-25",
+      "expected": {
+        "unit": "day",
+        "count": 11,
+        "states": "eeeeetrrrrr",
+        "todayIndex": 5,
+        "heights": [
+          0.09090909090909091,
+          0.18181818181818182,
+          0.2727272727272727,
+          0.36363636363636365,
+          0.45454545454545453,
+          0.5454545454545454,
+          0.6363636363636364,
+          0.7272727272727273,
+          0.8181818181818182,
+          0.9090909090909091,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "barres : moins de 3 mois, une barre par semaine ; hauteur minimale 0,06",
+      "chart": "bars",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-03-31"
+      },
+      "today": "2026-02-04",
+      "expected": {
+        "unit": "week",
+        "count": 14,
+        "states": "eeeeetrrrrrrrr",
+        "todayIndex": 5,
+        "first": {
+          "start": "2026-01-01",
+          "end": "2026-01-04"
+        },
+        "last": {
+          "start": "2026-03-30",
+          "end": "2026-03-31"
+        }
+      }
+    },
+    {
+      "name": "barres : hauteurs des semaines (4/90 relevé à 0,06)",
+      "chart": "bars",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-03-31"
+      },
+      "today": "2026-02-04",
+      "expected": {
+        "heights": [
+          0.06,
+          0.12222222222222222,
+          0.2,
+          0.2777777777777778,
+          0.35555555555555557,
+          0.43333333333333335,
+          0.5111111111111111,
+          0.5888888888888889,
+          0.6666666666666666,
+          0.7444444444444445,
+          0.8222222222222222,
+          0.9,
+          0.9777777777777777,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "barres : 3 mois pile, une barre par mois",
+      "chart": "bars",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-15",
+        "targetDate": "2026-04-15"
+      },
+      "today": "2026-03-10",
+      "expected": {
+        "unit": "month",
+        "count": 4,
+        "states": "eetr",
+        "todayIndex": 2,
+        "heights": [
+          0.18681318681318682,
+          0.4945054945054945,
+          0.8351648351648352,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "barres : fenêtre de 30 barres sur un « depuis » de 131 mois, aujourd'hui à droite",
+      "chart": "bars",
+      "goal": {
+        "kind": "since",
+        "startDate": "2016-01-01"
+      },
+      "today": "2026-11-26",
+      "maxBars": 30,
+      "expected": {
+        "unit": "month",
+        "count": 131,
+        "todayIndex": 130,
+        "window": {
+          "from": 101,
+          "to": 130
+        }
+      }
+    },
+    {
+      "name": "barres : fenêtre centrée aux deux tiers sur aujourd'hui",
+      "chart": "bars",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2020-01-01",
+        "targetDate": "2029-12-31"
+      },
+      "today": "2024-06-15",
+      "maxBars": 24,
+      "expected": {
+        "count": 120,
+        "todayIndex": 53,
+        "window": {
+          "from": 37,
+          "to": 60
+        }
+      }
+    },
+    {
+      "name": "barres : fenêtre plus large que le graphique = toutes les barres",
+      "chart": "bars",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-15",
+        "targetDate": "2026-04-15"
+      },
+      "today": "2026-03-10",
+      "maxBars": 30,
+      "expected": {
+        "window": {
+          "from": 0,
+          "to": 3
+        }
+      }
+    },
+    {
+      "name": "barres : compte à rebours pas commencé, fenêtre au début, aucune barre du jour",
+      "chart": "bars",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2027-01-01",
+        "targetDate": "2029-12-31"
+      },
+      "today": "2026-11-26",
+      "maxBars": 12,
+      "expected": {
+        "todayIndex": null,
+        "window": {
+          "from": 0,
+          "to": 11
+        }
+      }
+    },
+    {
+      "name": "anneau : compte à rebours à mi-parcours = progression du moteur",
+      "chart": "ring",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-06",
+      "expected": {
+        "fraction": 0.5,
+        "percent": 50,
+        "date": "2026-01-11",
+        "daysLeft": 5,
+        "milestone": null
+      }
+    },
+    {
+      "name": "anneau : compte à rebours atteint, plein, 0 jour restant",
+      "chart": "ring",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-11"
+      },
+      "today": "2026-01-20",
+      "expected": {
+        "fraction": 1.0,
+        "percent": 100,
+        "date": "2026-01-11",
+        "daysLeft": 0,
+        "milestone": null
+      }
+    },
+    {
+      "name": "anneau : depuis moins d'un mois, vers 1 mois",
+      "chart": "ring",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-11-10"
+      },
+      "today": "2026-11-26",
+      "expected": {
+        "fraction": 0.5333333333333333,
+        "percent": 53,
+        "date": "2026-12-10",
+        "daysLeft": 14,
+        "milestone": {
+          "unit": "month",
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "anneau : 1 mois atteint (31 janvier → 28 février), vers 1 an depuis le départ",
+      "chart": "ring",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-01-31"
+      },
+      "today": "2026-02-28",
+      "expected": {
+        "fraction": 0.07671232876712329,
+        "percent": 7,
+        "date": "2027-01-31",
+        "daysLeft": 337,
+        "milestone": {
+          "unit": "year",
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "anneau : 1 an atteint le 28 février pour un départ un 29 février, vers 2 ans",
+      "chart": "ring",
+      "goal": {
+        "kind": "since",
+        "startDate": "2024-02-29"
+      },
+      "today": "2025-02-28",
+      "expected": {
+        "fraction": 0.0,
+        "percent": 0,
+        "date": "2026-02-28",
+        "daysLeft": 365,
+        "milestone": {
+          "unit": "year",
+          "count": 2
+        }
+      }
+    },
+    {
+      "name": "anneau : depuis 6 ans et 8 mois, vers le 7e anniversaire",
+      "chart": "ring",
+      "goal": {
+        "kind": "since",
+        "startDate": "2020-03-15"
+      },
+      "today": "2026-11-26",
+      "expected": {
+        "fraction": 0.7013698630136986,
+        "percent": 70,
+        "date": "2027-03-15",
+        "daysLeft": 109,
+        "milestone": {
+          "unit": "year",
+          "count": 7
+        }
+      }
+    },
+    {
+      "name": "anneau : depuis une date future, vide, 1 mois après le départ",
+      "chart": "ring",
+      "goal": {
+        "kind": "since",
+        "startDate": "2026-12-01"
+      },
+      "today": "2026-11-26",
+      "expected": {
+        "fraction": 0.0,
+        "percent": 0,
+        "date": "2027-01-01",
+        "daysLeft": 36,
+        "milestone": {
+          "unit": "month",
+          "count": 1
+        }
+      }
+    },
+    {
+      "name": "frise : compte à rebours en cours, de départ à cible, une graduation au 1er de chaque mois",
+      "chart": "strip",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-12-31"
+      },
+      "today": "2026-03-01",
+      "expected": {
+        "start": "2026-01-01",
+        "end": "2026-12-31",
+        "target": "2026-12-31",
+        "solidEnd": "2026-12-31",
+        "startPosition": 0.0,
+        "todayPosition": 0.1620879120879121,
+        "targetPosition": 1.0,
+        "tickCount": 11,
+        "firstTick": "2026-02-01",
+        "lastTick": "2026-12-01",
+        "yearTicks": []
+      }
+    },
+    {
+      "name": "frise : depuis, marge après aujourd'hui (un dixième de l'étendue, au moins 10 jours), 1er janvier marqués",
+      "chart": "strip",
+      "goal": {
+        "kind": "since",
+        "startDate": "2025-11-15"
+      },
+      "today": "2026-11-26",
+      "expected": {
+        "start": "2025-11-15",
+        "end": "2027-01-02",
+        "target": null,
+        "solidEnd": "2026-11-26",
+        "todayPosition": 0.910411622276029,
+        "targetPosition": null,
+        "tickCount": 14,
+        "firstTick": "2025-12-01",
+        "lastTick": "2027-01-01",
+        "yearTicks": [
+          "2026-01-01",
+          "2027-01-01"
+        ]
+      }
+    },
+    {
+      "name": "frise : cible dépassée, prolongée après aujourd'hui (au moins 10 jours)",
+      "chart": "strip",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-01-01",
+        "targetDate": "2026-01-31"
+      },
+      "today": "2026-02-10",
+      "expected": {
+        "start": "2026-01-01",
+        "end": "2026-02-20",
+        "solidEnd": "2026-01-31",
+        "todayPosition": 0.8,
+        "targetPosition": 0.6,
+        "tickCount": 1
+      }
+    },
+    {
+      "name": "frise : départ futur, la frise commence aujourd'hui et le départ est placé plus loin",
+      "chart": "strip",
+      "goal": {
+        "kind": "countdown",
+        "startDate": "2026-12-01",
+        "targetDate": "2026-12-31"
+      },
+      "today": "2026-11-26",
+      "expected": {
+        "start": "2026-11-26",
+        "end": "2026-12-31",
+        "target": "2026-12-31",
+        "startPosition": 0.14285714285714285,
+        "todayPosition": 0.0,
+        "targetPosition": 1.0,
+        "tickCount": 1,
+        "firstTick": "2026-12-01"
+      }
+    }
+  ]
+}

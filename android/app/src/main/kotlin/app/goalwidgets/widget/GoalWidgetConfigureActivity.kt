@@ -22,6 +22,8 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -107,6 +109,7 @@ import app.goalwidgets.core.GoalStyle
 import app.goalwidgets.core.WidgetChartConfig
 import app.goalwidgets.core.WidgetPart
 import app.goalwidgets.core.WidgetSize
+import app.goalwidgets.core.WidgetTheme
 import app.goalwidgets.ui.EditableBlock
 import app.goalwidgets.ui.GoalLabels
 import app.goalwidgets.ui.GoalTint
@@ -148,6 +151,7 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
                 var goalId by remember { mutableStateOf<Long?>(null) }
                 var period by remember { mutableStateOf(DotPeriod.WHOLE) }
                 var chart by remember { mutableStateOf(WidgetChartConfig.DEFAULT) }
+                var theme by remember { mutableStateOf(WidgetTheme.DEFAULT) }
                 var isUpdate by remember { mutableStateOf(false) }
                 LaunchedEffect(appWidgetId) {
                     val state = currentState(appWidgetId)
@@ -155,6 +159,7 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
                     isUpdate = goalId != null
                     period = DotPeriod.fromWire(state?.get(GoalWidgets.PERIOD)) ?: DotPeriod.WHOLE
                     chart = WidgetChartConfig.decode(state?.get(GoalWidgets.CHART), state?.get(GoalWidgets.HIDDEN))
+                    theme = WidgetTheme.fromWire(state?.get(GoalWidgets.THEME))
                 }
                 val list = goals
                 WidgetConfigScreen(
@@ -164,10 +169,12 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
                     isGrid = isGrid,
                     period = period,
                     chart = chart,
+                    theme = theme,
                     isUpdate = isUpdate,
                     onGoal = { goalId = it },
                     onPeriod = { period = it },
                     onChart = { chart = it },
+                    onTheme = { theme = it },
                     onClose = ::finish,
                     onOpenApp = {
                         startActivity(Intent(this, MainActivity::class.java))
@@ -176,7 +183,7 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
                     onConfirm = { id ->
                         lifecycleScope.launch {
                             val context = this@GoalWidgetConfigureActivity
-                            GoalWidgets.assign(context, appWidgetId, id, period.takeIf { isGrid }, chart.takeUnless { isGrid })
+                            GoalWidgets.assign(context, appWidgetId, id, period.takeIf { isGrid }, chart.takeUnless { isGrid }, theme.takeUnless { isGrid })
                             MidnightRefresh.schedule(context)
                             setResult(RESULT_OK, result)
                             finish()
@@ -201,10 +208,12 @@ private fun WidgetConfigScreen(
     isGrid: Boolean,
     period: DotPeriod,
     chart: WidgetChartConfig,
+    theme: WidgetTheme,
     isUpdate: Boolean,
     onGoal: (Long) -> Unit,
     onPeriod: (DotPeriod) -> Unit,
     onChart: (WidgetChartConfig) -> Unit,
+    onTheme: (WidgetTheme) -> Unit,
     onClose: () -> Unit,
     onOpenApp: () -> Unit,
     onConfirm: (Long) -> Unit,
@@ -232,7 +241,7 @@ private fun WidgetConfigScreen(
                 }
                 else -> {
                     if (!isGrid) {
-                        PreviewStage(selected, today, chart, size, base)
+                        PreviewStage(selected, today, chart, theme, size, base)
                         Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             SizeToggle(size, base) { size = it }
                             Text(stringResource(R.string.widget_size_hint), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -246,6 +255,10 @@ private fun WidgetConfigScreen(
                         if (isGrid) {
                             PeriodChoice(period, base, onPeriod)
                         } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                SectionTitle(stringResource(R.string.widget_config_theme))
+                                ThemeChoices(selected, theme, onTheme)
+                            }
                             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                 SectionTitle(stringResource(if (size == WidgetSize.SMALL) R.string.widget_config_chart_small else R.string.widget_config_chart))
                                 ChartChoices(selected, today, chart.chart) { onChart(chart.copy(chart = it)) }
@@ -303,7 +316,7 @@ private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 
 /** Scène d'aperçu : « fond d'écran » doux et vrai rendu du widget (même composition Glance que l'écran d'accueil). */
 @Composable
-private fun PreviewStage(goal: StoredGoal, today: LocalDate, config: WidgetChartConfig, size: WidgetSize, base: Color) {
+private fun PreviewStage(goal: StoredGoal, today: LocalDate, config: WidgetChartConfig, theme: WidgetTheme, size: WidgetSize, base: Color) {
     Box(
         Modifier
             .padding(20.dp)
@@ -327,15 +340,15 @@ private fun PreviewStage(goal: StoredGoal, today: LocalDate, config: WidgetChart
                 contentAlignment = Alignment.Center,
             ) {
                 AnimatedContent(
-                    targetState = Triple(goal, config, size),
+                    targetState = PreviewKey(goal, config, theme, size),
                     transitionSpec = {
                         (fadeIn(spring(stiffness = Spring.StiffnessMediumLow)) + scaleIn(spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow), initialScale = 0.96f)) togetherWith
                             (fadeOut(spring(stiffness = Spring.StiffnessMedium)) + scaleOut(targetScale = 1.02f))
                     },
                     label = "preview",
-                ) { (g, c, s) ->
+                ) { (g, c, th, s) ->
                     val k = minOf(1f, w.value / s.previewWidthDp, h.value / s.previewHeightDp)
-                    WidgetRemoteView(g, today, c, s, Modifier.requiredSize(s.previewWidthDp.dp, s.previewHeightDp.dp).graphicsLayer { scaleX = k; scaleY = k })
+                    WidgetRemoteView(g, today, c, th, s, Modifier.requiredSize(s.previewWidthDp.dp, s.previewHeightDp.dp).graphicsLayer { scaleX = k; scaleY = k })
                 }
             }
         }
@@ -345,13 +358,13 @@ private fun PreviewStage(goal: StoredGoal, today: LocalDate, config: WidgetChart
 /** Rendu réel du widget (RemoteViews composées par Glance, appliquées dans l'app). */
 @OptIn(ExperimentalGlanceRemoteViewsApi::class)
 @Composable
-private fun WidgetRemoteView(goal: StoredGoal, today: LocalDate, config: WidgetChartConfig, size: WidgetSize, modifier: Modifier) {
+private fun WidgetRemoteView(goal: StoredGoal, today: LocalDate, config: WidgetChartConfig, theme: WidgetTheme, size: WidgetSize, modifier: Modifier) {
     val context = LocalContext.current
-    val views by produceState<RemoteViews?>(null, goal, today, config, size) {
+    val views by produceState<RemoteViews?>(null, goal, today, config, theme, size) {
         // API expérimentale : en cas d'échec, pas d'aperçu plutôt qu'un plantage de la configuration.
         value = runCatching {
             GlanceRemoteViews().compose(context, DpSize(size.previewWidthDp.dp, size.previewHeightDp.dp)) {
-                GlanceTheme { ChartWidgetContent(goal.goal, goal.style, today, config, click = null) }
+                GlanceTheme { ChartWidgetContent(goal.goal, goal.style, today, config, theme, click = null) }
             }.remoteViews
         }.getOrNull()
     }
@@ -363,6 +376,53 @@ private fun WidgetRemoteView(goal: StoredGoal, today: LocalDate, config: WidgetC
         },
         modifier = modifier,
     )
+}
+
+private data class PreviewKey(val goal: StoredGoal, val config: WidgetChartConfig, val theme: WidgetTheme, val size: WidgetSize)
+
+/** Habillages proposés : vignette du fond (dégradé, surface du système, nuit) avec un anneau de la couleur. */
+@Composable
+private fun ThemeChoices(goal: StoredGoal, selected: WidgetTheme, onSelect: (WidgetTheme) -> Unit) {
+    val dark = isSystemInDarkTheme()
+    val deep = GoalTint.deepColor(goal.style)
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        WidgetTheme.entries.forEach { theme ->
+            val on = theme == selected
+            val scale by animateFloatAsState(if (on) 1.05f else 1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow), label = "themeChoice")
+            val (bg, fg) = when (theme) {
+                WidgetTheme.VIVID -> Brush.linearGradient(GoalTint.gradient(deep)) to Color.White
+                WidgetTheme.SOFT -> Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.surfaceContainerHigh)) to
+                    GoalTint.accent(goal.style, dark)
+                WidgetTheme.MIDNIGHT -> Brush.linearGradient(listOf(lerp(deep, Color(WidgetBitmaps.MIDNIGHT_BASE), 0.75f), Color(WidgetBitmaps.MIDNIGHT_BASE))) to
+                    GoalTint.accent(goal.style, dark = true)
+            }
+            val name = stringResource(themeLabel(theme))
+            Column(
+                Modifier.weight(1f).scale(scale).clip(RoundedCornerShape(20.dp)).clickable(role = Role.RadioButton) { onSelect(theme) }.padding(vertical = 4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Box(
+                    Modifier
+                        .border(if (on) 3.dp else 0.dp, if (on) MaterialTheme.colorScheme.onSurface else Color.Transparent, RoundedCornerShape(21.dp))
+                        .padding(3.dp)
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(bg),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Box(Modifier.size(30.dp).border(5.dp, fg, CircleShape))
+                }
+                Text(name, fontSize = 12.sp, fontWeight = if (on) FontWeight.Bold else FontWeight.Medium, modifier = Modifier.padding(top = 6.dp))
+            }
+        }
+    }
+}
+
+private fun themeLabel(theme: WidgetTheme) = when (theme) {
+    WidgetTheme.VIVID -> R.string.widget_theme_vivid
+    WidgetTheme.SOFT -> R.string.widget_theme_soft
+    WidgetTheme.MIDNIGHT -> R.string.widget_theme_midnight
 }
 
 @Composable

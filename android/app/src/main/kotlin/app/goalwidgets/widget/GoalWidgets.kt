@@ -10,6 +10,7 @@ import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.appwidget.updateAll
 import app.goalwidgets.core.DotPeriod
 import app.goalwidgets.core.WidgetChartConfig
+import app.goalwidgets.core.WidgetTheme
 
 /**
  * Point d'entrée de l'app vers les widgets ([GoalWidget] « Objectif », à graphique, et [DotGridWidget] « Grille ») :
@@ -30,6 +31,9 @@ object GoalWidgets {
     val CHART = stringPreferencesKey("chart")
     val HIDDEN = stringPreferencesKey("hidden_parts")
 
+    /** Habillage du widget « Objectif » (`WidgetTheme.wire`) ; absent = « Vif » (widgets posés avant les thèmes). */
+    val THEME = stringPreferencesKey("theme")
+
     /** `true` si le widget [appWidgetId] est une « Grille » (l'écran de configuration propose alors la période). */
     fun isDotGrid(context: Context, appWidgetId: Int): Boolean =
         AppWidgetManager.getInstance(context).getAppWidgetInfo(appWidgetId)
@@ -39,7 +43,14 @@ object GoalWidgets {
      * Lie le widget [appWidgetId] à l'objectif [goalId] (création ou changement) et le redessine.
      * [period] n'est utilisé que par la « Grille », [chart] que par le widget « Objectif ».
      */
-    suspend fun assign(context: Context, appWidgetId: Int, goalId: Long, period: DotPeriod? = null, chart: WidgetChartConfig? = null) {
+    suspend fun assign(
+        context: Context,
+        appWidgetId: Int,
+        goalId: Long,
+        period: DotPeriod? = null,
+        chart: WidgetChartConfig? = null,
+        theme: WidgetTheme? = null,
+    ) {
         val glanceId = GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId)
         updateAppWidgetState(context, glanceId) {
             it[GOAL_ID] = goalId
@@ -48,6 +59,7 @@ object GoalWidgets {
                 it[CHART] = chart.chart.wire
                 it[HIDDEN] = chart.encodeHidden()
             }
+            if (theme != null) it[THEME] = theme.wire
         }
         if (isDotGrid(context, appWidgetId)) DotGridWidget().update(context, glanceId) else GoalWidget().update(context, glanceId)
     }
@@ -56,12 +68,13 @@ object GoalWidgets {
     suspend fun refreshAll(context: Context) {
         GoalWidget().updateAll(context)
         DotGridWidget().updateAll(context)
+        GoalListWidget().updateAll(context)
     }
 
     /** Il reste au moins un widget (de l'un ou l'autre type) : l'alarme de minuit est utile. */
     fun hasAny(context: Context): Boolean {
         val manager = AppWidgetManager.getInstance(context)
-        return listOf(GoalWidgetReceiver::class.java, DotGridWidgetReceiver::class.java).any {
+        return listOf(GoalWidgetReceiver::class.java, DotGridWidgetReceiver::class.java, GoalListWidgetReceiver::class.java).any {
             manager.getAppWidgetIds(ComponentName(context, it)).isNotEmpty()
         }
     }

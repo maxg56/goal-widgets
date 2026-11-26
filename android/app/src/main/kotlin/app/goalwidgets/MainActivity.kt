@@ -1,6 +1,5 @@
 package app.goalwidgets
 
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -28,7 +27,8 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import app.goalwidgets.core.GoalOrder
+import app.goalwidgets.widget.GoalListOrder
+import app.goalwidgets.widget.GoalWidgets
 import app.goalwidgets.share.GoalFiles
 import app.goalwidgets.share.GoalSharing
 import app.goalwidgets.ui.AppActions
@@ -192,8 +192,6 @@ class MainActivity : ComponentActivity() {
         /** Certains fournisseurs (Drive, messageries) ne déclarent pas le type JSON. */
         private val IMPORT_MIME_TYPES = arrayOf("application/json", "text/*", "application/octet-stream")
         private val UPDATE_CHECK_INTERVAL = 15.minutes
-        private const val PREFS = "settings"
-        private const val PREF_ORDER = "goal_order"
 
         /** Id (Long) de l'objectif dont le détail s'ouvre (appui sur un widget, une notification…). */
         const val EXTRA_GOAL_ID = "app.goalwidgets.extra.GOAL_ID"
@@ -201,12 +199,15 @@ class MainActivity : ComponentActivity() {
         private val factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as GoalWidgetsApplication
-                val prefs = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                 GoalListViewModel(
                     app.database.goalDao(),
                     onGoalsChanged = app::onGoalsChanged,
-                    initialOrder = GoalOrder.fromWire(prefs.getString(PREF_ORDER, null)),
-                    onOrderChanged = { prefs.edit().putString(PREF_ORDER, it.wire).apply() },
+                    initialOrder = GoalListOrder.read(app),
+                    onOrderChanged = {
+                        GoalListOrder.write(app, it)
+                        // Le widget « Liste » suit le tri de l'app.
+                        app.scope.launch { GoalWidgets.refreshAll(app) }
+                    },
                 )
             }
         }

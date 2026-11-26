@@ -1,6 +1,7 @@
 package app.goalwidgets.widget
 
 import android.graphics.Bitmap
+import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.DashPathEffect
 import android.graphics.LinearGradient
@@ -22,6 +23,7 @@ import app.goalwidgets.core.GoalStrip
 import app.goalwidgets.core.GoalStyle
 import app.goalwidgets.core.RingChart
 import app.goalwidgets.core.SegmentState
+import app.goalwidgets.core.WidgetTheme
 import app.goalwidgets.ui.GoalTint
 import java.time.LocalDate
 import kotlin.math.max
@@ -59,21 +61,52 @@ object WidgetBitmaps {
     /** Un pixel du fond pour 4 dp : un dégradé étiré reste lisse. */
     private const val BACKGROUND_PX_PER_DP = 0.25f
 
-    fun background(style: GoalStyle, widthDp: Float, heightDp: Float): Bitmap {
+    /**
+     * Fond « Vif » : dégradé de la couleur de l'objectif façon « mesh » — éclat clair en haut à droite,
+     * halo d'une teinte voisine en bas à gauche, ombre douce en bas. Fond « Nuit » : presque noir,
+     * halo discret de la couleur de l'objectif. Petit bitmap étiré : un dégradé reste lisse.
+     */
+    fun background(style: GoalStyle, widthDp: Float, heightDp: Float, theme: WidgetTheme = WidgetTheme.VIVID): Bitmap {
         val w = WidgetBitmapBudget.pixels(widthDp, BACKGROUND_PX_PER_DP).coerceAtLeast(8)
         val h = WidgetBitmapBudget.pixels(heightDp, BACKGROUND_PX_PER_DP).coerceAtLeast(8)
         val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val c = Canvas(bmp)
+        val deep = GoalTint.deepColor(style).toArgb()
+        val radius = max(w, h) * 0.75f
+        if (theme == WidgetTheme.MIDNIGHT) {
+            c.drawColor(MIDNIGHT_BASE)
+            glow(c, w * 0.95f, h * 0.0f, radius * 1.1f, withAlpha(GoalTint.accent(style, dark = true).toArgb(), 0.30f))
+            glow(c, w * 0.0f, h * 1.0f, radius * 0.9f, withAlpha(deep, 0.35f))
+            return bmp
+        }
         val stops = GoalTint.gradient(GoalTint.deepColor(style)).map { it.toArgb() }.toIntArray()
         c.drawRect(0f, 0f, w.toFloat(), h.toFloat(), Paint().apply {
             shader = LinearGradient(0f, 0f, w * 0.25f, h.toFloat(), stops, null, Shader.TileMode.CLAMP)
         })
-        val radius = max(w, h) * 0.75f
-        c.drawCircle(w * 0.88f, h * 0.08f, radius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            shader = RadialGradient(w * 0.88f, h * 0.08f, radius, white(0.22f), white(0f), Shader.TileMode.CLAMP)
-        })
+        glow(c, w * 0.05f, h * 0.95f, radius, withAlpha(shiftHue(deep, 28f), 0.55f))
+        glow(c, w * 0.88f, h * 0.08f, radius, white(0.24f))
         return bmp
     }
+
+    private fun glow(c: Canvas, x: Float, y: Float, radius: Float, color: Int) {
+        c.drawCircle(x, y, radius, Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            shader = RadialGradient(x, y, radius, color, color and 0x00FFFFFF, Shader.TileMode.CLAMP)
+        })
+    }
+
+    /** Teinte voisine (décalée de [degrees]) pour le halo du dégradé « Vif ». */
+    private fun shiftHue(color: Int, degrees: Float): Int {
+        val hsv = FloatArray(3)
+        android.graphics.Color.colorToHSV(color, hsv)
+        hsv[0] = (hsv[0] + degrees + 360f) % 360f
+        hsv[1] = (hsv[1] * 1.1f).coerceAtMost(1f)
+        return android.graphics.Color.HSVToColor(hsv)
+    }
+
+    private fun withAlpha(color: Int, alpha: Float): Int = (color and 0x00FFFFFF) or ((alpha.coerceIn(0f, 1f) * 255).toInt() shl 24)
+
+    /** Fond du thème « Nuit » (proche du noir OLED, légèrement bleuté). */
+    const val MIDNIGHT_BASE: Int = 0xFF0B0D12.toInt()
 
     /** Graphique [kind] dans une zone de [widthDp] × [heightDp], à teinter en blanc, découpé selon [unit]. */
     fun chart(
@@ -135,11 +168,24 @@ object WidgetBitmaps {
 
     private fun ring(c: Canvas, r: RectF, fraction: Float) {
         val side = min(r.width(), r.height())
-        val stroke = side * 0.12f
-        val oval = RectF(r.centerX() - side / 2 + stroke / 2, r.centerY() - side / 2 + stroke / 2, r.centerX() + side / 2 - stroke / 2, r.centerY() + side / 2 - stroke / 2)
-        c.drawArc(oval, 0f, 360f, false, stroke(0.22f, stroke, round = false))
+        val stroke = side * 0.11f
+        // Marge pour le halo : il ne doit pas être coupé par le bord du bitmap.
+        val inset = stroke / 2 + stroke * 0.45f
+        val oval = RectF(r.centerX() - side / 2 + inset, r.centerY() - side / 2 + inset, r.centerX() + side / 2 - inset, r.centerY() + side / 2 - inset)
+        c.drawArc(oval, 0f, 360f, false, stroke(0.2f, stroke, round = false))
         val sweep = 360f * fraction.coerceIn(0f, 1f)
-        if (sweep > 0.5f) c.drawArc(oval, -90f, sweep, false, stroke(1f, stroke, round = true))
+        if (sweep > 0.5f) {
+            // Halo flou sous l'arc, l'arc, puis une auréole à son extrémité (« où j'en suis »).
+            c.drawArc(oval, -90f, sweep, false, stroke(0.45f, stroke, round = true).apply { maskFilter = BlurMaskFilter(stroke * 0.45f, BlurMaskFilter.Blur.NORMAL) })
+            c.drawArc(oval, -90f, sweep, false, stroke(1f, stroke, round = true))
+            if (sweep < 359.5f) {
+                val angle = Math.toRadians((sweep - 90f).toDouble())
+                val rad = oval.width() / 2
+                val ex = oval.centerX() + rad * kotlin.math.cos(angle).toFloat()
+                val ey = oval.centerY() + rad * kotlin.math.sin(angle).toFloat()
+                c.drawCircle(ex, ey, stroke * 0.95f, fill(0.3f))
+            }
+        }
     }
 
     private fun arcs(c: Canvas, r: RectF, scale: Float, arcs: ArcsChart) {
@@ -157,6 +203,9 @@ object WidgetBitmaps {
             val sweep = 360f * seg.fill.toFloat()
             if (sweep > 0.5f) {
                 val alpha = if (i == current) 1f else 0.5f + 0.4f * (i + 1) / n
+                if (i == current) {
+                    c.drawArc(oval, -90f, sweep, false, stroke(0.4f, stroke, round = true).apply { maskFilter = BlurMaskFilter(stroke * 0.5f, BlurMaskFilter.Blur.NORMAL) })
+                }
                 c.drawArc(oval, -90f, sweep, false, stroke(alpha, stroke, round = true))
             }
         }

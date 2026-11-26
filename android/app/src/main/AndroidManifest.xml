@@ -89,6 +89,19 @@
                 android:resource="@xml/dot_grid_widget_info" />
         </receiver>
 
+        <!-- Widget « Liste » : tous les objectifs, sans configuration. -->
+        <receiver
+            android:name=".widget.GoalListWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_list_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/goal_list_widget_info" />
+        </receiver>
+
         <activity
             android:name=".widget.GoalWidgetConfigureActivity"
             android:excludeFromRecents="true"

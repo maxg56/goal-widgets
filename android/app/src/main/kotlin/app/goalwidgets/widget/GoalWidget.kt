@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.ColorFilter
@@ -23,6 +22,7 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.appWidgetBackground
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.background
@@ -57,6 +57,8 @@ import app.goalwidgets.core.WidgetContent
 import app.goalwidgets.core.WidgetPart
 import app.goalwidgets.core.WidgetResetTap
 import app.goalwidgets.core.WidgetSize
+import app.goalwidgets.core.WidgetTheme
+import app.goalwidgets.core.Phase
 import app.goalwidgets.ui.DateFormats
 import app.goalwidgets.ui.GoalLabels
 import app.goalwidgets.ui.titleWithEmoji
@@ -70,7 +72,7 @@ import java.time.LocalDate
  * ([GoalWidgets.HIDDEN]). Un widget posé avant l'arrivée des graphiques n'a ni l'un ni l'autre :
  * [WidgetChartConfig.decode] donne l'anneau avec tout affiché, sans migration à écrire.
  * Gabarit selon la taille réelle ([WidgetSize]) : compact (une rangée, dont les anciens 2×1), petit,
- * moyen, grand.
+ * moyen, grand. Habillage ([GoalWidgets.THEME], [WidgetTheme]) : Vif (défaut), Doux ou Nuit.
  */
 class GoalWidget : GlanceAppWidget() {
 
@@ -85,6 +87,7 @@ class GoalWidget : GlanceAppWidget() {
             val goals by dao.observeAll().collectAsState(initial = null)
             val goalId = currentState(GoalWidgets.GOAL_ID)
             val config = WidgetChartConfig.decode(currentState(GoalWidgets.CHART), currentState(GoalWidgets.HIDDEN))
+            val theme = WidgetTheme.fromWire(currentState(GoalWidgets.THEME))
             // Bouton ↺ armé (premier appui) : retour au repos passé le délai de confirmation.
             val armedAt = currentState(RESET_ARMED_AT)
             LaunchedEffect(armedAt) {
@@ -113,7 +116,7 @@ class GoalWidget : GlanceAppWidget() {
                             } else {
                                 null
                             }
-                            ChartWidgetContent(row.toGoal(), row.style(), today, config, openGoal(context, content.goalId), streak)
+                            ChartWidgetContent(row.toGoal(), row.style(), today, config, theme, openGoal(context, content.goalId), streak)
                         }
                         else -> Background(GlanceModifier.clickable(chooseGoal(context, appWidgetId))) {
                             Message(
@@ -129,12 +132,9 @@ class GoalWidget : GlanceAppWidget() {
     }
 }
 
-private val white = ColorProvider(Color.White)
-private fun whiteAlpha(alpha: Float) = ColorProvider(Color.White.copy(alpha = alpha))
-
-/** Taille (sp) du grand nombre pour qu'il tienne dans [widthDp] (≈ 0,6 em par chiffre en gras). */
+/** Taille (sp) du grand nombre pour qu'il tienne dans [widthDp] (≈ 0,55 em par chiffre, police condensée grasse). */
 private fun fitSp(text: String, widthDp: Float, maxSp: Float): Float =
-    minOf(maxSp, widthDp / (0.62f * text.length.coerceAtLeast(1))).coerceAtLeast(10f)
+    minOf(maxSp, widthDp / (0.55f * text.length.coerceAtLeast(1))).coerceAtLeast(10f)
 
 /**
  * Contenu du widget à graphique pour la taille courante ([LocalSize]). Aussi rendu tel quel dans
@@ -146,6 +146,7 @@ fun ChartWidgetContent(
     style: GoalStyle,
     today: LocalDate,
     config: WidgetChartConfig,
+    theme: WidgetTheme,
     click: Action?,
     /** Compteur « série » : bouton ↺ et record (`null` sinon, et dans l'aperçu de la configuration). */
     streak: WidgetStreak? = null,
@@ -157,55 +158,65 @@ fun ChartWidgetContent(
     val state = CountdownEngine.compute(goal, today)
     val resources = context.resources
     val content = WidgetTexts(
-        title = titleWithEmoji(goal.title, style.emoji),
+        title = goal.title,
+        emoji = style.emoji?.takeIf { it.isNotBlank() },
         number = GoalLabels.bigNumber(resources, state),
         caption = GoalLabels.caption(resources, state),
         shortCaption = GoalLabels.shortCaption(resources, state),
         status = GoalLabels.status(resources, state),
+        percent = state.percent?.takeIf { state.phase == Phase.UPCOMING }?.let { GoalLabels.percent(resources, it) },
         record = streak?.recordDays?.let { resources.getString(R.string.widget_record, it) },
     )
-    var modifier = GlanceModifier
-        .fillMaxSize()
-        .appWidgetBackground()
-        .systemCorners()
-        .background(ImageProvider(WidgetBitmaps.background(style, w, h)), ContentScale.FillBounds)
+    val palette = WidgetPalette.of(theme, style)
+    var modifier = palette.background(GlanceModifier.fillMaxSize().appWidgetBackground().systemCorners(), style, w, h)
     if (click != null) modifier = modifier.clickable(click)
     // Unité des graphiques : celle de l'objectif, sinon le réglage général (suivi en direct).
     val globalUnit by (context.applicationContext as GoalWidgetsApplication).chartSettings.global.collectAsState()
     val unit = ChartUnit.resolve(style.chartUnit, globalUnit)
-    val draw = ChartDrawer(goal, today, unit, context.resources.displayMetrics.density)
+    val draw = ChartDrawer(goal, today, unit, context.resources.displayMetrics.density, palette)
+    val layout = WidgetSize.of(w, h)
     Box(modifier) {
-        when (WidgetSize.of(w, h)) {
+        when (layout) {
             WidgetSize.COMPACT -> Compact(content, config, draw, w, h, hasButton = streak != null)
             WidgetSize.SMALL -> Small(content, config, draw, w, h)
             WidgetSize.MEDIUM -> Medium(content, config, draw, w, h)
-            WidgetSize.LARGE -> Large(content, config, draw, goal, today, w, h)
+            WidgetSize.LARGE -> Large(content, config, draw, goal, w, h)
         }
         if (streak != null) {
-            val compact = WidgetSize.of(w, h) == WidgetSize.COMPACT
             Box(
                 GlanceModifier.fillMaxSize().padding(8.dp),
-                contentAlignment = if (compact) Alignment.CenterEnd else Alignment.TopEnd,
-            ) { ResetButton(streak) }
+                contentAlignment = if (layout == WidgetSize.COMPACT) Alignment.CenterEnd else Alignment.TopEnd,
+            ) { ResetButton(streak, palette) }
         }
     }
 }
 
 private class WidgetTexts(
     val title: String,
+    val emoji: String?,
     val number: String,
     val caption: String,
     val shortCaption: String,
     val status: String,
+    /** « 42 % » d'un compte à rebours en cours, sinon `null`. */
+    val percent: String?,
     /** « Record 47 j » d'un compteur « série » déjà remis à zéro, sinon `null`. */
     val record: String? = null,
 ) {
+    val titleWithEmoji: String get() = titleWithEmoji(title, emoji)
+
     /** Légende longue suivie du record éventuel. */
     val captionWithRecord: String get() = listOfNotNull(caption, record).joinToString(" · ")
 }
 
-/** Bitmaps des graphiques pour un objectif et une densité donnés. */
-private class ChartDrawer(private val goal: Goal, private val today: LocalDate, private val unit: ChartUnit, private val density: Float) {
+/** Bitmaps des graphiques pour un objectif et une densité donnés, teintés selon la palette. */
+private class ChartDrawer(
+    private val goal: Goal,
+    private val today: LocalDate,
+    private val unit: ChartUnit,
+    private val density: Float,
+    val palette: WidgetPalette,
+) {
     fun chart(kind: ChartKind, widthDp: Float, heightDp: Float): Bitmap =
         WidgetBitmaps.chart(kind, goal, today, widthDp.coerceAtLeast(1f), heightDp.coerceAtLeast(1f), density, unit)
 
@@ -213,38 +224,74 @@ private class ChartDrawer(private val goal: Goal, private val today: LocalDate, 
 }
 
 @Composable
-private fun ChartImage(bitmap: Bitmap, description: String, modifier: GlanceModifier) {
+private fun ChartImage(bitmap: Bitmap, description: String, tint: ColorProvider, modifier: GlanceModifier) {
     Image(
         provider = ImageProvider(bitmap),
         contentDescription = description,
         modifier = modifier,
         contentScale = ContentScale.Fit,
-        colorFilter = ColorFilter.tint(white),
+        colorFilter = ColorFilter.tint(tint),
     )
 }
 
 @Composable
-private fun Title(text: String, sizeSp: Float) {
-    Text(text, style = TextStyle(color = whiteAlpha(0.92f), fontSize = sizeSp.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+private fun BigNumber(text: String, sizeSp: Float, palette: WidgetPalette) {
+    Text(
+        text,
+        style = TextStyle(color = palette.number, fontSize = sizeSp.sp, fontWeight = FontWeight.Bold, fontFamily = WidgetPalette.NUMBER_FONT),
+        maxLines = 1,
+    )
+}
+
+@Composable
+private fun Caption(text: String, sizeSp: Float, palette: WidgetPalette, bold: Boolean = false) {
+    Text(text, style = TextStyle(color = palette.secondary, fontSize = sizeSp.sp, fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium), maxLines = 1)
+}
+
+@Composable
+private fun Title(text: String, sizeSp: Float, palette: WidgetPalette) {
+    Text(text, style = TextStyle(color = palette.primary, fontSize = sizeSp.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+}
+
+/** Titre précédé de l'emoji dans une pastille ronde (moyen et grand formats). */
+@Composable
+private fun TitleRow(t: WidgetTexts, sizeSp: Float, palette: WidgetPalette, trailing: String? = null) {
+    Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        if (t.emoji != null) {
+            val badge = (sizeSp * 1.9f).dp
+            Box(GlanceModifier.size(badge).cornerRadius(badge / 2).background(palette.chip), contentAlignment = Alignment.Center) {
+                Text(t.emoji, style = TextStyle(fontSize = (sizeSp * 0.95f).sp), maxLines = 1)
+            }
+            Spacer(GlanceModifier.width(8.dp))
+        }
+        Box(GlanceModifier.defaultWeight()) { Title(t.title, sizeSp, palette) }
+        if (trailing != null) Pill(trailing, palette)
+    }
+}
+
+/** Petite pastille de texte (pourcentage). */
+@Composable
+private fun Pill(text: String, palette: WidgetPalette) {
+    Box(GlanceModifier.height(22.dp).cornerRadius(11.dp).background(palette.chip).padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+        Text(text, style = TextStyle(color = palette.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+    }
 }
 
 /** Une rangée (2×1, 4×1, dont les widgets posés avant les graphiques) : texte à gauche, petit anneau à droite. */
 @Composable
 private fun Compact(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, w: Float, h: Float, hasButton: Boolean) {
+    val p = draw.palette
     val pad = 10f
     val side = h - 2 * pad
     Row(GlanceModifier.fillMaxSize().padding(horizontal = 14.dp, vertical = pad.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(GlanceModifier.defaultWeight()) {
-            if (config.shows(WidgetPart.TITLE)) Title(t.title, 13f)
+            if (config.shows(WidgetPart.TITLE)) Title(t.titleWithEmoji, 13f, p)
             Row(verticalAlignment = Alignment.Bottom) {
                 if (config.shows(WidgetPart.NUMBER)) {
-                    val sp = fitSp(t.number, w * 0.4f, (side * 0.62f).coerceIn(16f, 34f))
-                    Text(t.number, style = TextStyle(color = white, fontSize = sp.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                    BigNumber(t.number, fitSp(t.number, w * 0.4f, (side * 0.66f).coerceIn(16f, 36f)), p)
                     Spacer(GlanceModifier.width(6.dp))
                 }
-                if (config.shows(WidgetPart.CAPTION)) {
-                    Text(t.shortCaption, style = TextStyle(color = whiteAlpha(0.82f), fontSize = 12.sp), maxLines = 1)
-                }
+                if (config.shows(WidgetPart.CAPTION)) Caption(t.shortCaption, 12f, p)
             }
         }
         if (hasButton) {
@@ -252,7 +299,7 @@ private fun Compact(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer
             Spacer(GlanceModifier.width(44.dp))
         } else if (config.shows(WidgetPart.CHART) && w >= 160f && side >= 24f) {
             Spacer(GlanceModifier.width(8.dp))
-            ChartImage(draw.chart(ChartKind.RING, side, side), t.status, GlanceModifier.size(side.dp))
+            ChartImage(draw.chart(ChartKind.RING, side, side), t.status, p.accent, GlanceModifier.size(side.dp))
         }
     }
 }
@@ -260,31 +307,29 @@ private fun Compact(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer
 /** Petit (2×2) : titre, puis toujours l'anneau avec le nombre au centre. */
 @Composable
 private fun Small(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, w: Float, h: Float) {
+    val p = draw.palette
     val pad = 12f
     val showTitle = config.shows(WidgetPart.TITLE)
     val side = minOf(w - 2 * pad, h - 2 * pad - if (showTitle) 18f else 0f).coerceAtLeast(1f)
     val showChart = config.shows(WidgetPart.CHART)
-    val inner = if (showChart) side * 0.74f else side
+    val inner = if (showChart) side * 0.7f else side
     Column(GlanceModifier.fillMaxSize().padding(pad.dp)) {
-        if (showTitle) Title(t.title, 12f)
+        if (showTitle) Title(t.titleWithEmoji, 12f, p)
         Box(GlanceModifier.defaultWeight().fillMaxWidth(), contentAlignment = Alignment.Center) {
-            if (showChart) ChartImage(draw.chart(ChartKind.RING, side, side), t.status, GlanceModifier.size(side.dp))
+            if (showChart) ChartImage(draw.chart(ChartKind.RING, side, side), t.status, p.accent, GlanceModifier.size(side.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (config.shows(WidgetPart.NUMBER)) {
-                    Text(t.number, style = TextStyle(color = white, fontSize = fitSp(t.number, inner * 0.8f, inner * 0.42f).sp, fontWeight = FontWeight.Bold), maxLines = 1)
-                }
-                if (config.shows(WidgetPart.CAPTION)) {
-                    Text(t.shortCaption, style = TextStyle(color = whiteAlpha(0.8f), fontSize = 10.sp), maxLines = 1)
-                }
-                t.record?.let { Text(it, style = TextStyle(color = whiteAlpha(0.8f), fontSize = 9.sp, fontWeight = FontWeight.Bold), maxLines = 1) }
+                if (config.shows(WidgetPart.NUMBER)) BigNumber(t.number, fitSp(t.number, inner * 0.8f, inner * 0.44f), p)
+                if (config.shows(WidgetPart.CAPTION)) Caption(t.shortCaption, 10f, p)
+                t.record?.let { Caption(it, 9f, p, bold = true) }
             }
         }
     }
 }
 
-/** Moyen (4×2) : texte à gauche, graphique choisi à droite, mini frise en bas. */
+/** Moyen (4×2) : titre avec emoji en pastille, gros nombre à gauche, graphique choisi à droite, mini frise en bas. */
 @Composable
 private fun Medium(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, w: Float, h: Float) {
+    val p = draw.palette
     val pad = 16f
     val showLine = config.shows(WidgetPart.TIMELINE)
     val lineH = 14f
@@ -295,29 +340,26 @@ private fun Medium(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer,
     Column(GlanceModifier.fillMaxSize().padding(pad.dp)) {
         Row(GlanceModifier.defaultWeight().fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(GlanceModifier.defaultWeight()) {
-                if (config.shows(WidgetPart.TITLE)) Title(t.title, 14f)
-                if (config.shows(WidgetPart.NUMBER)) {
-                    Text(t.number, style = TextStyle(color = white, fontSize = fitSp(t.number, textW, (contentH * 0.5f).coerceIn(20f, 52f)).sp, fontWeight = FontWeight.Bold), maxLines = 1)
-                }
-                if (config.shows(WidgetPart.CAPTION)) {
-                    Text(t.captionWithRecord, style = TextStyle(color = whiteAlpha(0.82f), fontSize = 13.sp), maxLines = 1)
-                }
+                if (config.shows(WidgetPart.TITLE)) TitleRow(t, 14f, p)
+                if (config.shows(WidgetPart.NUMBER)) BigNumber(t.number, fitSp(t.number, textW, (contentH * 0.52f).coerceIn(20f, 58f)), p)
+                if (config.shows(WidgetPart.CAPTION)) Caption(listOfNotNull(t.captionWithRecord, t.percent).joinToString(" · "), 13f, p)
             }
             if (showChart) {
                 Spacer(GlanceModifier.width(12.dp))
-                ChartImage(draw.chart(config.chart, side, side), t.status, GlanceModifier.size(side.dp))
+                ChartImage(draw.chart(config.chart, side, side), t.status, p.accent, GlanceModifier.size(side.dp))
             }
         }
         if (showLine) {
             Spacer(GlanceModifier.height(8.dp))
-            ChartImage(draw.strip(w - 2 * pad, lineH), t.status, GlanceModifier.fillMaxWidth().height(lineH.dp))
+            ChartImage(draw.strip(w - 2 * pad, lineH), t.status, p.accent, GlanceModifier.fillMaxWidth().height(lineH.dp))
         }
     }
 }
 
-/** Grand (4×4) : titre, nombre et légende, grand graphique, mini frise avec ses dates. */
+/** Grand (4×4) : titre et pourcentage, nombre et légende, grand graphique, mini frise avec ses dates. */
 @Composable
-private fun Large(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, goal: Goal, today: LocalDate, w: Float, h: Float) {
+private fun Large(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, goal: Goal, w: Float, h: Float) {
+    val p = draw.palette
     val resources = LocalContext.current.resources
     val pad = 18f
     val showTitle = config.shows(WidgetPart.TITLE)
@@ -326,38 +368,37 @@ private fun Large(t: WidgetTexts, config: WidgetChartConfig, draw: ChartDrawer, 
     val showLine = config.shows(WidgetPart.TIMELINE)
     val lineH = 16f
     val chartW = w - 2 * pad
-    val chartH = h - 2 * pad - (if (showTitle) 24f else 0f) - (if (showNumber) 64f else if (showCaption) 20f else 0f) - 10f -
+    val chartH = h - 2 * pad - (if (showTitle) 28f else 0f) - (if (showNumber) 64f else if (showCaption) 20f else 0f) - 10f -
         (if (showLine) lineH + 28f else 0f)
     Column(GlanceModifier.fillMaxSize().padding(pad.dp)) {
-        if (showTitle) Title(t.title, 16f)
+        if (showTitle) TitleRow(t, 16f, p, trailing = t.percent)
         if (showNumber || showCaption) {
             Row(verticalAlignment = Alignment.Bottom) {
                 if (showNumber) {
-                    Text(t.number, style = TextStyle(color = white, fontSize = fitSp(t.number, chartW * 0.55f, 56f).sp, fontWeight = FontWeight.Bold), maxLines = 1)
+                    BigNumber(t.number, fitSp(t.number, chartW * 0.55f, 60f), p)
                     Spacer(GlanceModifier.width(8.dp))
                 }
-                if (showCaption) Text(t.captionWithRecord, style = TextStyle(color = whiteAlpha(0.82f), fontSize = 13.sp), maxLines = 1)
+                if (showCaption) Caption(t.captionWithRecord, 13f, p)
             }
         }
         Spacer(GlanceModifier.height(10.dp))
         Box(GlanceModifier.defaultWeight().fillMaxWidth(), contentAlignment = Alignment.Center) {
             if (config.shows(WidgetPart.CHART) && chartH > 30f) {
-                ChartImage(draw.chart(config.chart, chartW, chartH), t.status, GlanceModifier.fillMaxSize())
+                ChartImage(draw.chart(config.chart, chartW, chartH), t.status, p.accent, GlanceModifier.fillMaxSize())
             }
         }
         if (showLine) {
             Spacer(GlanceModifier.height(8.dp))
-            ChartImage(draw.strip(chartW, lineH), t.status, GlanceModifier.fillMaxWidth().height(lineH.dp))
+            ChartImage(draw.strip(chartW, lineH), t.status, p.accent, GlanceModifier.fillMaxWidth().height(lineH.dp))
             Row(GlanceModifier.fillMaxWidth().padding(top = 4.dp)) {
-                val label = TextStyle(color = whiteAlpha(0.75f), fontSize = 11.sp)
-                Text(goal.startDate.format(DateFormats.dayMonth), style = label, maxLines = 1)
+                Caption(goal.startDate.format(DateFormats.dayMonth), 11f, p)
                 Spacer(GlanceModifier.defaultWeight())
                 val target = goal.targetDate.takeIf { goal.kind == GoalKind.COUNTDOWN }
-                Text(
+                Caption(
                     target?.let { resources.getString(R.string.strip_target, it.format(DateFormats.dayMonth)) }
                         ?: resources.getString(R.string.strip_today),
-                    style = label,
-                    maxLines = 1,
+                    11f,
+                    p,
                 )
             }
         }

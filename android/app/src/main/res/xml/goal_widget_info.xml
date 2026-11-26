@@ -6,6 +6,7 @@
     android:configure="app.goalwidgets.widget.GoalWidgetConfigureActivity"
     android:description="@string/widget_description"
     android:initialLayout="@layout/glance_default_loading_layout"
+    android:previewLayout="@layout/widget_preview_goal"
     android:minWidth="250dp"
     android:minHeight="110dp"
     android:minResizeWidth="110dp"

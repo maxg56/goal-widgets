@@ -323,6 +323,22 @@
     <string name="widget_config_chart">Graphique</string>
     <string name="widget_config_chart_small">Graphique (le petit format garde l\'anneau)</string>
     <string name="widget_config_parts">Éléments</string>
+    <string name="widget_config_theme">Style</string>
+    <string name="widget_list_name">Liste</string>
+    <!-- Exemples des aperçus du sélecteur de widgets. -->
+    <string name="widget_preview_sample_title">🎓 Examen</string>
+    <string name="widget_preview_sample_caption">jours restants · 64 %</string>
+    <string name="widget_preview_sample_status">Dans 42 jours</string>
+    <string name="widget_preview_list_trip">Voyage</string>
+    <string name="widget_preview_list_trip_status">Dans 12 jours</string>
+    <string name="widget_preview_list_since">Sans fumer</string>
+    <string name="widget_preview_list_since_status">Depuis 187 jours</string>
+    <string name="widget_list_description">Tous vos objectifs dans un seul widget</string>
+    <string name="widget_list_header">Mes objectifs</string>
+    <string name="widget_list_empty">Aucun objectif pour l\'instant. Touchez pour en créer un.</string>
+    <string name="widget_theme_vivid">Vif</string>
+    <string name="widget_theme_soft">Doux</string>
+    <string name="widget_theme_midnight">Nuit</string>
     <string name="widget_part_title">Titre</string>
     <string name="widget_part_number">Nombre</string>
     <string name="widget_part_caption">Légende</string>

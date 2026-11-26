@@ -2,7 +2,6 @@ package app.goalwidgets.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
@@ -28,7 +27,6 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
 import app.goalwidgets.GoalWidgetsApplication
 import app.goalwidgets.R
 import app.goalwidgets.core.WidgetResetTap
@@ -77,28 +75,28 @@ class ResetStreakCallback : ActionCallback {
     }
 }
 
-/** Bouton ↺ / « Confirmer ? », posé dans un coin du widget. */
+/** Bouton ↺ / « Confirmer ? », posé dans un coin du widget, aux couleurs de son habillage. */
 @Composable
-internal fun ResetButton(streak: WidgetStreak) {
+internal fun ResetButton(streak: WidgetStreak, palette: WidgetPalette) {
     val context = LocalContext.current
     val click = actionRunCallback<ResetStreakCallback>(actionParametersOf(RESET_GOAL_ID to streak.goalId))
     if (streak.armed) {
         Box(
-            GlanceModifier.height(28.dp).cornerRadius(14.dp).background(Color.White).padding(horizontal = 10.dp).clickable(click),
+            GlanceModifier.height(28.dp).cornerRadius(14.dp).background(palette.armedBg).padding(horizontal = 10.dp).clickable(click),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 context.getString(R.string.widget_reset_confirm),
-                style = TextStyle(color = ColorProvider(Color(0xFF1C1B1F)), fontSize = 12.sp, fontWeight = FontWeight.Bold),
+                style = TextStyle(color = palette.armedFg, fontSize = 12.sp, fontWeight = FontWeight.Bold),
                 maxLines = 1,
             )
         }
     } else {
         Box(
-            GlanceModifier.size(28.dp).cornerRadius(14.dp).background(Color.White.copy(alpha = 0.25f)).clickable(click),
+            GlanceModifier.size(28.dp).cornerRadius(14.dp).background(palette.chip).clickable(click),
             contentAlignment = Alignment.Center,
         ) {
-            Text("↺", style = TextStyle(color = ColorProvider(Color.White), fontSize = 16.sp, fontWeight = FontWeight.Bold), maxLines = 1)
+            Text("↺", style = TextStyle(color = palette.primary, fontSize = 16.sp, fontWeight = FontWeight.Bold), maxLines = 1)
         }
     }
 }

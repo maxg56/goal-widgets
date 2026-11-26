@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Anneau d'exemple des aperçus (64 %). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp" android:height="100dp" android:viewportWidth="100" android:viewportHeight="100">
+    <path android:pathData="M50,9 a41,41 0 1,1 0,82 a41,41 0 1,1 0,-82"
+        android:strokeWidth="11" android:strokeColor="#40FFFFFF" />
+    <path android:pathData="M50,9 a41,41 0 1,1 0,82 a41,41 0 1,1 0,-82"
+        android:strokeWidth="11" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:trimPathEnd="0.64" />
+</vector>

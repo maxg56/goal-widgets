@@ -32,3 +32,8 @@ class GoalWidgetReceiver : MidnightAwareReceiver() {
 class DotGridWidgetReceiver : MidnightAwareReceiver() {
     override val glanceAppWidget: GlanceAppWidget = DotGridWidget()
 }
+
+/** Widget « Liste » : tous les objectifs. */
+class GoalListWidgetReceiver : MidnightAwareReceiver() {
+    override val glanceAppWidget: GlanceAppWidget = GoalListWidget()
+}

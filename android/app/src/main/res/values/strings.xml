@@ -119,6 +119,15 @@
     <string name="goal_sort_title">Trier par</string>
     <string name="goal_sort_closest_date">Date la plus proche</string>
     <string name="goal_sort_created">Date de création</string>
+    <!-- Unité des graphiques (barres, arcs, points) : réglage général (menu ⋮) et par objectif. -->
+    <string name="chart_unit_menu_title">Graphiques par</string>
+    <string name="chart_unit_auto">Automatique</string>
+    <string name="chart_unit_day">Jour</string>
+    <string name="chart_unit_week">Semaine</string>
+    <string name="chart_unit_month">Mois</string>
+    <string name="chart_unit_inherit">Général (%1$s)</string>
+    <string name="goal_form_chart_unit">Graphiques par</string>
+    <string name="goal_form_chart_unit_hint">Découpage des barres, des arcs et de la grille de points. « Général » suit le réglage du menu ⋮ de l\'accueil. Si l\'unité donne trop de périodes, l\'unité au-dessus est utilisée.</string>
     <string name="action_export">Exporter les objectifs</string>
     <string name="action_import">Importer des objectifs</string>
     <plurals name="export_done">
@@ -257,6 +266,7 @@
     <string name="ring_reached">Objectif atteint</string>
     <string name="ring_milestone_footnote">%1$s le %2$s · encore %3$s</string>
     <string name="arcs_week_label">sem. du %1$s</string>
+    <string name="arcs_unit_day">1 arc = 1 jour</string>
     <string name="arcs_unit_week">1 arc = 1 semaine</string>
     <string name="arcs_unit_month">1 arc = 1 mois</string>
     <plurals name="arcs_unit_years">

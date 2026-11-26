@@ -79,6 +79,7 @@ import app.goalwidgets.R
 import app.goalwidgets.core.ArcsChart
 import app.goalwidgets.core.BarsChart
 import app.goalwidgets.core.ChartKind
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.CountdownEngine
 import app.goalwidgets.core.DetailLayout
 import app.goalwidgets.core.DetailPart
@@ -326,6 +327,8 @@ private fun DetailPage(
 ) {
     val resources = LocalContext.current.resources
     val goal = stored.goal
+    // Unité des graphiques : celle de l'objectif, sinon le réglage général.
+    val unit = ChartUnit.resolve(stored.style.chartUnit, globalChartUnit())
     val state = CountdownEngine.compute(goal, today)
     val accent = GoalTint.accent(stored.style, isSystemInDarkTheme())
     val card = MaterialTheme.colorScheme.surfaceContainerLowest.copy(alpha = 0.96f)
@@ -411,10 +414,10 @@ private fun DetailPage(
                         ) { kind ->
                             val m = Modifier.fillMaxSize()
                             when (kind) {
-                                ChartKind.DOTS -> DotsChartView(remember(goal, today) { DotGrid.compute(goal, today, DotPeriod.WHOLE) }, accent, isSettled, m)
+                                ChartKind.DOTS -> DotsChartView(remember(goal, today, unit) { DotGrid.compute(goal, today, DotPeriod.WHOLE, unit) }, accent, isSettled, m)
                                 ChartKind.RING -> RingChartView(remember(goal, today) { RingChart.compute(goal, today) }, accent, isSettled, m)
-                                ChartKind.ARCS -> ArcsChartView(remember(goal, today) { ArcsChart.compute(goal, today) }, accent, isSettled, m)
-                                ChartKind.BARS -> BarsChartView(remember(goal, today) { BarsChart.compute(goal, today) }, accent, isSettled, m)
+                                ChartKind.ARCS -> ArcsChartView(remember(goal, today, unit) { ArcsChart.compute(goal, today, unit) }, accent, isSettled, m)
+                                ChartKind.BARS -> BarsChartView(remember(goal, today, unit) { BarsChart.compute(goal, today, unit) }, accent, isSettled, m)
                             }
                         }
                     }

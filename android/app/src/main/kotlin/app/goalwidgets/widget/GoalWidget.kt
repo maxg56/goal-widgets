@@ -44,6 +44,7 @@ import androidx.glance.unit.ColorProvider
 import app.goalwidgets.GoalWidgetsApplication
 import app.goalwidgets.R
 import app.goalwidgets.core.ChartKind
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.CountdownEngine
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalKind
@@ -136,7 +137,10 @@ fun ChartWidgetContent(goal: Goal, style: GoalStyle, today: LocalDate, config: W
         .systemCorners()
         .background(ImageProvider(WidgetBitmaps.background(style, w, h)), ContentScale.FillBounds)
     if (click != null) modifier = modifier.clickable(click)
-    val draw = ChartDrawer(goal, today, context.resources.displayMetrics.density)
+    // Unité des graphiques : celle de l'objectif, sinon le réglage général (suivi en direct).
+    val globalUnit by (context.applicationContext as GoalWidgetsApplication).chartSettings.global.collectAsState()
+    val unit = ChartUnit.resolve(style.chartUnit, globalUnit)
+    val draw = ChartDrawer(goal, today, unit, context.resources.displayMetrics.density)
     Box(modifier) {
         when (WidgetSize.of(w, h)) {
             WidgetSize.COMPACT -> Compact(content, config, draw, w, h)
@@ -150,9 +154,9 @@ fun ChartWidgetContent(goal: Goal, style: GoalStyle, today: LocalDate, config: W
 private class WidgetTexts(val title: String, val number: String, val caption: String, val shortCaption: String, val status: String)
 
 /** Bitmaps des graphiques pour un objectif et une densité donnés. */
-private class ChartDrawer(private val goal: Goal, private val today: LocalDate, private val density: Float) {
+private class ChartDrawer(private val goal: Goal, private val today: LocalDate, private val unit: ChartUnit, private val density: Float) {
     fun chart(kind: ChartKind, widthDp: Float, heightDp: Float): Bitmap =
-        WidgetBitmaps.chart(kind, goal, today, widthDp.coerceAtLeast(1f), heightDp.coerceAtLeast(1f), density)
+        WidgetBitmaps.chart(kind, goal, today, widthDp.coerceAtLeast(1f), heightDp.coerceAtLeast(1f), density, unit)
 
     fun strip(widthDp: Float, heightDp: Float): Bitmap = WidgetBitmaps.strip(goal, today, widthDp.coerceAtLeast(1f), heightDp, density)
 }

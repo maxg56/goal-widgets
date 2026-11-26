@@ -105,8 +105,16 @@ data class ArcsChart(val unit: SegmentUnit, val step: Int, val segments: List<Ch
         private const val MAX_WEEK_DAYS = 62
         private const val MAX_ARCS = 12
 
-        fun compute(goal: Goal, today: LocalDate): ArcsChart {
+        /**
+         * [unit] : unité préférée ([ChartUnit.AUTO] = règle ci-dessus). Une unité forcée qui donnerait
+         * plus de [MAX_ARCS] arcs passe à l'unité au-dessus (jour → semaine → mois → années).
+         */
+        fun compute(goal: Goal, today: LocalDate, unit: ChartUnit = ChartUnit.AUTO): ArcsChart {
             val span = ChartSpan.of(goal, today)
+            preferredUnits(unit).forEach { u ->
+                val segments = span.split(u, today)
+                if (segments.size <= MAX_ARCS) return ArcsChart(u, 1, segments)
+            }
             val months = ChronoUnit.MONTHS.between(span.start.withDayOfMonth(1), span.end.withDayOfMonth(1)) + 1
             return when {
                 span.days <= MAX_WEEK_DAYS -> ArcsChart(SegmentUnit.WEEK, 1, span.split(SegmentUnit.WEEK, today))
@@ -149,19 +157,40 @@ data class BarsChart(val unit: SegmentUnit, val bars: List<Bar>) {
         const val MIN_HEIGHT = 0.06
         private const val MAX_DAY_BARS_DAYS = 20
 
-        fun compute(goal: Goal, today: LocalDate): BarsChart {
+        /** Au-delà, une unité forcée passe à l'unité au-dessus (le mois reste le dernier recours). */
+        private const val MAX_FORCED_BARS = 31
+
+        /**
+         * [unit] : unité préférée ([ChartUnit.AUTO] = règle ci-dessus). Une unité forcée qui donnerait
+         * plus de [MAX_FORCED_BARS] barres passe à l'unité au-dessus (jour → semaine → mois).
+         */
+        fun compute(goal: Goal, today: LocalDate, unit: ChartUnit = ChartUnit.AUTO): BarsChart {
             val span = ChartSpan.of(goal, today)
-            val unit = when {
-                span.days <= MAX_DAY_BARS_DAYS -> SegmentUnit.DAY
-                span.end < span.start.plusMonths(3) -> SegmentUnit.WEEK
-                else -> SegmentUnit.MONTH
+            val segments = if (unit == ChartUnit.AUTO) {
+                val auto = when {
+                    span.days <= MAX_DAY_BARS_DAYS -> SegmentUnit.DAY
+                    span.end < span.start.plusMonths(3) -> SegmentUnit.WEEK
+                    else -> SegmentUnit.MONTH
+                }
+                auto to span.split(auto, today)
+            } else {
+                preferredUnits(unit).map { it to span.split(it, today) }
+                    .firstOrNull { (u, s) -> s.size <= MAX_FORCED_BARS || u == SegmentUnit.MONTH }!!
             }
             var cumulative = 0
-            val bars = span.split(unit, today).map { segment ->
+            val bars = segments.second.map { segment ->
                 cumulative += segment.days
                 Bar(segment, maxOf(cumulative.toDouble() / span.days, MIN_HEIGHT))
             }
-            return BarsChart(unit, bars)
+            return BarsChart(segments.first, bars)
         }
     }
+}
+
+/** Unités à essayer, de la préférée à la plus grossière ; vide pour [ChartUnit.AUTO]. */
+internal fun preferredUnits(unit: ChartUnit): List<SegmentUnit> = when (unit) {
+    ChartUnit.AUTO -> emptyList()
+    ChartUnit.DAY -> listOf(SegmentUnit.DAY, SegmentUnit.WEEK, SegmentUnit.MONTH)
+    ChartUnit.WEEK -> listOf(SegmentUnit.WEEK, SegmentUnit.MONTH)
+    ChartUnit.MONTH -> listOf(SegmentUnit.MONTH)
 }

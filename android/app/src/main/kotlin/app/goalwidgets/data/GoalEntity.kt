@@ -4,6 +4,7 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.ExportedGoal
 import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalColor
@@ -41,6 +42,8 @@ data class GoalEntity(
      * pour les nouveaux objectifs : l'autorisation est demandée quand l'utilisateur les active.
      */
     @ColumnInfo(defaultValue = "0") val notificationsEnabled: Boolean = false,
+    /** Valeur `ChartUnit.wire`, ou `null` = comme le réglage général (v4). Non exportée. */
+    val chartUnit: String? = null,
 ) {
     fun toGoal(): Goal = Goal(
         kind = GoalKind.fromWire(kind),
@@ -49,7 +52,7 @@ data class GoalEntity(
         title = title,
     )
 
-    fun style(): GoalStyle = GoalStyle(GoalColor.fromWire(color), emoji)
+    fun style(): GoalStyle = GoalStyle(GoalColor.fromWire(color), emoji, ChartUnit.fromWire(chartUnit))
 
     fun toExported(): ExportedGoal = ExportedGoal(
         id = uid,
@@ -77,6 +80,7 @@ data class GoalEntity(
             color = style.color?.wire,
             emoji = style.emoji,
             notificationsEnabled = notificationsEnabled,
+            chartUnit = style.chartUnit?.wire,
         )
 
         /**

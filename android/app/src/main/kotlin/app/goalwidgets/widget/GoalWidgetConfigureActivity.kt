@@ -100,6 +100,7 @@ import app.goalwidgets.GoalWidgetsApplication
 import app.goalwidgets.MainActivity
 import app.goalwidgets.R
 import app.goalwidgets.core.ChartKind
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.CountdownEngine
 import app.goalwidgets.core.DotPeriod
 import app.goalwidgets.core.GoalStyle
@@ -110,6 +111,7 @@ import app.goalwidgets.ui.EditableBlock
 import app.goalwidgets.ui.GoalLabels
 import app.goalwidgets.ui.GoalTint
 import app.goalwidgets.ui.GoalWidgetsTheme
+import app.goalwidgets.ui.globalChartUnit
 import app.goalwidgets.ui.HiddenRow
 import app.goalwidgets.ui.StoredGoal
 import app.goalwidgets.ui.titleWithEmoji
@@ -437,11 +439,12 @@ private fun GoalChoice(stored: StoredGoal, today: LocalDate, selected: Boolean, 
 private fun ChartChoices(goal: StoredGoal, today: LocalDate, selected: ChartKind, onSelect: (ChartKind) -> Unit) {
     val resources = LocalContext.current.resources
     val density = LocalDensity.current.density
+    val unit = ChartUnit.resolve(goal.style.chartUnit, globalChartUnit())
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         ChartKind.entries.forEach { kind ->
             val on = kind == selected
             val scale by animateFloatAsState(if (on) 1.06f else 1f, spring(dampingRatio = 0.45f, stiffness = Spring.StiffnessMediumLow), label = "chartChoice")
-            val thumb = remember(goal, today, kind, density) { WidgetBitmaps.chart(kind, goal.goal, today, 44f, 44f, density).asImageBitmap() }
+            val thumb = remember(goal, today, kind, density, unit) { WidgetBitmaps.chart(kind, goal.goal, today, 44f, 44f, density, unit).asImageBitmap() }
             val name = GoalLabels.chartName(resources, kind)
             Column(
                 Modifier.weight(1f).scale(scale).clip(RoundedCornerShape(20.dp)).clickable(role = Role.RadioButton) { onSelect(kind) }.padding(vertical = 4.dp),

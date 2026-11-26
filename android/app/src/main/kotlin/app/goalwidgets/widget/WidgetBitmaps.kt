@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.toArgb
 import app.goalwidgets.core.ArcsChart
 import app.goalwidgets.core.BarsChart
 import app.goalwidgets.core.ChartKind
+import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.core.DotGrid
 import app.goalwidgets.core.DotGridLayout
 import app.goalwidgets.core.DotPeriod
@@ -74,8 +75,16 @@ object WidgetBitmaps {
         return bmp
     }
 
-    /** Graphique [kind] dans une zone de [widthDp] × [heightDp], à teinter en blanc. */
-    fun chart(kind: ChartKind, goal: Goal, today: LocalDate, widthDp: Float, heightDp: Float, screenDensity: Float): Bitmap {
+    /** Graphique [kind] dans une zone de [widthDp] × [heightDp], à teinter en blanc, découpé selon [unit]. */
+    fun chart(
+        kind: ChartKind,
+        goal: Goal,
+        today: LocalDate,
+        widthDp: Float,
+        heightDp: Float,
+        screenDensity: Float,
+        unit: ChartUnit = ChartUnit.AUTO,
+    ): Bitmap {
         val square = kind == ChartKind.RING || kind == ChartKind.ARCS
         val wDp = if (square) min(widthDp, heightDp) else widthDp
         val hDp = if (square) min(widthDp, heightDp) else heightDp
@@ -85,9 +94,9 @@ object WidgetBitmaps {
         val r = RectF(0f, 0f, bmp.width.toFloat(), bmp.height.toFloat())
         when (kind) {
             ChartKind.RING -> ring(c, r, RingChart.compute(goal, today).fraction.toFloat())
-            ChartKind.ARCS -> arcs(c, r, scale, ArcsChart.compute(goal, today))
-            ChartKind.BARS -> bars(c, r, scale, BarsChart.compute(goal, today))
-            ChartKind.DOTS -> dots(c, r, DotGrid.compute(goal, today, DotPeriod.WHOLE))
+            ChartKind.ARCS -> arcs(c, r, scale, ArcsChart.compute(goal, today, unit))
+            ChartKind.BARS -> bars(c, r, scale, BarsChart.compute(goal, today, unit))
+            ChartKind.DOTS -> dots(c, r, DotGrid.compute(goal, today, DotPeriod.WHOLE, unit))
         }
         return bmp
     }

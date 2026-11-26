@@ -108,6 +108,7 @@ class GoalListViewModel(
                 targetEpochDay = goal.targetDate?.toEpochDay(),
                 color = style.color?.wire,
                 emoji = style.emoji,
+                chartUnit = style.chartUnit?.wire,
                 notificationsEnabled = notificationsEnabled,
             )
             onGoalsChanged()

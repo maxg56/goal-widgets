@@ -51,7 +51,11 @@ data class DotGrid(val unit: DotUnit, val cells: List<DotCell>) {
         /** Au-delà de 366 cellules, on passe à l'unité suivante (jour → semaine → mois). */
         private const val MAX_CELLS = 366L
 
-        fun compute(goal: Goal, today: LocalDate, period: DotPeriod): DotGrid {
+        /**
+         * [preferred] : unité préférée, appliquée seulement à la période [DotPeriod.WHOLE] (les périodes
+         * mois/semaine restent au jour). Plus de [MAX_CELLS] points → unité au-dessus.
+         */
+        fun compute(goal: Goal, today: LocalDate, period: DotPeriod, preferred: ChartUnit = ChartUnit.AUTO): DotGrid {
             // Étendue de l'objectif : départ → cible (compte à rebours) ou → sans fin (« depuis »).
             // Cible avant le départ (possible via un import) : en « objectif entier », une seule cellule
             // au départ ; en mois/semaine, tout ce qui suit la cible est hors objectif (comme iOS).
@@ -75,9 +79,15 @@ data class DotGrid(val unit: DotUnit, val cells: List<DotCell>) {
             }
 
             val days = ChronoUnit.DAYS.between(rangeStart, rangeEnd) + 1
+            val smallest = when {
+                period != DotPeriod.WHOLE -> DotUnit.DAY
+                preferred == ChartUnit.WEEK -> DotUnit.WEEK
+                preferred == ChartUnit.MONTH -> DotUnit.MONTH
+                else -> DotUnit.DAY
+            }
             val unit = when {
-                days <= MAX_CELLS -> DotUnit.DAY
-                (days + 6) / 7 <= MAX_CELLS -> DotUnit.WEEK
+                smallest == DotUnit.DAY && days <= MAX_CELLS -> DotUnit.DAY
+                smallest != DotUnit.MONTH && (days + 6) / 7 <= MAX_CELLS -> DotUnit.WEEK
                 else -> DotUnit.MONTH
             }
 

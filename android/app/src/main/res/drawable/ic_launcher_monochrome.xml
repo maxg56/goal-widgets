@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Icône à thème (Android 13+) : même dessin, une seule couleur teintée par le système. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <path android:pathData="M54,32 a22,22 0 1,1 0,44 a22,22 0 1,1 0,-44"
+        android:strokeColor="#FF000000" android:strokeWidth="7" android:strokeLineCap="round" android:trimPathEnd="0.7" />
+    <path android:pathData="M48.5,54 a5.5,5.5 0 1,0 11,0 a5.5,5.5 0 1,0 -11,0" android:fillColor="#FF000000" />
+</vector>

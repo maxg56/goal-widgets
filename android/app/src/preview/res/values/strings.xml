@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Build « preview » d'une branche : installé à côté de l'app, nom distinct sur l'écran d'accueil. -->
+<resources>
+    <string name="app_name">Goal Widgets (test)</string>
+</resources>

@@ -154,7 +154,7 @@ private const val HEADER_DP = 52f
 private const val MAX_DENSITY = 2f
 
 /**
- * Dessin de la grille en trois masques blancs (teintés ensuite) :
+ * Dessin de la grille en trois masques ALPHA_8 (1 octet par pixel au lieu de 4, teintés ensuite) :
  * - [accent] : points écoulés (pleins), aujourd'hui (plein, plus gros), restants (anneaux) ;
  * - [todayRing] : anneau autour du point du jour (mise en valeur, couleur du texte) ;
  * - [outside] : petits points hors objectif (périodes mois/semaine).
@@ -166,9 +166,9 @@ internal object DotGridBitmaps {
         val layout = layout(grid, period, widthPx, heightPx)
         val w = max(1, ceil(layout.columns * layout.pitch).toInt())
         val h = max(1, ceil(layout.rows * layout.pitch).toInt())
-        val accent = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val ring = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val outside = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val accent = Bitmap.createBitmap(w, h, Bitmap.Config.ALPHA_8)
+        val ring = Bitmap.createBitmap(w, h, Bitmap.Config.ALPHA_8)
+        val outside = Bitmap.createBitmap(w, h, Bitmap.Config.ALPHA_8)
         val accentCanvas = Canvas(accent)
         val ringCanvas = Canvas(ring)
         val outsideCanvas = Canvas(outside)

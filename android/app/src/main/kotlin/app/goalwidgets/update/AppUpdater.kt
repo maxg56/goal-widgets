@@ -93,6 +93,11 @@ class AppUpdater(
      * mise à jour » — affiche le résultat, ignore le cache, réessaie une version refusée ou bloquée.
      */
     fun requestCheck(manual: Boolean = false) {
+        if (!BuildConfig.AUTO_UPDATE) {
+            // Build « preview » (autre applicationId) : la release publiée n'est pas pour lui.
+            if (manual) _state.value = UpdateState.UpToDate
+            return
+        }
         if (job?.isActive == true) return
         // Installation en attente (confirmation, résultat du système) : pas de 2e session en parallèle.
         val pending = _state.value is UpdateState.ConfirmationRequired || _state.value is UpdateState.Installing
@@ -346,6 +351,20 @@ class AppUpdater(
     }
 
     companion object {
+        /**
+         * Au démarrage : supprime les APK déjà installés ou abandonnés (`cache/updates`). Après une
+         * mise à jour réussie, le système arrête le processus avant [onInstalled] : sans ce ménage,
+         * l'APK téléchargé (plusieurs Mo) resterait dans le cache indéfiniment.
+         */
+        fun purgeStaleDownloads(context: Context) {
+            val installed = BuildConfig.VERSION_CODE.toLong()
+            File(context.cacheDir, "updates").listFiles()?.forEach { file ->
+                val code = APK_NAME.matchEntire(file.name)?.groupValues?.get(1)?.toLongOrNull()
+                if (code == null || code <= installed) file.delete()
+            }
+        }
+
+        private val APK_NAME = Regex("""goal-widgets-(\d+)\.apk""")
         private const val LATEST_RELEASE_URL = "https://api.github.com/repos/maxg56/goal-widgets/releases/latest"
         private const val USER_AGENT = "GoalWidgets-Updater"
         private const val MIN_CHECK_INTERVAL_MS = 60_000L

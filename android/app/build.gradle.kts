@@ -17,6 +17,11 @@ android {
         // en local : valeurs historiques (versionCode 1 = build de debug installé à la main).
         versionCode = providers.gradleProperty("versionCode").orNull?.toInt() ?: 1
         versionName = providers.gradleProperty("versionName").orNull ?: "0.1.0"
+        // Mises à jour automatiques depuis les GitHub Releases (désactivées pour les builds « preview »).
+        buildConfigField("boolean", "AUTO_UPDATE", "true")
+        // Seul le français est traduit : les traductions des bibliothèques (Material, Compose…) dans
+        // d'autres langues ne font que grossir l'APK. Ajouter ici toute nouvelle langue (values-xx/).
+        resourceConfigurations += listOf("fr")
     }
 
     // Signature de la release publiée par la CI (.github/workflows/android-release.yml) : la clé
@@ -36,8 +41,36 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 : code et ressources inutilisés retirés, APK bien plus léger (règles : proguard-rules.pro).
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             if (releaseKeystore != null) signingConfig = signingConfigs.getByName("release")
+        }
+        // Build de test d'une branche (.github/workflows/android-preview.yml) : identique à la release
+        // (minifiée) mais installée À CÔTÉ de l'app (autre applicationId, autre nom), sans mise à jour auto.
+        create("preview") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".preview"
+            versionNameSuffix = "-preview"
+            matchingFallbacks += listOf("release")
+            buildConfigField("boolean", "AUTO_UPDATE", "false")
+            signingConfig = signingConfigs.getByName(if (releaseKeystore != null) "release" else "debug")
+        }
+    }
+    sourceSets {
+        // Même code « sans debug » que la release (NotificationDebugSection vide).
+        getByName("preview") { java.srcDir("src/release/kotlin") }
+    }
+    // Bloc de métadonnées des dépendances (réservé au Play Store) : inutile hors Play Store.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
+    packaging {
+        resources {
+            // Fichiers de build des bibliothèques, jamais lus à l'exécution.
+            excludes += listOf("DebugProbesKt.bin", "META-INF/*.version", "META-INF/androidx.*", "META-INF/com.google.*")
         }
     }
     compileOptions {

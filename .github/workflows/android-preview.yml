@@ -1,0 +1,106 @@
+# Chaque push sur une branche autre que main touchant l'app Android : tests + APK « preview » de la
+# branche, publié en pré-release GitHub `preview-<branche>` (remplacée à chaque push).
+#
+# L'APK preview s'installe À CÔTÉ de l'app (applicationId app.goalwidgets.preview, nom
+# « Goal Widgets (test) ») : aucun risque pour les données de l'app principale. Pour y retrouver ses
+# objectifs : Exporter dans l'app, puis Importer dans la preview.
+# Une pré-release n'est jamais « latest » : la mise à jour auto de l'app (releases/latest) l'ignore.
+name: Android preview
+
+on:
+  push:
+    branches-ignore: [main]
+    paths:
+      - "android/**"
+      - "shared-cases/**"
+      - ".github/workflows/android-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-preview-${{ github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: android
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Version
+        id: version
+        run: |
+          echo "code=$((1000 + GITHUB_RUN_NUMBER))" >> "$GITHUB_OUTPUT"
+          echo "name=1.${GITHUB_RUN_NUMBER} (${GITHUB_SHA::7})" >> "$GITHUB_OUTPUT"
+          tag="preview-$(echo "$GITHUB_REF_NAME" | tr -c 'A-Za-z0-9._-' '-' | sed 's/-*$//')"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      # Même clé que la release si les secrets existent (les previews se mettent à jour entre elles),
+      # sinon clé de debug de la CI (désinstaller la preview précédente avant d'installer).
+      - name: Keystore
+        env:
+          SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$SIGNING_KEYSTORE_BASE64" ]; then
+            echo "$SIGNING_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release.keystore"
+            echo "SIGNING_KEYSTORE_PATH=$RUNNER_TEMP/release.keystore" >> "$GITHUB_ENV"
+          fi
+
+      - name: Tests et APK preview
+        env:
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: >-
+          ./gradlew test assemblePreview
+          -PversionCode=${{ steps.version.outputs.code }}
+          "-PversionName=${{ steps.version.outputs.name }}"
+
+      - name: APK
+        id: apk
+        run: |
+          apk="$RUNNER_TEMP/goal-widgets-${{ steps.version.outputs.tag }}.apk"
+          cp app/build/outputs/apk/preview/app-preview.apk "$apk"
+          echo "path=$apk" >> "$GITHUB_OUTPUT"
+          size=$(stat -c %s "$apk")
+          echo "### APK preview : $((size / 1024)) Ko" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goal-widgets-${{ steps.version.outputs.tag }}
+          path: ${{ steps.apk.outputs.path }}
+          retention-days: 14
+
+      - name: Pré-release de la branche
+        run: |
+          gh release delete "${{ steps.version.outputs.tag }}" --yes --cleanup-tag 2>/dev/null || true
+          {
+            echo "Build de test de la branche \`$GITHUB_REF_NAME\` — s'installe à côté de l'app (« Goal Widgets (test) »)."
+            echo
+            git log -1 --format=%B
+          } > "$RUNNER_TEMP/notes.md"
+          gh release create "${{ steps.version.outputs.tag }}" "${{ steps.apk.outputs.path }}" \
+            --target "$GITHUB_SHA" \
+            --title "Preview $GITHUB_REF_NAME — ${{ steps.version.outputs.name }}" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            --prerelease --latest=false
+
+      - name: Suppression du keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.keystore"

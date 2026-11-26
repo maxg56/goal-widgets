@@ -37,6 +37,7 @@ class GoalWidgetsApplication : Application() {
         MilestoneNotifications.createChannel(this)
         DailyRescheduleWorker.enqueue(this)
         rescheduleNotifications()
+        scope.launch(Dispatchers.IO) { AppUpdater.purgeStaleDownloads(this@GoalWidgetsApplication) }
     }
 
     /**

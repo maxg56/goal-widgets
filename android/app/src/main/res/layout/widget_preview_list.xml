@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Aperçu du widget « Liste » dans le sélecteur du lanceur (Android 12+). -->
+<!-- Les barres de progression utilisent FrameLayout : un previewLayout passe par RemoteViews,
+     qui refuse android.view.View (« Class not allowed to be inflated »). -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -46,8 +48,8 @@
                 android:layout_marginTop="4dp"
                 android:background="@color/widget_preview_track"
                 android:orientation="horizontal">
-                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="70" android:background="#FF1565C0" />
-                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="30" />
+                <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="70" android:background="#FF1565C0" />
+                <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="30" />
             </LinearLayout>
         </LinearLayout>
 
@@ -91,8 +93,8 @@
                 android:layout_marginTop="4dp"
                 android:background="@color/widget_preview_track"
                 android:orientation="horizontal">
-                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="64" android:background="#FF3949AB" />
-                <View android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="36" />
+                <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="64" android:background="#FF3949AB" />
+                <FrameLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="36" />
             </LinearLayout>
         </LinearLayout>
 

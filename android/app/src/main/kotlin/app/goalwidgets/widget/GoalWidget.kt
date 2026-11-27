@@ -72,7 +72,7 @@ import java.time.LocalDate
  * ([GoalWidgets.HIDDEN]). Un widget posé avant l'arrivée des graphiques n'a ni l'un ni l'autre :
  * [WidgetChartConfig.decode] donne l'anneau avec tout affiché, sans migration à écrire.
  * Gabarit selon la taille réelle ([WidgetSize]) : compact (une rangée, dont les anciens 2×1), petit,
- * moyen, grand. Habillage ([GoalWidgets.THEME], [WidgetTheme]) : Vif (défaut), Doux ou Nuit.
+ * moyen, grand. Habillage ([GoalWidgets.THEME], [WidgetTheme]) : Doux (défaut), Vif ou Nuit.
  */
 class GoalWidget : GlanceAppWidget() {
 

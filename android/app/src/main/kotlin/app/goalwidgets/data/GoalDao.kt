@@ -36,6 +36,10 @@ interface GoalDao {
     @Query("UPDATE goals SET streak = :enabled WHERE id = :id")
     suspend fun setStreak(id: Long, enabled: Boolean): Int
 
+    /** Réglages de notification d'un objectif (`NotificationPrefs.encode`). */
+    @Query("UPDATE goals SET notificationPrefs = :prefs WHERE id = :id")
+    suspend fun setNotificationPrefs(id: Long, prefs: String): Int
+
     /** Archive (ou sort de l'archive) un objectif ; renvoie le nombre de lignes modifiées. */
     @Query("UPDATE goals SET archived = :archived WHERE id = :id")
     suspend fun setArchived(id: Long, archived: Boolean): Int
@@ -142,11 +146,13 @@ interface GoalDao {
         notificationsEnabled: Boolean?,
         streak: Boolean?,
         repeatYearly: Boolean? = null,
+        notificationPrefs: String? = null,
     ): Int {
         val updated = updateContent(id, title, kind, startEpochDay, targetEpochDay, color, emoji, chartUnit)
         if (notificationsEnabled != null) setNotificationsEnabled(id, notificationsEnabled)
         if (streak != null) setStreak(id, streak)
         if (repeatYearly != null) setRepeatYearly(id, repeatYearly)
+        if (notificationPrefs != null) setNotificationPrefs(id, notificationPrefs)
         return updated
     }
 

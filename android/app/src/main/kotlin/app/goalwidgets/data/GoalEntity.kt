@@ -11,6 +11,7 @@ import app.goalwidgets.core.Goal
 import app.goalwidgets.core.GoalColor
 import app.goalwidgets.core.GoalKind
 import app.goalwidgets.core.GoalStyle
+import app.goalwidgets.core.NotificationPrefs
 import app.goalwidgets.core.PastStreak
 import app.goalwidgets.core.Streaks
 import java.time.Instant
@@ -58,7 +59,11 @@ data class GoalEntity(
     @ColumnInfo(defaultValue = "0") val repeatYearly: Boolean = false,
     /** Archivé : hors de l'accueil (section « Archivés »), sans notification ; widgets inchangés (v6). */
     @ColumnInfo(defaultValue = "0") val archived: Boolean = false,
+    /** Réglages de notification de l'objectif (`NotificationPrefs.encode`, vide = défaut) (v7). */
+    @ColumnInfo(defaultValue = "") val notificationPrefs: String = "",
 ) {
+    fun notificationSettings(): NotificationPrefs = NotificationPrefs.decode(notificationPrefs)
+
     fun toGoal(): Goal = Goal(
         kind = GoalKind.fromWire(kind),
         startDate = LocalDate.ofEpochDay(startEpochDay),
@@ -89,6 +94,7 @@ data class GoalEntity(
             streakHistory = history(),
             repeatYearly = repeatYearly,
             archived = archived,
+            notificationPrefs = notificationPrefs,
         ),
     )
 
@@ -101,6 +107,7 @@ data class GoalEntity(
             notificationsEnabled: Boolean = false,
             streak: Boolean = false,
             repeatYearly: Boolean = false,
+            notificationPrefs: NotificationPrefs = NotificationPrefs.DEFAULT,
         ) = GoalEntity(
             id = id,
             title = goal.title,
@@ -114,6 +121,7 @@ data class GoalEntity(
             chartUnit = style.chartUnit?.wire,
             streak = streak,
             repeatYearly = repeatYearly && goal.kind == GoalKind.COUNTDOWN,
+            notificationPrefs = notificationPrefs.encode(),
         )
 
         /**
@@ -127,6 +135,11 @@ data class GoalEntity(
             notificationsEnabled = e.notificationsEnabled ?: false,
             streak = e.options.streak,
             repeatYearly = e.options.repeatYearly,
-        ).copy(uid = e.id, streakHistory = Streaks.encode(e.options.streakHistory), archived = e.options.archived)
+        ).copy(
+            uid = e.id,
+            streakHistory = Streaks.encode(e.options.streakHistory),
+            archived = e.options.archived,
+            notificationPrefs = NotificationPrefs.decode(e.options.notificationPrefs).encode(),
+        )
     }
 }

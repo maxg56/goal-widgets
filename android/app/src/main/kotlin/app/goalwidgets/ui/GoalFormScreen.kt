@@ -139,6 +139,7 @@ import app.goalwidgets.core.GoalColor
 import app.goalwidgets.core.GoalDraft
 import app.goalwidgets.core.GoalKind
 import app.goalwidgets.core.GoalStyle
+import app.goalwidgets.core.NotificationPrefs
 import app.goalwidgets.core.Phase
 import app.goalwidgets.core.RingChart
 import app.goalwidgets.notifications.MilestoneNotifications
@@ -190,6 +191,8 @@ fun GoalFormScreen(
     var streak by rememberSaveable { mutableStateOf(existing?.streak ?: false) }
     // Option « chaque année » : compte à rebours seulement.
     var repeatYearly by rememberSaveable { mutableStateOf(existing?.repeatYearly ?: false) }
+    // Réglages de notification (texte encodé : sauvegardable tel quel).
+    var notifPrefs by rememberSaveable { mutableStateOf((existing?.notificationPrefs ?: NotificationPrefs.DEFAULT).encode()) }
     var attempted by rememberSaveable { mutableStateOf(false) }
     var sheet by rememberSaveable { mutableStateOf<DateField?>(null) }
     var confirm by rememberSaveable { mutableStateOf<Confirm?>(null) }
@@ -207,7 +210,7 @@ fun GoalFormScreen(
     fun save() {
         attempted = true
         if (draft.errors().isEmpty()) {
-            onSave(draft.toGoal(), style, GoalOptions(notify, streak, repeatYearly))
+            onSave(draft.toGoal(), style, GoalOptions(notify, streak, repeatYearly, NotificationPrefs.decode(notifPrefs)))
         } else {
             scope.launch { for (x in listOf(22f, -18f, 12f, -8f, 4f, 0f)) shake.animateTo(x, tween(45)) }
         }
@@ -245,7 +248,7 @@ fun GoalFormScreen(
                 AnimatedVisibility(kind == GoalKind.COUNTDOWN, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
                     OptionCard(Icons.Filled.DateRange, R.string.goal_form_repeat_yearly, R.string.goal_form_repeat_yearly_footer, repeatYearly, base) { repeatYearly = it }
                 }
-                NotificationCard(notify, base) { notify = it }
+                NotificationCard(notify, base, kind, NotificationPrefs.decode(notifPrefs), onPrefs = { notifPrefs = it.encode() }) { notify = it }
                 if (existing != null) {
                     val copyTitle = stringResource(R.string.form_duplicate_title, initial?.title.orEmpty())
                     ManageCard(
@@ -912,7 +915,14 @@ private fun EmojiBubble(selected: Boolean, base: Color, label: String, onClick: 
  * refusée, l'interrupteur reste actif (préférence de l'objectif) et un lien mène aux paramètres.
  */
 @Composable
-private fun NotificationCard(enabled: Boolean, base: Color, onChange: (Boolean) -> Unit) {
+private fun NotificationCard(
+    enabled: Boolean,
+    base: Color,
+    kind: GoalKind,
+    prefs: NotificationPrefs,
+    onPrefs: (NotificationPrefs) -> Unit,
+    onChange: (Boolean) -> Unit,
+) {
     val context = LocalContext.current
     var canPost by remember { mutableStateOf(MilestoneNotifications.canPost(context)) }
     LifecycleResumeEffect(Unit) {
@@ -935,10 +945,9 @@ private fun NotificationCard(enabled: Boolean, base: Color, onChange: (Boolean) 
             .fillMaxWidth()
             .clip(RoundedCornerShape(28.dp))
             .background(MaterialTheme.colorScheme.surfaceContainer)
-            .clickable(role = Role.Switch) { toggle(!enabled) }
             .padding(18.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.clickable(role = Role.Switch) { toggle(!enabled) }, verticalAlignment = Alignment.CenterVertically) {
             val wiggle by animateFloatAsState(if (enabled) 1f else 0f, spring(dampingRatio = 0.25f, stiffness = Spring.StiffnessLow), label = "wiggle")
             Box(Modifier.size(48.dp).clip(CircleShape).background(tint.copy(alpha = 0.15f)), contentAlignment = Alignment.Center) {
                 Icon(
@@ -958,6 +967,10 @@ private fun NotificationCard(enabled: Boolean, base: Color, onChange: (Boolean) 
                 onCheckedChange = ::toggle,
                 colors = SwitchDefaults.colors(checkedTrackColor = base, checkedThumbColor = Color.White),
             )
+        }
+        // Personnalisation : quels jalons, rappels « N jours avant », heure propre.
+        AnimatedVisibility(enabled, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+            NotificationPrefsEditor(kind, prefs, base, onPrefs)
         }
         AnimatedVisibility(enabled && !canPost, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
             Column(Modifier.padding(top = 12.dp)) {

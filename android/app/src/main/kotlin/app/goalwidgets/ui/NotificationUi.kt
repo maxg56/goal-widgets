@@ -46,6 +46,17 @@ import app.goalwidgets.BuildConfig
 import app.goalwidgets.R
 import app.goalwidgets.debug.NotificationDebugSection
 import app.goalwidgets.notifications.MilestoneNotifications
+import app.goalwidgets.notifications.WeeklySummary
+import android.widget.Toast
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Switch
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import java.time.DayOfWeek
+import java.time.format.TextStyle
+import java.util.Locale
 import app.goalwidgets.update.UpdateSettingsRow
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -107,6 +118,8 @@ fun NotificationSettingsScreen(
             }
             if (!canPost) DeniedHint(context)
             HorizontalDivider()
+            WeeklySummarySection()
+            HorizontalDivider()
             // Xiaomi, Huawei… : l'optimisation de batterie peut tuer les alarmes et la tâche quotidienne.
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.notifications_battery_title), style = MaterialTheme.typography.titleSmall)
@@ -137,6 +150,78 @@ fun NotificationSettingsScreen(
             dismissButton = {
                 TextButton(onClick = { picking = false }) { Text(stringResource(R.string.action_cancel)) }
             },
+        )
+    }
+}
+
+/** Résumé hebdomadaire : interrupteur, jour, heure, et essai immédiat. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun WeeklySummarySection() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var settings by remember { mutableStateOf(WeeklySummary.settings(context)) }
+    var pickingTime by rememberSaveable { mutableStateOf(false) }
+    var pickingDay by rememberSaveable { mutableStateOf(false) }
+    fun update(s: WeeklySummary.Settings) {
+        settings = s
+        WeeklySummary.save(context, s)
+        WeeklySummary.schedule(context)
+    }
+    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        Row(Modifier.fillMaxWidth().clickable { update(settings.copy(enabled = !settings.enabled)) }, verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.weekly_settings_title), style = MaterialTheme.typography.titleSmall)
+                Text(
+                    stringResource(R.string.weekly_settings_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            Switch(checked = settings.enabled, onCheckedChange = { update(settings.copy(enabled = it)) })
+        }
+        if (settings.enabled) {
+            val dayName = settings.day.getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault()).replaceFirstChar { it.titlecase(Locale.getDefault()) }
+            Row(Modifier.fillMaxWidth().clickable { pickingDay = true }.padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(stringResource(R.string.weekly_settings_day))
+                Box {
+                    Text(dayName, color = MaterialTheme.colorScheme.primary)
+                    DropdownMenu(expanded = pickingDay, onDismissRequest = { pickingDay = false }) {
+                        DayOfWeek.entries.forEach { day ->
+                            DropdownMenuItem(
+                                text = { Text(day.getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault()).replaceFirstChar { it.titlecase(Locale.getDefault()) }) },
+                                onClick = { pickingDay = false; update(settings.copy(day = day)) },
+                            )
+                        }
+                    }
+                }
+            }
+            Row(Modifier.fillMaxWidth().clickable { pickingTime = true }.padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(stringResource(R.string.weekly_settings_time))
+                Text(settings.time.format(DateTimeFormatter.ofLocalizedTime(FormatStyle.SHORT)), color = MaterialTheme.colorScheme.primary)
+            }
+            OutlinedButton(onClick = {
+                scope.launch {
+                    if (!WeeklySummary.show(context)) {
+                        Toast.makeText(context, context.getString(R.string.weekly_settings_nothing), Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }) { Text(stringResource(R.string.weekly_settings_try)) }
+        }
+    }
+    if (pickingTime) {
+        val state = rememberTimePickerState(initialHour = settings.time.hour, initialMinute = settings.time.minute)
+        AlertDialog(
+            onDismissRequest = { pickingTime = false },
+            title = { Text(stringResource(R.string.weekly_settings_time)) },
+            text = { TimePicker(state = state) },
+            confirmButton = {
+                TextButton(onClick = {
+                    update(settings.copy(time = LocalTime.of(state.hour, state.minute)))
+                    pickingTime = false
+                }) { Text(stringResource(R.string.action_ok)) }
+            },
+            dismissButton = { TextButton(onClick = { pickingTime = false }) { Text(stringResource(R.string.action_cancel)) } },
         )
     }
 }

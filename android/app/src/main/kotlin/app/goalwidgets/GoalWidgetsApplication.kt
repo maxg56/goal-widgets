@@ -5,6 +5,7 @@ import app.goalwidgets.core.ChartUnit
 import app.goalwidgets.data.GoalDatabase
 import app.goalwidgets.notifications.DailyRescheduleWorker
 import app.goalwidgets.notifications.MilestoneNotifications
+import app.goalwidgets.notifications.WeeklySummary
 import app.goalwidgets.shortcuts.AppShortcuts
 import app.goalwidgets.ui.ChartSettings
 import app.goalwidgets.update.AppUpdater
@@ -37,6 +38,7 @@ class GoalWidgetsApplication : Application() {
         super.onCreate()
         // Démarrage de l'app : canal, tâche quotidienne et reprogrammation de l'horizon.
         MilestoneNotifications.createChannel(this)
+        WeeklySummary.createChannel(this)
         DailyRescheduleWorker.enqueue(this)
         rescheduleNotifications()
         scope.launch(Dispatchers.IO) { AppUpdater.purgeStaleDownloads(this@GoalWidgetsApplication) }

@@ -19,6 +19,7 @@ import app.goalwidgets.R
 import app.goalwidgets.core.Milestone
 import app.goalwidgets.core.MilestoneKind
 import app.goalwidgets.core.MilestonePlanner
+import app.goalwidgets.data.GoalEntity
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.LocalDate
@@ -93,6 +94,7 @@ object MilestoneNotifications {
             alarms.setWindow(AlarmManager.RTC_WAKEUP, s.triggerAtMillis, WINDOW_MILLIS, alarmIntent(app, s.milestone))
         }
         prefs.edit().putStringSet(KEY_SCHEDULED, wantedIds).apply()
+        WeeklySummary.schedule(app)
     }
 
     /**
@@ -107,7 +109,11 @@ object MilestoneNotifications {
         val zone = ZoneId.systemDefault()
         val now = System.currentTimeMillis()
 
+        // Heure d'envoi : celle de l'objectif si elle est personnalisée, sinon l'heure générale.
+        val timeOf = mutableMapOf<String, java.time.LocalTime>()
         val planned = dao.getAll().flatMap { row ->
+            val prefs = row.notificationSettings()
+            timeOf[row.id.toString()] = prefs.sendTime ?: sendTime
             MilestonePlanner.plan(
                 goalId = row.id.toString(),
                 goal = row.toGoal(),
@@ -115,14 +121,13 @@ object MilestoneNotifications {
                 notificationsEnabled = row.notificationsEnabled && !row.archived,
                 today = today,
                 horizonDays = HORIZON_DAYS,
+                prefs = prefs,
             )
         }
+        fun at(m: Milestone) = triggerAt(m.date, timeOf[m.goalId] ?: sendTime, zone)
         // Le jalon du jour n'est programmé que si l'heure d'envoi n'est pas encore passée.
-        return MilestonePlanner.closest(
-            planned.filter { triggerAt(it.date, sendTime, zone) > now },
-            MAX_SCHEDULED,
-        )
-            .map { Scheduled(it, triggerAt(it.date, sendTime, zone)) }
+        return MilestonePlanner.closest(planned.filter { at(it) > now }, MAX_SCHEDULED)
+            .map { Scheduled(it, at(it)) }
             .sortedBy { it.triggerAtMillis }
     }
 
@@ -142,9 +147,10 @@ object MilestoneNotifications {
         val today = if (date == windowStartDay) date else now.toLocalDate()
         if (date != today) return
         val row = (app as GoalWidgetsApplication).database.goalDao().getById(goalId)
-        val deliver = MilestonePlanner.shouldDeliver(milestone, row?.toGoal(), row != null && row.notificationsEnabled && !row.archived, today)
-        if (row == null || !deliver) return
-        show(app, row.title, milestone)
+        if (row == null) return
+        val deliver = MilestonePlanner.shouldDeliver(milestone, row.toGoal(), row.notificationsEnabled && !row.archived, today, row.notificationSettings())
+        if (!deliver) return
+        show(app, row, milestone)
     }
 
     /**
@@ -152,13 +158,30 @@ object MilestoneNotifications {
      * vérification de date : chemin commun à l'alarme réelle et aux outils de debug (t14).
      * Renvoie `false` si l'app n'a pas le droit de notifier.
      */
-    fun show(context: Context, goalTitle: String, milestone: Milestone): Boolean {
+    fun show(context: Context, goalTitle: String, milestone: Milestone): Boolean =
+        post(context, NotificationCompat.Builder(context.applicationContext, CHANNEL_ID).setContentTitle(goalTitle).setContentText(NotificationTexts.body(context.resources, milestone)), milestone)
+
+    /**
+     * Notification enrichie d'un jalon : emoji et couleur de l'objectif, détail (« 42 jours restants ·
+     * 67 % »), barre de progression d'un compte à rebours, bouton « Remettre à zéro » d'une série
+     * ([armedReset] : second appui demandé, cf. [NotificationActionReceiver]).
+     */
+    fun show(context: Context, row: GoalEntity, milestone: Milestone, armedReset: Boolean = false): Boolean {
+        val app = context.applicationContext
+        val builder = RichNotification.builder(app, row, milestone, LocalDate.now())
+        if (row.offersStreakReset) {
+            val action = if (armedReset) NotificationActionReceiver.CONFIRM_RESET else NotificationActionReceiver.ARM_RESET
+            val label = if (armedReset) R.string.notif_action_reset_confirm else R.string.notif_action_reset
+            builder.addAction(0, app.getString(label), NotificationActionReceiver.intent(app, action, milestone))
+        }
+        return post(app, builder, milestone)
+    }
+
+    private fun post(context: Context, builder: NotificationCompat.Builder, milestone: Milestone): Boolean {
         val app = context.applicationContext
         if (!canPost(app)) return false
-        val notification = NotificationCompat.Builder(app, CHANNEL_ID)
+        val notification = builder
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(goalTitle)
-            .setContentText(NotificationTexts.body(app.resources, milestone))
             .setContentIntent(openGoalIntent(app, milestone.goalId.toLong(), milestone.id))
             .setAutoCancel(true)
             .build()
@@ -169,6 +192,11 @@ object MilestoneNotifications {
             // Autorisation retirée entre la vérification et l'envoi.
             false
         }
+    }
+
+    /** Retire la notification d'un jalon (après une remise à zéro depuis la notification). */
+    fun dismiss(context: Context, milestone: Milestone) {
+        NotificationManagerCompat.from(context).cancel(milestone.id, 0)
     }
 
     /** Écrit [m] dans les extras de [intent] (alarme réelle, et alarme de test en debug). */
@@ -210,7 +238,7 @@ object MilestoneNotifications {
      * Appui sur la notification : ouvre l'app sur l'objectif (même extra que le widget, t06).
      * `SINGLE_TOP` : app déjà ouverte → `MainActivity.onNewIntent`, formulaire en cours conservé.
      */
-    private fun openGoalIntent(context: Context, goalId: Long, milestoneId: String): PendingIntent =
+    internal fun openGoalIntent(context: Context, goalId: Long, milestoneId: String): PendingIntent =
         PendingIntent.getActivity(
             context,
             0,

@@ -159,7 +159,7 @@
     <!-- Notifications de jalons (t08). Mêmes clés qu'iOS (t09) ; le titre d'une notification est
          celui de l'objectif. %1$s = durée construite avec breakdown_years / breakdown_months. -->
     <string name="goal_form_notifications">Notifications de jalons</string>
-    <string name="goal_form_notifications_footer">Compteur « depuis » : chaque mois et chaque année. Compte à rebours : rappels mensuels, puis J-30, J-7, J-1 et le jour J.</string>
+    <string name="goal_form_notifications_footer">Jalons et rappels de cet objectif, personnalisables une fois activés.</string>
     <string name="notifications_settings_title">Notifications</string>
     <string name="notifications_send_time">Heure d\'envoi</string>
     <string name="notifications_send_time_footer">Heure à laquelle arrivent les notifications, pour tous les objectifs.</string>
@@ -169,11 +169,67 @@
     <string name="notifications_battery_hint">Certains téléphones (Xiaomi, Huawei, Honor, Oppo…) arrêtent les applications en arrière-plan pour économiser la batterie. Si les notifications n\'arrivent pas, désactivez l\'optimisation de batterie pour Goal Widgets (et, sur Xiaomi, autorisez le « démarrage automatique »).</string>
     <string name="notifications_battery_open">Optimisation de batterie</string>
     <string name="notif_channel_name">Jalons des objectifs</string>
-    <string name="notif_channel_description">Mois-anniversaires, anniversaires et rappels avant une date cible</string>
+    <string name="notif_channel_description">Mois-anniversaires, anniversaires, paliers de jours et rappels avant une date cible</string>
     <string name="notif_since_elapsed">Ça fait %1$s</string>
     <string name="notif_countdown_remaining">Plus que %1$s</string>
     <string name="notif_countdown_tomorrow">C\'est demain !</string>
     <string name="notif_countdown_today">C\'est aujourd\'hui !</string>
+    <plurals name="notif_countdown_weeks_left">
+        <item quantity="one">Plus qu\'%d semaine</item>
+        <item quantity="many">Plus que %d semaines</item>
+        <item quantity="other">Plus que %d semaines</item>
+    </plurals>
+    <plurals name="notif_since_days_milestone">
+        <item quantity="one">Ça fait %d jour ! 🎉</item>
+        <item quantity="many">Ça fait %d jours ! 🎉</item>
+        <item quantity="other">Ça fait %d jours ! 🎉</item>
+    </plurals>
+    <string name="notif_action_reset">Remettre à zéro</string>
+    <string name="notif_action_reset_confirm">Confirmer la remise à zéro</string>
+    <string name="notif_family_month">Mois-anniversaires</string>
+    <string name="notif_family_month_hint">« Ça fait 3 mois »</string>
+    <string name="notif_family_year">Anniversaires</string>
+    <string name="notif_family_year_hint">« Ça fait 1 an »</string>
+    <string name="notif_family_days">Paliers de jours</string>
+    <string name="notif_family_days_hint">7, 14, 50, 100, 200, 300, 500, 1000 jours…</string>
+    <string name="notif_family_target">Jour J</string>
+    <string name="notif_family_target_hint">« C\'est aujourd\'hui ! »</string>
+    <string name="notif_family_monthly">Rappels mensuels</string>
+    <string name="notif_family_monthly_hint">« Plus que 4 mois »</string>
+    <string name="notif_days_before_title">Rappels avant la date</string>
+    <string name="notif_days_before_other">Autre</string>
+    <string name="notif_days_before_dialog">Rappel combien de jours avant ?</string>
+    <string name="notif_days_before_suffix">jours avant</string>
+    <string name="notif_days_before_eve">La veille</string>
+    <plurals name="notif_days_before">
+        <item quantity="one">%d jour avant</item>
+        <item quantity="many">%d jours avant</item>
+        <item quantity="other">%d jours avant</item>
+    </plurals>
+    <plurals name="notif_weeks_before">
+        <item quantity="one">%d semaine avant</item>
+        <item quantity="many">%d semaines avant</item>
+        <item quantity="other">%d semaines avant</item>
+    </plurals>
+    <string name="notif_time_title">Heure d\'envoi</string>
+    <string name="notif_time_global">Heure générale (réglages des notifications)</string>
+    <string name="notif_time_custom">Propre à cet objectif</string>
+    <string name="notif_time_use_global">Heure générale</string>
+    <string name="weekly_settings_title">Résumé hebdomadaire</string>
+    <string name="weekly_settings_hint">Une notification par semaine avec vos objectifs, du plus proche au plus lointain</string>
+    <string name="weekly_settings_day">Jour</string>
+    <string name="weekly_settings_time">Heure</string>
+    <string name="weekly_settings_try">Voir un exemple maintenant</string>
+    <string name="weekly_settings_nothing">Aucun objectif à résumer (ou notifications refusées)</string>
+    <string name="weekly_channel_name">Résumé hebdomadaire</string>
+    <string name="weekly_channel_description">Une fois par semaine, où en sont vos objectifs</string>
+    <string name="weekly_title">Votre semaine en objectifs</string>
+    <plurals name="weekly_more">
+        <item quantity="one">et %d autre</item>
+        <item quantity="many">et %d autres</item>
+        <item quantity="other">et %d autres</item>
+    </plurals>
+    <string name="notif_reset_done">Compteur remis à zéro : nouvelle série, courage ! 💪</string>
     <plurals name="notif_countdown_days_left">
         <item quantity="one">Plus que %d jour</item>
         <item quantity="many">Plus que %d jours</item>

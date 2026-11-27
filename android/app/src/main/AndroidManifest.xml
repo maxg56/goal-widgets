@@ -130,6 +130,13 @@
         <receiver
             android:name=".notifications.MilestoneAlarmReceiver"
             android:exported="false" />
+        <!-- Bouton « Remettre à zéro » des notifications de série, résumé hebdomadaire. -->
+        <receiver
+            android:name=".notifications.NotificationActionReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".notifications.WeeklySummaryReceiver"
+            android:exported="false" />
         <receiver
             android:name=".notifications.NotificationRescheduleReceiver"
             android:exported="true">

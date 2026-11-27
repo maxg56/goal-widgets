@@ -72,6 +72,7 @@ qui ne les connaît pas les ignore (iOS aujourd'hui) :
 | `streakHistory` | chaîne `AAAA-MM-JJ/AAAA-MM-JJ;…` | vide | séries terminées, ordre chronologique (pas dans un objectif partagé) |
 | `repeatYearly` | booléen | `false` | compte à rebours « chaque année » (ignoré pour `since`) |
 | `archived` | booléen | `false` | objectif archivé (pas dans un objectif partagé) |
+| `notificationPrefs` | chaîne `off=…;before=…;time=…` | vide | réglages de notification (`NotificationPrefs`) : familles coupées (`month`, `year`, `days`, `monthly`, `target`), rappels « N jours avant », heure d'envoi en minutes |
 
 Un élément de `goals` qui n'est pas un objet JSON : `invalidGoal` avec `field` = `"goal"`.
 

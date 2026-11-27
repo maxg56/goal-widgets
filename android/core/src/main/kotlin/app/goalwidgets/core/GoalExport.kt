@@ -74,6 +74,8 @@ data class ExportedOptions(
     val streakHistory: List<PastStreak> = emptyList(),
     val repeatYearly: Boolean = false,
     val archived: Boolean = false,
+    /** Réglages de notification (`NotificationPrefs.encode`), vide = défaut. */
+    val notificationPrefs: String = "",
 )
 
 /** Raison pour laquelle un fichier est refusé en entier (aucun objectif n'est importé). */
@@ -136,6 +138,7 @@ object GoalExport {
         if (o.streakHistory.isNotEmpty()) put("streakHistory", Streaks.encode(o.streakHistory))
         if (o.repeatYearly) put("repeatYearly", true)
         if (o.archived) put("archived", true)
+        if (o.notificationPrefs.isNotEmpty()) put("notificationPrefs", o.notificationPrefs)
     }
 
     /** Lit un fichier entier ; au moindre objectif invalide, tout le fichier est refusé. */
@@ -199,6 +202,7 @@ object GoalExport {
                 streakHistory = Streaks.decode(o.string("streakHistory")),
                 repeatYearly = o.flag("repeatYearly") && kind == GoalKind.COUNTDOWN,
                 archived = o.flag("archived"),
+                notificationPrefs = NotificationPrefs.decode(o.string("notificationPrefs")).encode(),
             ),
         )
     }

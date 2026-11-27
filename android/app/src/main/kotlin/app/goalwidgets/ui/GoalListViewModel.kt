@@ -10,6 +10,7 @@ import app.goalwidgets.core.GoalOrder
 import app.goalwidgets.core.GoalStyle
 import app.goalwidgets.core.ImportError
 import app.goalwidgets.core.ImportPlan
+import app.goalwidgets.core.NotificationPrefs
 import app.goalwidgets.core.PastStreak
 import app.goalwidgets.core.SortKey
 import app.goalwidgets.core.StreakSummary
@@ -44,9 +45,11 @@ data class StoredGoal(
     val repeatYearly: Boolean = false,
     /** Archivé : section « Archivés » de l'accueil, sans notification. */
     val archived: Boolean = false,
+    /** Réglages de notification personnalisés. */
+    val notificationPrefs: NotificationPrefs = NotificationPrefs.DEFAULT,
 ) {
     /** Options du formulaire telles qu'enregistrées. */
-    val options: GoalOptions get() = GoalOptions(notificationsEnabled, streak, repeatYearly)
+    val options: GoalOptions get() = GoalOptions(notificationsEnabled, streak, repeatYearly, notificationPrefs)
 
     /** Remise à zéro proposée : compteur « depuis » marqué « série ». */
     val isStreak: Boolean get() = streak && goal.kind == GoalKind.SINCE
@@ -67,6 +70,7 @@ data class StoredGoal(
             history = entity.history(),
             repeatYearly = entity.repeatYearly,
             archived = entity.archived,
+            notificationPrefs = entity.notificationSettings(),
         )
     }
 }
@@ -79,6 +83,7 @@ data class GoalOptions(
     val notificationsEnabled: Boolean = false,
     val streak: Boolean = false,
     val repeatYearly: Boolean = false,
+    val notificationPrefs: NotificationPrefs = NotificationPrefs.DEFAULT,
 )
 
 /** Issue d'un import : objectifs ajoutés / ignorés, ou fichier refusé (rien n'est écrit). */
@@ -124,6 +129,7 @@ class GoalListViewModel(
                     notificationsEnabled = options.notificationsEnabled,
                     streak = options.streak,
                     repeatYearly = options.repeatYearly,
+                    notificationPrefs = options.notificationPrefs,
                 ),
             )
             // « Chaque année » avec une date déjà passée : directement l'occurrence suivante.
@@ -170,6 +176,7 @@ class GoalListViewModel(
                 notificationsEnabled = options?.notificationsEnabled,
                 streak = options?.streak,
                 repeatYearly = options?.let { it.repeatYearly && goal.kind == GoalKind.COUNTDOWN },
+                notificationPrefs = options?.notificationPrefs?.encode(),
             )
             dao.rollYearly(LocalDate.now())
             onGoalsChanged()

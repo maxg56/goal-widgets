@@ -19,12 +19,15 @@ object NotificationTexts {
             resources.getString(R.string.notif_since_elapsed, duration(resources, months = milestone.value * 12))
         MilestoneKind.MONTHLY_REMINDER ->
             resources.getString(R.string.notif_countdown_remaining, duration(resources, months = milestone.value))
-        MilestoneKind.DAYS_BEFORE ->
-            if (milestone.value == 1) {
-                resources.getString(R.string.notif_countdown_tomorrow)
-            } else {
-                resources.getQuantityString(R.plurals.notif_countdown_days_left, milestone.value, milestone.value)
-            }
+        MilestoneKind.DAYS_BEFORE -> when {
+            milestone.value == 1 -> resources.getString(R.string.notif_countdown_tomorrow)
+            // Rappel en semaines rondes (14, 21, 28… jours) : « Plus que 2 semaines ».
+            milestone.value >= 14 && milestone.value % 7 == 0 && milestone.value != 30 ->
+                resources.getQuantityString(R.plurals.notif_countdown_weeks_left, milestone.value / 7, milestone.value / 7)
+            else -> resources.getQuantityString(R.plurals.notif_countdown_days_left, milestone.value, milestone.value)
+        }
+        MilestoneKind.DAY_MILESTONE ->
+            resources.getQuantityString(R.plurals.notif_since_days_milestone, milestone.value, milestone.value)
         MilestoneKind.TARGET_DAY -> resources.getString(R.string.notif_countdown_today)
     }
 

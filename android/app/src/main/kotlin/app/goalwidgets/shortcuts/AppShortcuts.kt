@@ -3,11 +3,7 @@ package app.goalwidgets.shortcuts
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Typeface
 import android.net.Uri
-import androidx.compose.ui.graphics.toArgb
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
@@ -17,7 +13,7 @@ import app.goalwidgets.R
 import app.goalwidgets.core.GoalOrder
 import app.goalwidgets.core.GoalStyle
 import app.goalwidgets.core.SortKey
-import app.goalwidgets.ui.GoalTint
+import app.goalwidgets.ui.GoalBadge
 import java.time.Instant
 import java.time.LocalDate
 
@@ -48,7 +44,7 @@ object AppShortcuts {
                 val style = row.style()
                 ShortcutInfoCompat.Builder(context, "goal_${row.id}")
                     .setShortLabel(row.title.ifBlank { context.getString(R.string.app_name) })
-                    .setIcon(IconCompat.createWithAdaptiveBitmap(badge(style.emoji ?: row.title.take(1).uppercase(), style, context)))
+                    .setIcon(IconCompat.createWithAdaptiveBitmap(badge(row.title, style, context)))
                     .setIntent(
                         Intent(context, MainActivity::class.java)
                             .setAction(Intent.ACTION_VIEW)
@@ -62,23 +58,7 @@ object AppShortcuts {
         }
     }
 
-    /**
-     * Icône adaptative : disque de la couleur de l'objectif, emoji ou initiale au centre (zone sûre
-     * des icônes adaptatives : les 2/3 centraux).
-     */
-    private fun badge(text: String, style: GoalStyle, context: Context): Bitmap {
-        val size = (108 * context.resources.displayMetrics.density).toInt().coerceIn(108, 432)
-        val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-        val c = Canvas(bmp)
-        c.drawColor(GoalTint.deepColor(style).toArgb())
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = android.graphics.Color.WHITE
-            textAlign = Paint.Align.CENTER
-            textSize = size * 0.34f
-            typeface = Typeface.DEFAULT_BOLD
-        }
-        val y = size / 2f - (paint.descent() + paint.ascent()) / 2
-        c.drawText(text, size / 2f, y, paint)
-        return bmp
-    }
+    /** Icône adaptative : pastille de l'objectif ([GoalBadge]), à la densité de l'écran. */
+    private fun badge(title: String, style: GoalStyle, context: Context): Bitmap =
+        GoalBadge.bitmap(title, style, (108 * context.resources.displayMetrics.density).toInt().coerceIn(108, 432))
 }

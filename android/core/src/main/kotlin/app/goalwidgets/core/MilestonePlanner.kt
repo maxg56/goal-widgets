@@ -1,6 +1,7 @@
 package app.goalwidgets.core
 
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 /** Type de jalon. `wire` est la valeur utilisée dans `shared-cases/planner.json`. */
 enum class MilestoneKind(val wire: String) {
@@ -10,10 +11,13 @@ enum class MilestoneKind(val wire: String) {
     YEAR_ANNIVERSARY("year_anniversary"),
     /** Compte à rebours : rappel mensuel (`value` = mois restants, ≥ 2). */
     MONTHLY_REMINDER("monthly_reminder"),
-    /** Compte à rebours : J-30, J-7, J-1 (`value` = 30, 7 ou 1). */
+    /** Compte à rebours : J-n (`value` = n ; 30, 7 et 1 par défaut, au choix sur Android). */
     DAYS_BEFORE("days_before"),
     /** Compte à rebours : jour J (`value` = 0). */
-    TARGET_DAY("target_day");
+    TARGET_DAY("target_day"),
+
+    /** « depuis » : palier de jours (`value` = jours écoulés : 7, 14, 50, 100…). Android seulement. */
+    DAY_MILESTONE("day_milestone");
 
     companion object {
         fun fromWire(value: String): MilestoneKind =
@@ -38,8 +42,13 @@ data class Milestone(
     val strength: Int
         get() = when (kind) {
             MilestoneKind.TARGET_DAY -> 100
-            MilestoneKind.DAYS_BEFORE -> when (value) { 1 -> 90; 7 -> 80; else -> 70 }
+            MilestoneKind.DAYS_BEFORE -> when {
+                value == 1 -> 90
+                value <= 7 -> 80
+                else -> 70
+            }
             MilestoneKind.YEAR_ANNIVERSARY -> 60
+            MilestoneKind.DAY_MILESTONE -> 55
             MilestoneKind.MONTHLY_REMINDER -> 50
             MilestoneKind.MONTH_ANNIVERSARY -> 40
         }
@@ -65,14 +74,19 @@ object MilestonePlanner {
         notificationsEnabled: Boolean,
         today: LocalDate,
         horizonDays: Int,
+        /**
+         * Réglages de l'objectif ; par défaut les règles d'origine ([NotificationPrefs.CLASSIC]),
+         * communes avec iOS et figées par les cas partagés.
+         */
+        prefs: NotificationPrefs = NotificationPrefs.CLASSIC,
     ): List<Milestone> {
         if (!notificationsEnabled || horizonDays < 0) return emptyList()
         val last = today.plusDays(horizonDays.toLong())
         val candidates = when (goal.kind) {
-            GoalKind.SINCE -> sinceCandidates(goalId, goal.startDate, last)
+            GoalKind.SINCE -> sinceCandidates(goalId, goal.startDate, last, prefs)
             GoalKind.COUNTDOWN -> {
                 val target = goal.targetDate ?: return emptyList()
-                countdownCandidates(goalId, target, goal.startDate, today)
+                countdownCandidates(goalId, target, goal.startDate, today, prefs)
             }
         }
         return candidates
@@ -89,9 +103,15 @@ object MilestonePlanner {
      * « c'est aujourd'hui »…) serait faux d'un jour pour une alarme en retard. Et seulement si
      * le planificateur le prévoit encore pour cet objectif aujourd'hui ([goal] `null` = supprimé).
      */
-    fun shouldDeliver(milestone: Milestone, goal: Goal?, notificationsEnabled: Boolean, today: LocalDate): Boolean {
+    fun shouldDeliver(
+        milestone: Milestone,
+        goal: Goal?,
+        notificationsEnabled: Boolean,
+        today: LocalDate,
+        prefs: NotificationPrefs = NotificationPrefs.CLASSIC,
+    ): Boolean {
         if (milestone.date != today || goal == null) return false
-        return milestone in plan(milestone.goalId, goal, notificationsEnabled, today, horizonDays = 0)
+        return milestone in plan(milestone.goalId, goal, notificationsEnabled, today, horizonDays = 0, prefs = prefs)
     }
 
     /**
@@ -103,18 +123,25 @@ object MilestonePlanner {
             .sortedWith(compareBy<Milestone> { it.date }.thenByDescending { it.strength }.thenBy { it.id })
             .take(limit.coerceAtLeast(0))
 
-    private fun sinceCandidates(goalId: String, start: LocalDate, last: LocalDate): List<Milestone> {
+    private fun sinceCandidates(goalId: String, start: LocalDate, last: LocalDate, prefs: NotificationPrefs): List<Milestone> {
         val result = mutableListOf<Milestone>()
         var n = 1L
         while (true) {
             val date = start.plusMonths(n)
             if (date > last) break
-            result += if (n % 12 == 0L) {
-                Milestone(goalId, date, MilestoneKind.YEAR_ANNIVERSARY, (n / 12).toInt())
-            } else {
-                Milestone(goalId, date, MilestoneKind.MONTH_ANNIVERSARY, n.toInt())
+            if (n % 12 == 0L) {
+                if (prefs.enabled(MilestoneFamily.YEAR_ANNIVERSARIES)) {
+                    result += Milestone(goalId, date, MilestoneKind.YEAR_ANNIVERSARY, (n / 12).toInt())
+                }
+            } else if (prefs.enabled(MilestoneFamily.MONTH_ANNIVERSARIES)) {
+                result += Milestone(goalId, date, MilestoneKind.MONTH_ANNIVERSARY, n.toInt())
             }
             n++
+        }
+        if (prefs.enabled(MilestoneFamily.DAY_MILESTONES)) {
+            for (d in DayMilestones.upTo(ChronoUnit.DAYS.between(start, last))) {
+                result += Milestone(goalId, start.plusDays(d.toLong()), MilestoneKind.DAY_MILESTONE, d)
+            }
         }
         return result
     }
@@ -125,16 +152,14 @@ object MilestonePlanner {
         target: LocalDate,
         start: LocalDate,
         today: LocalDate,
+        prefs: NotificationPrefs,
     ): List<Milestone> {
-        val result = mutableListOf(
-            Milestone(goalId, target, MilestoneKind.TARGET_DAY, 0),
-            Milestone(goalId, target.minusDays(1), MilestoneKind.DAYS_BEFORE, 1),
-            Milestone(goalId, target.minusDays(7), MilestoneKind.DAYS_BEFORE, 7),
-            Milestone(goalId, target.minusDays(30), MilestoneKind.DAYS_BEFORE, 30),
-        )
+        val result = mutableListOf<Milestone>()
+        if (prefs.enabled(MilestoneFamily.TARGET_DAY)) result += Milestone(goalId, target, MilestoneKind.TARGET_DAY, 0)
+        prefs.daysBefore.forEach { n -> result += Milestone(goalId, target.minusDays(n.toLong()), MilestoneKind.DAYS_BEFORE, n) }
         // T − m mois recule quand m grandit : on s'arrête avant aujourd'hui ou au départ.
         var m = 2L
-        while (true) {
+        while (prefs.enabled(MilestoneFamily.MONTHLY_REMINDERS)) {
             val date = target.minusMonths(m)
             if (date < today || date <= start) break
             result += Milestone(goalId, date, MilestoneKind.MONTHLY_REMINDER, m.toInt())

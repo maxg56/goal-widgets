@@ -75,6 +75,7 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
@@ -704,10 +705,14 @@ private fun DateSheet(
             R.string.form_suggest_jan_first to LocalDate.of(today.year, 1, 1),
         )
     }
+    // Fond opaque partagé par la feuille et le calendrier : la grille des années se dessine par-dessus
+    // celle des jours avec la couleur de fond du DatePicker ; transparente, les jours restaient visibles.
+    val sheetColor = BottomSheetDefaults.ContainerColor
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         shape = RoundedCornerShape(topStart = 32.dp, topEnd = 32.dp),
+        containerColor = sheetColor,
     ) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 16.dp)) {
             Text(
@@ -768,7 +773,7 @@ private fun DateSheet(
                 headline = null,
                 showModeToggle = false,
                 colors = DatePickerDefaults.colors(
-                    containerColor = Color.Transparent,
+                    containerColor = sheetColor,
                     selectedDayContainerColor = base,
                     selectedDayContentColor = Color.White,
                     todayDateBorderColor = base,

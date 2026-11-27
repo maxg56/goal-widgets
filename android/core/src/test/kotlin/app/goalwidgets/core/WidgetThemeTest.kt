@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test
 
 class WidgetThemeTest {
     @Test
-    fun `widgets placed before themes keep the vivid look`() {
-        assertEquals(WidgetTheme.VIVID, WidgetTheme.fromWire(null))
-        assertEquals(WidgetTheme.VIVID, WidgetTheme.fromWire("unknown"))
+    fun `widgets without a theme follow the system (soft)`() {
+        assertEquals(WidgetTheme.SOFT, WidgetTheme.fromWire(null))
+        assertEquals(WidgetTheme.SOFT, WidgetTheme.fromWire("unknown"))
     }
 
     @Test

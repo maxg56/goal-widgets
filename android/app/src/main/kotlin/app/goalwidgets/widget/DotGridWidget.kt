@@ -76,8 +76,7 @@ class DotGridWidget : GlanceAppWidget() {
             val goals by dao.observeAll().collectAsState(initial = null)
             val goalId = currentState(GoalWidgets.GOAL_ID)
             val period = DotPeriod.fromWire(currentState(GoalWidgets.PERIOD)) ?: DotPeriod.WHOLE
-            // Grille posée avant les habillages : « Doux » (son apparence d'origine).
-            val theme = currentState(GoalWidgets.THEME)?.let(WidgetTheme::fromWire) ?: WidgetTheme.SOFT
+            val theme = WidgetTheme.fromWire(currentState(GoalWidgets.THEME))
             val globalUnit by (context.applicationContext as GoalWidgetsApplication).chartSettings.global.collectAsState()
             GlanceTheme {
                 val rows = goals

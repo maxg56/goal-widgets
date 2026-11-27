@@ -159,7 +159,7 @@ class GoalWidgetConfigureActivity : ComponentActivity() {
                     isUpdate = goalId != null
                     period = DotPeriod.fromWire(state?.get(GoalWidgets.PERIOD)) ?: DotPeriod.WHOLE
                     chart = WidgetChartConfig.decode(state?.get(GoalWidgets.CHART), state?.get(GoalWidgets.HIDDEN))
-                    theme = state?.get(GoalWidgets.THEME)?.let(WidgetTheme::fromWire) ?: if (isGrid) WidgetTheme.SOFT else WidgetTheme.DEFAULT
+                    theme = WidgetTheme.fromWire(state?.get(GoalWidgets.THEME))
                 }
                 val list = goals
                 WidgetConfigScreen(

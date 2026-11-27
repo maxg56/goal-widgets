@@ -31,7 +31,7 @@ object GoalWidgets {
     val CHART = stringPreferencesKey("chart")
     val HIDDEN = stringPreferencesKey("hidden_parts")
 
-    /** Habillage du widget « Objectif » (`WidgetTheme.wire`) ; absent = « Vif » (widgets posés avant les thèmes). */
+    /** Habillage du widget « Objectif » (`WidgetTheme.wire`) ; absent = « Doux » (WidgetTheme.DEFAULT). */
     val THEME = stringPreferencesKey("theme")
 
     /** `true` si le widget [appWidgetId] est une « Grille » (l'écran de configuration propose alors la période). */

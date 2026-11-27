@@ -112,7 +112,7 @@ Un widget de bureau (ordinateur) est un bonus facultatif, hors périmètre de ce
 
 ### Habillages et widget « Liste » (Android)
 
-- **Habillages** (par instance, choisis dans la configuration avec aperçu en direct ; clé `theme` de l'état Glance, `WidgetTheme` dans `:core`) : **Vif** (dégradé « mesh » de la couleur de l'objectif, texte blanc — défaut du widget « Objectif » et des widgets déjà posés), **Doux** (surface du thème système : suit clair/sombre et Material You, accents de la couleur — défaut de la « Grille », son apparence d'origine), **Nuit** (fond OLED, graphiques lumineux de la couleur).
+- **Habillages** (par instance, choisis dans la configuration avec aperçu en direct ; clé `theme` de l'état Glance, `WidgetTheme` dans `:core`) : **Doux** (défaut, y compris pour les widgets déjà posés : surface du thème système, suit clair/sombre et Material You, accents de la couleur), **Vif** (dégradé « mesh » de la couleur de l'objectif, texte blanc — l'apparence d'origine du widget « Objectif »), **Nuit** (fond OLED, graphiques lumineux de la couleur).
 - **Détails** : anneau et arc en cours avec halo flou et auréole à l'extrémité ; grands nombres en police condensée grasse ; emoji en pastille ; pourcentage (format moyen : dans la légende, grand : pastille).
 - **Widget « Liste »** : tous les objectifs, défilables, dans l'ordre choisi dans l'app (préférence partagée `GoalListOrder`), barre de progression des comptes à rebours, appui → détail. Pas de configuration.
 - **Sélecteur de widgets** (Android 12+) : aperçus `previewLayout` réalistes des trois widgets.

@@ -2,11 +2,11 @@ package app.goalwidgets.core
 
 /**
  * Habillage d'un widget, choisi par instance dans la configuration. `wire` = valeur stockée dans
- * l'état du widget ; absente (widgets posés avant les thèmes) ou inconnue → [VIVID], l'habillage
- * historique.
+ * l'état du widget ; absente (widgets posés avant les thèmes) ou inconnue → [SOFT], qui suit le
+ * mode clair/sombre du système.
  */
 enum class WidgetTheme(val wire: String) {
-    /** Dégradé saturé de la couleur de l'objectif, texte blanc (identique en clair et en sombre). */
+    /** Dégradé saturé de la couleur de l'objectif, texte blanc (identique en clair et en sombre ; l'habillage historique). */
     VIVID("vivid"),
 
     /** Surface du thème système (clair/sombre, Material You), accents de la couleur de l'objectif. */
@@ -16,7 +16,7 @@ enum class WidgetTheme(val wire: String) {
     MIDNIGHT("midnight");
 
     companion object {
-        val DEFAULT = VIVID
+        val DEFAULT = SOFT
 
         fun fromWire(value: String?): WidgetTheme = entries.firstOrNull { it.wire == value } ?: DEFAULT
     }
